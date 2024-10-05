@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html lang="en">
+{% load static %}
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Announcement Board</title>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+    <link rel="stylesheet" href="{% static 'style.css' %}">
+    <style>
+       @font-face {
+  font-family: "Poppins";
+  src: url("{% static 'fonts/Poppins-Regular.ttf' %}") format("truetype");
+  }
+
+  @font-face {
+  font-family: "Poppins";
+  src: url("{% static 'fonts/Poppins-Bold.ttf' %}") format("truetype");
+  font-weight: bold;
+  }
+
+  body {
+  font-family: "Poppins", sans-serif;
+  font-size: 1rem;
+  }
+        .sidebar {
+      position: fixed;
+      top: 0;
+      left: 0;
+      height: 100%;
+      width: 250px;
+      background-color: #f8f9fa; /* This is a light gray color, not blue */
+      padding-top: 20px;
+      border-right: 1px solid #ddd;
+    }
+    
+    .sidebar .logo {
+      text-align: center;
+      margin-bottom: 20px;
+    }
+    
+    .sidebar .logo img {
+      width: 100px;
+      border-radius: 50%;
+    }
+    
+    .sidebar .nav-item {
+      padding: 15px 20px;
+      text-align: center;
+      border-bottom: 1px solid #ddd;
+    }
+    
+    .sidebar .nav-item:hover {
+      background-color: #e9ecef;
+      cursor: pointer;
+    }
+        .user-profile {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            display: flex;
+            align-items: center;
+        }
+        .user-profile img {
+            border-radius: 50%; /* Make the image circular */
+            width: 40px;
+            height: 40px;
+            margin-right: 10px;
+        }
+        .announcement-card {
+            background-color: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            margin-bottom: 20px;
+        }
+        .announcement-card .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .announcement-card .header h5 {
+            margin: 0;
+        }
+        .announcement-card .actions {
+            display: flex;
+            gap: 10px;
+        }
+        .announcement-card .actions button {
+            background: none;
+            border: none;
+            color: #007bff;
+            cursor: pointer;
+        }
+        .announcement-card .actions button:hover {
+            text-decoration: underline;
+        }
+        .add-announcement {
+            margin-bottom: 20px;
+            padding: 20px;
+            background-color: white;
+            border-radius: 10px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+        .add-announcement textarea {
+            resize: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="sidebar">
+        <div class="logo">
+            <img src="{% static 'argao_logo.jpg' %}" alt="Logo">
+        </div>
+        <div class="nav-item" onclick="window.location.href='/staff_dash'">Dashboard</div>
+        <div class="nav-item" onclick="window.location.href='/staff_report'">Reports</div>
+        <div class="nav-item" onclick="window.location.href='/staff_services'">Services</div>
+        <div class="nav-item" onclick="window.location.href='/staff_feedback'">Feedbacks</div>
+        <div class="nav-item" onclick="window.location.href='/staff_session'">Session Agenda</div>
+        <div class="nav-item" onclick="window.location.href='/staff_announcement'">Announcements Board</div>
+    </div>
+
+    <div class="user-profile">
+        <img src="{% static 'user_profile.png' %}" alt="User Profile">
+        <span class="ms-2">Staff</span>
+    </div>
+
+    <main class="container-fluid" style="margin-left: 250px;"> <!-- Adjust for sidebar width -->
+        <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+            <h1 class="h2">Announcements Board</h1>
+            <div class="user-profile">
+                <img src="{% static 'user_profile.png' %}" alt="User Profile" class="img-fluid rounded-circle">
+                <span class="ms-2">Staff</span>
+            </div>
+        </div>
+
+        <div class="container mt-4">
+            <div class="add-announcement">
+                <h4>Add New Announcement</h4>
+                <form id="addAnnouncementForm" method="post" enctype="multipart/form-data">
+                    {% csrf_token %}
+                    <div class="form-group">
+                        <label for="announcementTitle">Title</label>
+                        <input type="text" class="form-control" id="announcementTitle" name="title" placeholder="Enter title of the ordinance/resolution" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="announcementContent">Content</label>
+                        <textarea class="form-control" id="announcementContent" name="content" rows="4" placeholder="Enter the announcement details" required></textarea>
+                    </div>
+                    <div class="form-group">
+                        <label for="announcementDocument">Attach Document (optional)</label>
+                        <input type="file" class="form-control-file" id="announcementDocument" name="document">
+                    </div>
+                    <button type="submit" class="btn btn-primary">Post Announcement</button>
+                </form>
+            </div>
+
+            <!-- Dynamic Announcement Cards -->
+            {% for announcement in announcements %}
+            <div class="announcement-card">
+                <div class="header">
+                    <h5>{{ announcement.title }}</h5>
+                    <div class="actions">
+                        <button class="edit-btn" data-id="{{ announcement.id }}">Edit</button>
+                        <button class="delete-btn" data-id="{{ announcement.id }}">Delete</button>
+                    </div>
+                </div>
+                <p class="content mt-3">{{ announcement.content }}</p>
+                <small class="text-muted">Posted on {{ announcement.created_at|date:"F d, Y" }}</small>
+                {% if announcement.document %}
+                    <div class="mt-2">
+                        <a href="{{ announcement.document.url }}" target="_blank">View Attached Document</a>
+                    </div>
+                {% endif %}
+            </div>
+            {% empty %}
+            <p>No announcements available.</p>
+            {% endfor %}
+        </div>
+    </main>
+
+    <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.9.3/dist/umd/popper.min.js"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+</body>
+</html>

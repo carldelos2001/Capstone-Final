@@ -10,6 +10,8 @@ from django.conf import settings
 from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
 from django.urls import reverse
+from firebase_admin.exceptions import FirebaseError
+from firebase_admin import auth, db
 
 import random
 import string
@@ -104,19 +106,21 @@ def login(request):
             # Store user details in session
             request.session['firstname'] = firstname
             request.session['email'] = email
-            request.session['user_id'] = user_id  # Store user ID
-            request.session['role'] = user_role  # Store user role
+            request.session['user_id'] = user_id
+            request.session['role'] = user_role
 
             # Redirect based on role
             if user_role == 'admin':
-                # Redirect to admin dashboard
                 return redirect('admin_dash')
-            else:
-                # Redirect to homepage
+            elif user_role == 'user':
                 return redirect('home')
+            else:
+                # Handle unexpected role
+                messages.error(request, 'Invalid user role. Please contact support.')
+                return redirect('login')
 
         except Exception as e:
-            error_response = json.loads(e.args[1])  # Get the error response in JSON format
+            error_response = json.loads(e.args[1])
             error_message = error_response.get('error', {}).get('message', '')
 
             # Map Firebase error codes to user-friendly messages
@@ -195,6 +199,25 @@ def admin_promanage(request):
     return render(request, 'admin_projectmanagement.html')
 def admin_services(request):
     return render(request, 'admin_services.html')
+def admin_staff_account(request):
+    return render(request, 'admin_staff_account_create.html')
+def admin_minutesmaker(request):
+    return render(request, 'admin_minutesmaker.html')
+def staff_announcement(request):
+    return render(request, 'staff_announcement.html')
+def main_login(request):
+    return render(request, 'mainlogin.html')
+def staff_dash(request):
+    return render(request, 'staff_dashboard.html')
+def staff_report(request):
+    return render(request, 'staff_report.html')
+def staff_services(request):
+    return render(request, 'staff_services.html')
+def staff_feedback(request):
+    return render(request, 'staff_feedback.html')
+def staff_session(request):
+    return render(request, 'staff_session.html')
+
 
 # >>>> ADMIN LOG IN
 def admin_login(request):
@@ -613,3 +636,57 @@ def submit_requirements(request):
             return JsonResponse({'error': str(e)}, status=500)
 
     return JsonResponse({'error': 'Invalid request method.'}, status=405)
+
+def get_account_data(request):
+    email = request.GET.get('email')
+    if email:
+        try:
+            ref = db.reference('accounts')  # Points to your Firebase "accounts" folder
+            accounts = ref.order_by_child('email').equal_to(email).get()
+            
+            for key, account_data in accounts.items():
+                if account_data.get('email') == email:
+                    return JsonResponse(account_data, safe=False)
+            
+            return JsonResponse({"error": "Account not found."}, status=404)
+        except Exception as e:
+            return JsonResponse({"error": str(e)}, status=500)
+    return JsonResponse({"error": "Invalid request."}, status=400)
+
+@csrf_exempt
+def admin_login_view(request):
+    if request.method == 'POST':
+        try:
+            # Parse the request body to get the email and password
+            data = json.loads(request.body)
+            email = data.get('email')
+            password = data.get('password')
+            
+            # Step 1: Verify if the account exists in Firebase Realtime Database
+            ref = db.reference('accounts')  # Assuming accounts are stored under the 'accounts' path in Firebase
+            accounts = ref.order_by_child('email').equal_to(email).get()
+            
+            if not accounts:
+                return JsonResponse({'success': False, 'message': 'Invalid email or password'}, status=400)
+
+            # Step 2: Authenticate the user (pseudo-code to check password)
+            for key, account in accounts.items():
+                if account.get('password') == password:  # Check if the password matches (implement password hashing for security)
+                    role = account.get('role')
+
+                    # Step 3: Check the role and redirect accordingly
+                    if role == 'admin':
+                        return JsonResponse({'success': True, 'redirect_url': '/admin_dashboard/'})
+                    elif role == 'staff':
+                        return JsonResponse({'success': True, 'redirect_url': '/staff_dashboard/'})
+                    else:
+                        return JsonResponse({'success': False, 'message': 'Invalid role'}, status=403)
+
+            return JsonResponse({'success': False, 'message': 'Invalid email or password'}, status=400)
+        
+        except FirebaseError as e:
+            return JsonResponse({'success': False, 'message': f'Firebase error: {str(e)}'}, status=500)
+        except Exception as e:
+            return JsonResponse({'success': False, 'message': str(e)}, status=500)
+    
+    return JsonResponse({'message': 'Invalid request method'}, status=405)

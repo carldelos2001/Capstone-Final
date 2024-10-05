@@ -2,7 +2,7 @@ import firebase_admin
 from firebase_admin import credentials, db, storage
 
 # Path to your Firebase service account key JSON file
-cred = credentials.Certificate('C:/Users/delos/capstoneproject/lgucapstoneproject/lgucapstone/json/lgucapstoneproject-b94fe-firebase-adminsdk-ksj7j-b3504c4e40.json')
+cred = credentials.Certificate('C:/Users/delos/capstoneproject/lgucapstoneproject/lgucapstone/json/lgucapstoneproject-b94fe-ee26a5eca1f9.json')
 firebase_admin.initialize_app(cred, {
     'databaseURL': 'https://lgucapstoneproject-b94fe-default-rtdb.firebaseio.com',
     'storageBucket': 'lgucapstoneproject-b94fe.appspot.com'

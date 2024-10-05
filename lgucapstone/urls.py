@@ -27,7 +27,18 @@ urlpatterns = [
     path('admin_announcement', views.admin_announcement, name='admin_announcement'),
     path('admin_attendance', views.admin_attendance, name='admin_attendance'),
     path('admin_services', views.admin_services, name='admin_services'),
+    path('admin_staff_account', views.admin_staff_account, name='admin_staff_account'),
+    path('admin_minutesmaker', views.admin_minutesmaker, name='admin_minutesmaker'),
+    path('main_login', views.main_login, name='main_login'),
 
+    path('admin_login_view/', views.admin_login_view, name='admin_login_view'),
+
+    path('staff_announcement', views.staff_announcement, name='staff_announcement'),
+    path('staff_dash', views.staff_dash, name='staff_dash'),
+    path('staff_report', views.staff_report, name='staff_report'),
+    path('staff_services', views.staff_services, name='staff_services'),
+    path('staff_feedback', views.staff_feedback, name='staff_feedback'),
+    path('staff_session', views.staff_session, name='staff_session'),
 
     path('send-otp/', send_otp, name='send_otp'),
     path('verify-otp/', verify_otp, name='verify_otp'),
@@ -43,4 +54,6 @@ urlpatterns = [
     path('get_user_info/', get_user_info, name='get_user_info'),
     path('update_user_info/', update_user_info, name='update_user_info'),
     path('api/submit-requirements/', submit_requirements, name='submit_requirements'),
+    path('get_account_data/', views.get_account_data, name='get_account_data'),
+
 ]
