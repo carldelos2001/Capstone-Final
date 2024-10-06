@@ -217,6 +217,8 @@ def staff_feedback(request):
     return render(request, 'staff_feedback.html')
 def staff_session(request):
     return render(request, 'staff_session.html')
+def admin_serve(request):
+    return render(request, 'admin_serve.html')
 
 
 # >>>> ADMIN LOG IN

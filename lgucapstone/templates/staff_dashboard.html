@@ -41,6 +41,8 @@
       background-color: #f8f9fa;
       padding-top: 20px;
       border-right: 1px solid #ddd;
+      display: flex;
+      flex-direction: column;
     }
     
     .sidebar .logo {
@@ -114,6 +116,17 @@
     .btn.btn-success{
       margin-top: 20px;
     }
+
+    .sidebar-footer {
+      margin-top: auto;
+      padding: 15px 20px;
+      border-top: 1px solid #ddd;
+    }
+
+    .sidebar-footer #welcomeMessage {
+      display: block;
+      margin-bottom: 10px;
+    }
   </style>
 </head>
 <body>
@@ -130,17 +143,16 @@
     <div class="nav-item" onclick="window.location.href='/staff_session'">Session Agenda</div>
     <div class="nav-item" onclick="window.location.href='/staff_announcement'">Announcements Board</div>
     
-    
-    
-    <!-- User Profile -->
-    <div class="user-profile">
-      <img src="{% static 'user_profile.png' %}" alt="User Profile">
-      <span class="ms-2">User Name</span>
+    <div class="sidebar-footer">
+      <span id="welcomeMessage">Staff:</span>
+      <div class="nav-item" onclick="logout()">Log Out</div>
     </div>
   </div>
 
   <!-- Main Content -->
   <div class="main-content">
+
+
     <!-- Charts Section -->
     <div class="row">
       <div class="col-md-6">
@@ -226,6 +238,12 @@
     const db = getDatabase(app);
     const storage = getStorage(app);
     
+    // Retrieve user name from localStorage
+    const userName = localStorage.getItem('userName');
+    if (userName) {
+      document.getElementById('welcomeMessage').textContent = `Staff: ${userName}`;
+    }
+
     // Function to parse the month from a date string (YYYY-MM-DD)
     function getMonthFromDate(dateStr) {
       const date = new Date(dateStr);
@@ -454,6 +472,14 @@
         }
       }
     });
+
+    // Logout function
+    window.logout = function() {
+      // Clear user data from localStorage
+      localStorage.removeItem('userName');
+      // Redirect to login page
+      window.location.href = 'main_login';  // Adjust this URL as needed
+    }
   </script>
 
   <!-- Bootstrap JS -->

@@ -146,8 +146,12 @@
                             if (accountData.password === password) {
                                 // Check user role and redirect accordingly
                                 if (accountData.role === "admin") {
+                                    // Store the user's name in localStorage before redirecting
+                                    localStorage.setItem('userName', accountData.name);
                                     window.location.href = '{% url "admin_dash" %}';
                                 } else if (accountData.role === "staff") {
+                                    // Store the user's name in localStorage before redirecting
+                                    localStorage.setItem('userName', accountData.name);
                                     window.location.href = '{% url "staff_dash" %}';
                                 } else {
                                     window.location.href = '{% url "login" %}';

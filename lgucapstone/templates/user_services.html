@@ -31,152 +31,425 @@
       font-size: 1rem;
     }
 
-  @font-face {
-  font-family: "Poppins";
-  src: url("{% static 'fonts/Poppins-Regular.ttf' %}") format("truetype");
-  }
-
-  @font-face {
-  font-family: "Poppins";
-  src: url("{% static 'fonts/Poppins-Bold.ttf' %}") format("truetype");
-  font-weight: bold;
-  }
-
-  body {
-  font-family: "Poppins", sans-serif;
-  font-size: 1rem;
-  }
-    .search_box1 {
-      display: flex;
-      justify-content: center;
-      margin-top: 20px;
+    @font-face {
+      font-family: "Poppins";
+      src: url("{% static 'fonts/Poppins-Regular.ttf' %}") format("truetype");
     }
 
-    .search_box {
-      width: 60%;
-      padding: 10px;
-      border-radius: 30px;
-      border: 1px solid #ccc;
-      outline: none;
-    }
-
-    .card-title {
-      font-size: 1.5rem;
+    @font-face {
+      font-family: "Poppins";
+      src: url("{% static 'fonts/Poppins-Bold.ttf' %}") format("truetype");
       font-weight: bold;
     }
 
-    .btn-primary {
-      background-color: #52AE77;
-      border-color: #52AE77;
+    body {
+      font-family: "Poppins", sans-serif;
+      font-size: 1rem;
     }
 
-    .btn-primary:hover {
-      background-color: #469961;
-      border-color: #469961;
+    .service-row {
+      margin-top: 30px;
+      margin-bottom: 20px;
+      padding: 15px;
+      border: 1px solid #ddd;
+      border-radius: 5px;
     }
-    
+
+    .service-btn {
+      background-color: #52AE77;
+      color: white;
+      border: none;
+      padding: 10px 15px;
+      border-radius: 5px;
+      cursor: pointer;
+      margin-right: 10px;
+      transition: background-color 0.3s ease;
+    }
+
+    .service-btn:hover {
+      background-color: #469961;
+    }
+
+    .modal {
+      display: none;
+      position: fixed;
+      z-index: 1000;
+      left: 0;
+      top: 0;
+      width: 100%;
+      height: 100%;
+      overflow: auto;
+      background-color: rgba(0,0,0,0.6);
+    }
+
+    .modal-content {
+      background-color: #fefefe;
+      margin: 5% auto;
+      padding: 30px;
+      border: none;
+      border-radius: 8px;
+      width: 90%;
+      max-width: 600px;
+      box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+    }
+
+    .close {
+      color: #aaa;
+      float: right;
+      font-size: 28px;
+      font-weight: bold;
+      transition: color 0.3s ease;
+    }
+
+    .close:hover,
+    .close:focus {
+      color: #333;
+      text-decoration: none;
+      cursor: pointer;
+    }
+
+    #applicationForm {
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+    }
+
+    #applicationForm label {
+      font-weight: bold;
+      margin-bottom: 5px;
+    }
+
+    #applicationForm input,
+    #applicationForm select {
+      padding: 10px;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+      font-size: 1rem;
+      width: 100%;
+    }
+
+    #applicationForm input[type="file"] {
+      border: none;
+      padding: 5px 0;
+    }
+
+    #submitApplicationBtn {
+      background-color: #52AE77;
+      color: white;
+      border: none;
+      padding: 12px 20px;
+      border-radius: 5px;
+      cursor: pointer;
+      font-size: 1rem;
+      transition: background-color 0.3s ease;
+      align-self: flex-start;
+    }
+
+    #submitApplicationBtn:hover {
+      background-color: #469961;
+    }
+
+    .form-group {
+      display: flex;
+      flex-direction: column;
+    }
+
+    .appointment-section {
+      margin-top: 30px;
+      border-top: 1px solid #ddd;
+      padding-top: 20px;
+    }
+
+    .appointment-section h4 {
+      margin-bottom: 15px;
+    }
   </style>
 
   <h1>Services Offered by the Sangguniang Bayan</h1>
   
   <div class="service-row">
-    <h3>Service Title 1</h3>
-    <button class="details-btn">More Details</button>
-    <button class="submit-requirements-btn">Submit Requirements</button>
+    <h3>APPROVAL OF SUBDIVISION/ CONSOLIDATION OF PLANS</h3>
+    <button class="service-btn" onclick="showGuidelines()">View Guidelines</button>
+    <button class="service-btn" onclick="showDocuments()">View Required Documents</button>
+    <button class="service-btn" onclick="showApplicationForm()">Apply for Service</button>
+    <button class="service-btn" onclick="showApplicationStatus()">View Application Status</button>
   </div>
 
-  <div class="service-row">
-    <h3>Service Title 2</h3>
-    <button class="details-btn">More Details</button>
-    <button class="submit-requirements-btn">Submit Requirements</button>
-  </div>
-
-  <!-- Modal for Submitting Requirements -->
-  <div id="submitRequirementsModal" class="modal">
+  <!-- Modal for Guidelines -->
+  <div id="guidelinesModal" class="modal">
     <div class="modal-content">
       <span class="close">&times;</span>
-      <h3>Submit Your Requirements</h3>
+      <h3>Guidelines for Approval of Subdivision/Consolidation of Plans</h3>
+      <ul>
+        <li>Submit all required documents</li>
+        <li>Pay the necessary fees</li>
+        <li>Attend the scheduled appointment</li>
+        <!-- Add more guidelines as needed -->
+      </ul>
+    </div>
+  </div>
 
-      <form id="requirementForm">
-        <label for="fileUpload">Upload Documents</label>
-        <input type="file" id="fileUpload" name="documents" multiple required>
+  <!-- Modal for Required Documents -->
+  <div id="documentsModal" class="modal">
+    <div class="modal-content">
+      <span class="close">&times;</span>
+      <h3>Required Documents for Approval of Subdivision/Consolidation of Plans</h3>
+      <ul>
+        <li>Application Form (6 copies including original)</li>
+        <li>Special Power of Attorney (if applicable)</li>
+        <li>MPDC Certification (as to zoning)</li>
+        <li>DENR Certification (as to Land Status)</li>
+        <li>Certified True Copy of Tax Declaration</li>
+        <li>Certified True Copy of the Title</li>
+        <li>Subdivision Scheme Plan/Sketch Plan</li>
+        <li>Vicinity or Location Map</li>
+        <li>Mode of Acquiring Ownership Document</li>
+        <li>Affidavit of Adjoining Owners</li>
+      </ul>
+    </div>
+  </div>
 
-        <label for="appointmentDate">Set Appointment Date</label>
-        <input type="date" id="appointmentDate" name="appointmentDate" required>
-
-        <label for="appointmentTime">Set Appointment Time</label>
-        <input type="time" id="appointmentTime" name="appointmentTime" required>
-
-        <button type="submit" id="setAppointmentBtn">Set Appointment</button>
+  <!-- Modal for Application Form and Appointment Booking -->
+  <div id="applicationFormModal" class="modal">
+    <div class="modal-content">
+      <span class="close">&times;</span>
+      <h3>Application Form for Approval of Subdivision/Consolidation of Plans</h3>
+      <form id="applicationForm">
+        <div class="form-group">
+          <label for="applicantName">Applicant Name:</label>
+          <input type="text" id="applicantName" name="applicantName" required>
+        </div>
+        
+        <div class="form-group">
+          <label for="applicationType">Application Type:</label>
+          <select id="applicationType" name="applicationType" required>
+            <option value="">Select Application Type</option>
+            <option value="subdivision">Subdivision</option>
+            <option value="consolidation">Consolidation</option>
+          </select>
+        </div>
+        
+        <div class="form-group">
+          <label for="applicationForm">Application Form:</label>
+          <input type="file" id="applicationForm" name="applicationForm" required>
+        </div>
+        
+        <div class="form-group">
+          <label for="specialPowerOfAttorney">Special Power of Attorney (if applicable):</label>
+          <input type="file" id="specialPowerOfAttorney" name="specialPowerOfAttorney">
+        </div>
+        
+        <div class="form-group">
+          <label for="mpdcCertification">MPDC Certification:</label>
+          <input type="file" id="mpdcCertification" name="mpdcCertification" required>
+        </div>
+        
+        <div class="form-group">
+          <label for="denrCertification">DENR Certification:</label>
+          <input type="file" id="denrCertification" name="denrCertification" required>
+        </div>
+        
+        <div class="form-group">
+          <label for="taxDeclaration">Certified True Copy of Tax Declaration:</label>
+          <input type="file" id="taxDeclaration" name="taxDeclaration" required>
+        </div>
+        
+        <div class="form-group">
+          <label for="titleCopy">Certified True Copy of the Title:</label>
+          <input type="file" id="titleCopy" name="titleCopy" required>
+        </div>
+        
+        <div class="form-group">
+          <label for="subdivisionPlan">Subdivision Scheme Plan/Sketch Plan:</label>
+          <input type="file" id="subdivisionPlan" name="subdivisionPlan" required>
+        </div>
+        
+        <div class="form-group">
+          <label for="vicinityMap">Vicinity or Location Map:</label>
+          <input type="file" id="vicinityMap" name="vicinityMap" required>
+        </div>
+        
+        <div class="form-group">
+          <label for="ownershipDocument">Mode of Acquiring Ownership Document:</label>
+          <input type="file" id="ownershipDocument" name="ownershipDocument" required>
+        </div>
+        
+        <div class="form-group">
+          <label for="adjoiningOwnersAffidavit">Affidavit of Adjoining Owners:</label>
+          <input type="file" id="adjoiningOwnersAffidavit" name="adjoiningOwnersAffidavit" required>
+        </div>
+        
+        <div class="appointment-section">
+          <h4>Book Appointment</h4>
+          <div class="form-group">
+            <label for="appointmentDate">Preferred Date:</label>
+            <input type="date" id="appointmentDate" name="appointmentDate" required>
+          </div>
+          
+          <div class="form-group">
+            <label for="appointmentTime">Preferred Time:</label>
+            <input type="time" id="appointmentTime" name="appointmentTime" required>
+          </div>
+        </div>
+        
+        <button type="submit" id="submitApplicationBtn">Submit Application and Book Appointment</button>
       </form>
     </div>
   </div>
 
-  <div class="appointment-status">
-    <h2>Your Appointment</h2>
-    <p>Status: <span id="appointmentStatus">Pending</span></p>
-    <button class="edit-docs-btn">Edit Submitted Documents</button>
+  <!-- Modal for Application Status -->
+  <div id="applicationStatusModal" class="modal">
+    <div class="modal-content">
+      <span class="close">&times;</span>
+      <h3>Application Status</h3>
+      <div id="applicationStatusContent">
+        <!-- Application status will be dynamically populated here -->
+      </div>
+      <button id="cancelAppointmentBtn" style="display: none;">Cancel Appointment</button>
+    </div>
   </div>
 
-  <script>
-    const submitModal = document.getElementById("submitRequirementsModal");
-    const submitBtns = document.querySelectorAll(".submit-requirements-btn");
-    const closeModal = document.querySelector(".close");
-  
-    submitBtns.forEach(btn => {
-      btn.addEventListener("click", function() {
-        submitModal.style.display = "block";
-      });
-    });
-  
-    closeModal.addEventListener("click", function() {
-      submitModal.style.display = "none";
-    });
+  <!-- Firebase SDK -->
+  <script src="https://www.gstatic.com/firebasejs/9.9.1/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.9.1/firebase-storage-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.9.1/firebase-database-compat.js"></script>
 
-    window.addEventListener("click", function(event) {
-      if (event.target === submitModal) {
-        submitModal.style.display = "none";
+  <script>
+    // Initialize Firebase
+    const firebaseConfig = {
+      apiKey: "AIzaSyAMwvUHsWFkTmJyfzuh4DxzOrMYEjcXHvI",
+      authDomain: "lgucapstoneproject-b94fe.firebaseapp.com",
+      databaseURL: "https://lgucapstoneproject-b94fe-default-rtdb.firebaseio.com",
+      projectId: "lgucapstoneproject-b94fe",
+      storageBucket: "lgucapstoneproject-b94fe.appspot.com",
+      messagingSenderId: "984934888272",
+      appId: "1:984934888272:web:e835b8e02ae708629a7255",
+      measurementId: "G-F84YQS756S"
+    };
+
+    firebase.initializeApp(firebaseConfig);
+
+    // Functions to show/hide modals
+    function showModal(modalId) {
+      document.getElementById(modalId).style.display = "block";
+    }
+
+    function hideModal(modalId) {
+      document.getElementById(modalId).style.display = "none";
+    }
+
+    function showGuidelines() {
+      showModal("guidelinesModal");
+    }
+
+    function showDocuments() {
+      showModal("documentsModal");
+    }
+
+    function showApplicationForm() {
+      showModal("applicationFormModal");
+    }
+
+    function showApplicationStatus() {
+      // Fetch and display application status
+      const applicationStatusContent = document.getElementById("applicationStatusContent");
+      applicationStatusContent.innerHTML = "Loading...";
+      
+      // Fetch application status from Firebase
+      const userId = "user123"; // Replace with actual user ID
+      firebase.database().ref('applications/' + userId).once('value').then((snapshot) => {
+        const data = snapshot.val();
+        if (data) {
+          applicationStatusContent.innerHTML = `
+            <p><strong>Status:</strong> ${data.status}</p>
+            <p><strong>Application Date:</strong> ${data.applicationDate}</p>
+            <p><strong>Appointment Date:</strong> ${data.appointmentDate}</p>
+            <p><strong>Appointment Time:</strong> ${data.appointmentTime}</p>
+          `;
+          document.getElementById("cancelAppointmentBtn").style.display = "block";
+        } else {
+          applicationStatusContent.innerHTML = "No application found.";
+        }
+      }).catch((error) => {
+        console.error("Error fetching application status:", error);
+        applicationStatusContent.innerHTML = "Error fetching application status.";
+      });
+      
+      showModal("applicationStatusModal");
+    }
+
+    // Close modal when clicking on <span> (x)
+    document.querySelectorAll(".close").forEach(function(closeBtn) {
+      closeBtn.onclick = function() {
+        this.closest(".modal").style.display = "none";
       }
     });
 
-    document.getElementById("setAppointmentBtn").addEventListener("click", function() {
-    const files = document.getElementById("fileUpload").files;
-    const date = document.getElementById("appointmentDate").value;
-    const time = document.getElementById("appointmentTime").value;
-
-    if (!date || !time || files.length === 0) {
-        alert("Please fill all fields and upload your documents.");
-        return;
+    // Close modal when clicking outside of it
+    window.onclick = function(event) {
+      if (event.target.classList.contains("modal")) {
+        event.target.style.display = "none";
+      }
     }
 
-    // Prepare FormData to send files and other data
-    const formData = new FormData();
-    formData.append('date', date);
-    formData.append('time', time);
-    for (let i = 0; i < files.length; i++) {
-        formData.append('files', files[i]); // Append files to formData
-    }
+    // Handle application form submission
+    document.getElementById("applicationForm").addEventListener("submit", function(e) {
+      e.preventDefault();
+      
+      const formData = new FormData(this);
+      const applicationData = {
+        applicantName: formData.get('applicantName'),
+        applicationType: formData.get('applicationType'),
+        applicationDate: new Date().toISOString(),
+        appointmentDate: formData.get('appointmentDate'),
+        appointmentTime: formData.get('appointmentTime'),
+        status: 'Pending'
+      };
 
-    // Send data to the backend
-    fetch('/api/submit-requirements/', {
-        method: 'POST',
-        body: formData
-    })
-    .then(response => response.json())
-    .then(data => {
-        if (data.status === 'success') {
-            alert(data.message);
-            submitModal.style.display = "none";
-            document.getElementById("appointmentStatus").textContent = "Pending";
-        } else {
-            alert('Error: ' + data.message);
+      // Save application data to Firebase
+      const userId = "user123"; // Replace with actual user ID
+      firebase.database().ref('applications/' + userId).set(applicationData)
+        .then(() => {
+          console.log("Application data saved successfully");
+          alert("Application submitted and appointment booked successfully!");
+          hideModal("applicationFormModal");
+        })
+        .catch((error) => {
+          console.error("Error saving application data:", error);
+          alert("Error submitting application. Please try again.");
+        });
+
+      // Upload files to Firebase Storage
+      const fileInputs = ['applicationForm', 'specialPowerOfAttorney', 'mpdcCertification', 'denrCertification', 'taxDeclaration', 'titleCopy', 'subdivisionPlan', 'vicinityMap', 'ownershipDocument', 'adjoiningOwnersAffidavit'];
+      
+      fileInputs.forEach(inputId => {
+        const file = document.getElementById(inputId).files[0];
+        if (file) {
+          const storageRef = firebase.storage().ref('applications/' + userId + '/' + inputId);
+          storageRef.put(file).then((snapshot) => {
+            console.log('Uploaded file:', inputId);
+          }).catch((error) => {
+            console.error('Error uploading file:', inputId, error);
+          });
         }
-    })
-    .catch(error => {
-        console.error('Error:', error);
-        alert('There was an error submitting your requirements.');
+      });
     });
-});
+
+    // Handle appointment cancellation
+    document.getElementById("cancelAppointmentBtn").addEventListener("click", function() {
+      if (confirm("Are you sure you want to cancel your appointment?")) {
+        const userId = "user123"; // Replace with actual user ID
+        firebase.database().ref('applications/' + userId).remove()
+          .then(() => {
+            alert("Appointment cancelled successfully!");
+            hideModal("applicationStatusModal");
+          })
+          .catch((error) => {
+            console.error("Error cancelling appointment:", error);
+            alert("Error cancelling appointment. Please try again.");
+          });
+      }
+    });
 
   </script>
 

@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Office of the Sangguniang Bayan</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            padding: 20px;
+            border: 1px solid #ccc;
+            border-radius: 10px;
+            background-color: #f9f9f9;
+        }
+        h1, h2 {
+            text-align: center;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+        th, td {
+            border: 1px solid #ccc;
+            padding: 8px;  /* Adjusted padding for better fitting */
+            text-align: left;
+        }
+        th {
+            background-color: #e9e9e9;
+        }
+        /* Style for the print button */
+        .print-button {
+            display: block;
+            margin: 20px auto;
+            padding: 10px 20px;
+            font-size: 16px;
+            background-color: #007bff;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        .print-button:hover {
+            background-color: #0056b3;
+        }
+        
+        @media print {
+            body {
+                margin: 0;  /* Remove margins for print */
+                padding: 0;  /* Remove padding for print */
+            }
+            table {
+                page-break-inside: avoid;  /* Avoid breaking tables */
+            }
+            .print-button {
+                display: none;  /* Hide the print button during printing */
+            }
+            h1, h2 {
+                font-size: 20px;  /* Adjust font size for headers */
+            }
+            th, td {
+                font-size: 12px;  /* Adjust font size for table content */
+                padding: 5px;  /* Reduce padding for tables */
+            }
+        }
+    </style>
+</head>
+<body>
+    <h1>Office of the Sangguniang Bayan</h1>
+    <h2>Checklist of Requirements</h2>
+    
+    <table>
+        <tr>
+            <th>CLASSIFICATION</th>
+            <td>Simple</td>
+        </tr>
+        <tr>
+            <th>TYPE OF TRANSACTION</th>
+            <td>G2G: Government to Government; G2B: Government to Business; G2C: Government to Client</td>
+        </tr>
+        <tr>
+            <th>WHO MAY AVAIL THE SERVICE</th>
+            <td>Anyone (private or public sector) including companies and other judicial persons</td>
+        </tr>
+    </table>
+
+    <table>
+        <tr>
+            <th>CHECKLIST OF REQUIREMENTS</th>
+            <th>WHERE TO SECURE</th>
+        </tr>
+        <tr>
+            <td>Letter Request signed by requesting party indicating the purpose (if the requesting party is a government entity)</td>
+            <td>Client/Requesting Party</td>
+        </tr>
+        <tr>
+            <td>For private requesting party - no requirement except Official Receipt as proof of payment of Secretary's Fee</td>
+            <td>Municipal Treasurer's Office</td>
+        </tr>
+    </table>
+
+    <table>
+        <tr>
+            <th>CLIENT STEPS</th>
+            <th>AGENCY ACTION</th>
+            <th>FEES TO BE PAID</th>
+            <th>PROCESSING TIME</th>
+            <th>PERSON RESPONSIBLE</th>
+        </tr>
+        <tr>
+            <td>Fill up request form and submit it to the office. (Make sure to indicate if the request is from government)</td>
+            <td>Review the accomplished Request</td>
+            <td>None</td>
+            <td>15 mins</td>
+            <td>SB Secretary or Staff</td>
+        </tr>
+        <tr>
+            <td>Records Verification as to the availability; Retrieve requested documents</td>
+            <td>None</td>
+            <td>None</td>
+            <td>15 mins</td>
+            <td>SB Secretary or Staff</td>
+        </tr>
+        <tr>
+            <td>Payment</td>
+            <td>Endorsed Client/Requesting Party to the Mun. Treasurer's Office</td>
+            <td>₱25.00 for first 2 pages & ₱10.00 for subsequent pages</td>
+            <td>15 mins</td>
+            <td>Revenue Collecting Clerk of the Treasurer's Office</td>
+        </tr>
+    </table>
+
+    <!-- Print Button -->
+    <button class="print-button" onclick="window.print();">Print this page</button>
+
+    <script>
+        // Optional: You can add any custom print styles here
+        window.onbeforeprint = function() {
+            document.body.classList.add('printing');
+        };
+        window.onafterprint = function() {
+            document.body.classList.remove('printing');
+        };
+    </script>
+</body>
+</html>

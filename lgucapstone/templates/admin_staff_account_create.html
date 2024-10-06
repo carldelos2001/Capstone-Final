@@ -29,16 +29,28 @@
   font-family: "Poppins", sans-serif;
   font-size: 1rem;
   }
-    .sidebar {
-      position: fixed;
-      top: 0;
-      left: 0;
-      height: 100%;
-      width: 250px;
-      background-color: #f8f9fa;
-      padding-top: 20px;
-      border-right: 1px solid #ddd;
+  .sidebar-footer {
+      margin-top: auto;
+      padding: 15px 20px;
+      border-top: 1px solid #ddd;
     }
+
+    .sidebar-footer #welcomeMessage {
+      display: block;
+      margin-bottom: 10px;
+    }
+  .sidebar {
+    position: fixed;
+    top: 0;
+    left: 0;
+    height: 100%;
+    width: 250px;
+    background-color: #f8f9fa;
+    padding-top: 20px;
+    border-right: 1px solid #ddd;
+    display: flex;
+    flex-direction: column;
+  }
     
     .sidebar .logo {
       text-align: center;
@@ -140,16 +152,19 @@
         <div class="nav-item" onclick="window.location.href='/admin_promanage'">Project Management</div>
         <div class="nav-item" onclick="window.location.href='/admin_staff_account'">Staff Account Management</div>
         <div class="nav-item" onclick="window.location.href='/admin_minutesmaker'">Minutes Maker</div>
+        <div class="sidebar-footer">
+          <span id="welcomeMessage">Staff:</span>
+          <div class="nav-item" onclick="logout()">Log Out</div>
+        </div>
+    
+
       </div>
 
       <!-- Main Content -->
       <main class="col-md-10 ms-sm-auto col-lg-10 px-4">
         <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
           <h1 class="h2">Staff Account Management</h1>
-          <div class="user-profile d-flex align-items-center">
-            <img src="{% static 'user_profile.png' %}" alt="User Profile" class="img-fluid rounded-circle" style="width: 40px;">
-            <span class="ms-2">User Name</span>
-          </div>
+          
         </div>
 
         <!-- Add Account Button -->
@@ -237,7 +252,13 @@
      // Initialize Firebase
      const app = initializeApp(firebaseConfig);
      const database = getDatabase(app);
- 
+     
+
+     // Retrieve user name from localStorage
+     const userName = localStorage.getItem('userName');
+     if (userName) {
+       document.getElementById('welcomeMessage').textContent = ` ${userName}`;
+     }
      // Staff management logic
      document.addEventListener('DOMContentLoaded', function() {
        const accountForm = document.getElementById('accountForm');
@@ -368,6 +389,15 @@
          return Object.values(accounts).some(account => account.email === email);
        }
      });
+
+     // Logout function
+window.logout = function() {
+      // Clear user data from localStorage
+      localStorage.removeItem('userName');
+      // Redirect to login page
+      window.location.href = 'main_login';  // Adjust this URL as needed
+    }
+
    </script>
 </body>
 </html>

@@ -30,14 +30,14 @@
     <div class="nav-item" onclick="window.location.href='/admin_promanage'">Project Management</div>
     <div class="nav-item" onclick="window.location.href='/admin_staff_account'">Staff Account Management</div>
     <div class="nav-item" onclick="window.location.href='/admin_minutesmaker'">Minutes Maker</div>
+    <div class="sidebar-footer">
+      <span id="welcomeMessage">Staff:</span>
+      <div class="nav-item" onclick="logout()">Log Out</div>
+    </div>
+
   </div>
 
-  <!-- User Profile -->
-  <div class="user-profile">
-    <img src="{% static 'user_profile.png' %}" alt="User Profile">
-    <span class="ms-2">User Name</span>
-  </div>
-
+ 
   <!-- Main Content -->
   <div class="main-content">
     <div class="container mt-4">
@@ -149,6 +149,12 @@
     firebase.initializeApp(firebaseConfig);
     var db = firebase.database();
 
+
+    // Retrieve user name from localStorage
+    const userName = localStorage.getItem('userName');
+    if (userName) {
+      document.getElementById('welcomeMessage').textContent = ` ${userName}`;
+    }
     // Budget Input Formatting
     document.getElementById('project-budget').addEventListener('input', function (e) {
       let value = e.target.value.replace(/,/g, '');
@@ -310,6 +316,13 @@ document.getElementById('search-bar').addEventListener('input', function() {
   });
 });
 
+// Logout function
+window.logout = function() {
+      // Clear user data from localStorage
+      localStorage.removeItem('userName');
+      // Redirect to login page
+      window.location.href = 'main_login';  // Adjust this URL as needed
+    }
 
 
 
@@ -332,6 +345,16 @@ document.getElementById('search-bar').addEventListener('input', function() {
   font-family: "Poppins", sans-serif;
   font-size: 1rem;
   }
+  .sidebar-footer {
+      margin-top: auto;
+      padding: 15px 20px;
+      border-top: 1px solid #ddd;
+    }
+
+    .sidebar-footer #welcomeMessage {
+      display: block;
+      margin-bottom: 10px;
+    }
   .sidebar {
     position: fixed;
     top: 0;
@@ -341,6 +364,8 @@ document.getElementById('search-bar').addEventListener('input', function() {
     background-color: #f8f9fa;
     padding-top: 20px;
     border-right: 1px solid #ddd;
+    display: flex;
+    flex-direction: column;
   }
 
   .sidebar .logo {

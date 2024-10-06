@@ -23,16 +23,28 @@
   font-family: "Poppins", sans-serif;
   font-size: 1rem;
   }
-        .sidebar {
-      position: fixed;
-      top: 0;
-      left: 0;
-      height: 100%;
-      width: 250px;
-      background-color: #f8f9fa; /* This is a light gray color, not blue */
-      padding-top: 20px;
-      border-right: 1px solid #ddd;
+  .sidebar-footer {
+      margin-top: auto;
+      padding: 15px 20px;
+      border-top: 1px solid #ddd;
     }
+
+    .sidebar-footer #welcomeMessage {
+      display: block;
+      margin-bottom: 10px;
+    }
+  .sidebar {
+    position: fixed;
+    top: 0;
+    left: 0;
+    height: 100%;
+    width: 250px;
+    background-color: #f8f9fa;
+    padding-top: 20px;
+    border-right: 1px solid #ddd;
+    display: flex;
+    flex-direction: column;
+  }
     
     .sidebar .logo {
       text-align: center;
@@ -118,69 +130,255 @@
         <div class="nav-item" onclick="window.location.href='/staff_feedback'">Feedbacks</div>
         <div class="nav-item" onclick="window.location.href='/staff_session'">Session Agenda</div>
         <div class="nav-item" onclick="window.location.href='/staff_announcement'">Announcements Board</div>
+
+        <div class="sidebar-footer">
+            <span id="welcomeMessage">Staff:</span>
+            <div class="nav-item" onclick="logout()">Log Out</div>
+          </div>   
     </div>
 
-    <div class="user-profile">
-        <img src="{% static 'user_profile.png' %}" alt="User Profile">
-        <span class="ms-2">Staff</span>
-    </div>
+    
 
     <main class="container-fluid" style="margin-left: 250px;"> <!-- Adjust for sidebar width -->
         <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
             <h1 class="h2">Announcements Board</h1>
-            <div class="user-profile">
-                <img src="{% static 'user_profile.png' %}" alt="User Profile" class="img-fluid rounded-circle">
-                <span class="ms-2">Staff</span>
-            </div>
+            
         </div>
 
         <div class="container mt-4">
             <div class="add-announcement">
                 <h4>Add New Announcement</h4>
-                <form id="addAnnouncementForm" method="post" enctype="multipart/form-data">
-                    {% csrf_token %}
+                <form id="addAnnouncementForm">
                     <div class="form-group">
                         <label for="announcementTitle">Title</label>
-                        <input type="text" class="form-control" id="announcementTitle" name="title" placeholder="Enter title of the ordinance/resolution" required>
+                        <input type="text" class="form-control" id="announcementTitle" placeholder="Enter title of the ordinance/resolution" required>
                     </div>
                     <div class="form-group">
                         <label for="announcementContent">Content</label>
-                        <textarea class="form-control" id="announcementContent" name="content" rows="4" placeholder="Enter the announcement details" required></textarea>
+                        <textarea class="form-control" id="announcementContent" rows="4" placeholder="Enter the announcement details" required></textarea>
                     </div>
                     <div class="form-group">
                         <label for="announcementDocument">Attach Document (optional)</label>
-                        <input type="file" class="form-control-file" id="announcementDocument" name="document">
+                        <input type="file" class="form-control-file" id="announcementDocument">
                     </div>
                     <button type="submit" class="btn btn-primary">Post Announcement</button>
                 </form>
             </div>
 
             <!-- Dynamic Announcement Cards -->
-            {% for announcement in announcements %}
-            <div class="announcement-card">
-                <div class="header">
-                    <h5>{{ announcement.title }}</h5>
-                    <div class="actions">
-                        <button class="edit-btn" data-id="{{ announcement.id }}">Edit</button>
-                        <button class="delete-btn" data-id="{{ announcement.id }}">Delete</button>
-                    </div>
-                </div>
-                <p class="content mt-3">{{ announcement.content }}</p>
-                <small class="text-muted">Posted on {{ announcement.created_at|date:"F d, Y" }}</small>
-                {% if announcement.document %}
-                    <div class="mt-2">
-                        <a href="{{ announcement.document.url }}" target="_blank">View Attached Document</a>
-                    </div>
-                {% endif %}
+            <div id="announcementsList">
+                <!-- Announcements will be dynamically added here -->
             </div>
-            {% empty %}
-            <p>No announcements available.</p>
-            {% endfor %}
         </div>
     </main>
+
+    <!-- Edit Announcement Modal -->
+    <div class="modal fade" id="editAnnouncementModal" tabindex="-1" role="dialog" aria-labelledby="editAnnouncementModalLabel" aria-hidden="true">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="editAnnouncementModalLabel">Edit Announcement</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <form id="editAnnouncementForm">
+                        <input type="hidden" id="editAnnouncementId">
+                        <div class="form-group">
+                            <label for="editAnnouncementTitle">Title</label>
+                            <input type="text" class="form-control" id="editAnnouncementTitle" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="editAnnouncementContent">Content</label>
+                            <textarea class="form-control" id="editAnnouncementContent" rows="4" required></textarea>
+                        </div>
+                        <div class="form-group">
+                            <label for="editAnnouncementDocument">Attach New Document (optional)</label>
+                            <input type="file" class="form-control-file" id="editAnnouncementDocument">
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+                    <button type="button" class="btn btn-primary" onclick="updateAnnouncement()">Save changes</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Firebase SDK -->
+    <script src="https://www.gstatic.com/firebasejs/9.9.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.9.1/firebase-database-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.9.1/firebase-storage-compat.js"></script>
 
     <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.9.3/dist/umd/popper.min.js"></script>
     <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+
+    <script>
+        // Initialize Firebase
+        const firebaseConfig = {
+            apiKey: "AIzaSyAMwvUHsWFkTmJyfzuh4DxzOrMYEjcXHvI",
+            authDomain: "lgucapstoneproject-b94fe.firebaseapp.com",
+            databaseURL: "https://lgucapstoneproject-b94fe-default-rtdb.firebaseio.com",
+            projectId: "lgucapstoneproject-b94fe",
+            storageBucket: "lgucapstoneproject-b94fe.appspot.com",
+            messagingSenderId: "984934888272",
+            appId: "1:984934888272:web:e835b8e02ae708629a7255",
+            measurementId: "G-F84YQS756S"
+        };
+
+        firebase.initializeApp(firebaseConfig);
+        const db = firebase.database();
+        const storage = firebase.storage();
+
+        // Retrieve user name from localStorage
+        const userName = localStorage.getItem('userName');
+        if (userName) {
+        document.getElementById('welcomeMessage').textContent = `Staff: ${userName}`;
+        }
+
+        // Handle form submission
+        document.getElementById('addAnnouncementForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const title = document.getElementById('announcementTitle').value;
+            const content = document.getElementById('announcementContent').value;
+            const file = document.getElementById('announcementDocument').files[0];
+
+            // Save announcement to Firebase
+            const newAnnouncementRef = db.ref('announcements').push();
+            const announcementData = {
+                title: title,
+                content: content,
+                createdAt: firebase.database.ServerValue.TIMESTAMP
+            };
+
+            if (file) {
+                const storageRef = storage.ref('announcements/' + file.name);
+                storageRef.put(file).then((snapshot) => {
+                    return snapshot.ref.getDownloadURL();
+                }).then((downloadURL) => {
+                    announcementData.documentUrl = downloadURL;
+                    return newAnnouncementRef.set(announcementData);
+                }).then(() => {
+                    alert('Announcement posted successfully!');
+                    document.getElementById('addAnnouncementForm').reset();
+                }).catch((error) => {
+                    console.error('Error uploading file:', error);
+                    alert('Error posting announcement. Please try again.');
+                });
+            } else {
+                newAnnouncementRef.set(announcementData).then(() => {
+                    alert('Announcement posted successfully!');
+                    document.getElementById('addAnnouncementForm').reset();
+                }).catch((error) => {
+                    console.error('Error posting announcement:', error);
+                    alert('Error posting announcement. Please try again.');
+                });
+            }
+        });
+
+        // Load and display announcements
+        function loadAnnouncements() {
+            const announcementsList = document.getElementById('announcementsList');
+            db.ref('announcements').on('value', (snapshot) => {
+                announcementsList.innerHTML = '';
+                snapshot.forEach((childSnapshot) => {
+                    const announcement = childSnapshot.val();
+                    const announcementHtml = `
+                        <div class="announcement-card">
+                            <div class="header">
+                                <h5>${announcement.title}</h5>
+                                <div class="actions">
+                                    <button class="edit-btn" onclick="openEditModal('${childSnapshot.key}')">Edit</button>
+                                    <button class="delete-btn" onclick="deleteAnnouncement('${childSnapshot.key}')">Delete</button>
+                                </div>
+                            </div>
+                            <p class="content mt-3">${announcement.content}</p>
+                            <small class="text-muted">Posted on ${new Date(announcement.createdAt).toLocaleDateString()}</small>
+                            ${announcement.documentUrl ? `<div class="mt-2"><a href="${announcement.documentUrl}" target="_blank">View Attached Document</a></div>` : ''}
+                        </div>
+                    `;
+                    announcementsList.insertAdjacentHTML('beforeend', announcementHtml);
+                });
+            });
+        }
+
+        // Open edit modal
+        function openEditModal(announcementId) {
+            db.ref('announcements/' + announcementId).once('value').then((snapshot) => {
+                const announcement = snapshot.val();
+                document.getElementById('editAnnouncementId').value = announcementId;
+                document.getElementById('editAnnouncementTitle').value = announcement.title;
+                document.getElementById('editAnnouncementContent').value = announcement.content;
+                $('#editAnnouncementModal').modal('show');
+            });
+        }
+
+        // Update announcement function
+        function updateAnnouncement() {
+            const announcementId = document.getElementById('editAnnouncementId').value;
+            const title = document.getElementById('editAnnouncementTitle').value;
+            const content = document.getElementById('editAnnouncementContent').value;
+            const file = document.getElementById('editAnnouncementDocument').files[0];
+            
+            const updateData = {
+                title: title,
+                content: content,
+                updatedAt: firebase.database.ServerValue.TIMESTAMP
+            };
+
+            if (file) {
+                const storageRef = storage.ref('announcements/' + file.name);
+                storageRef.put(file).then((snapshot) => {
+                    return snapshot.ref.getDownloadURL();
+                }).then((downloadURL) => {
+                    updateData.documentUrl = downloadURL;
+                    return db.ref('announcements/' + announcementId).update(updateData);
+                }).then(() => {
+                    alert('Announcement updated successfully!');
+                    $('#editAnnouncementModal').modal('hide');
+                }).catch((error) => {
+                    console.error('Error updating announcement:', error);
+                    alert('Error updating announcement. Please try again.');
+                });
+            } else {
+                db.ref('announcements/' + announcementId).update(updateData).then(() => {
+                    alert('Announcement updated successfully!');
+                    $('#editAnnouncementModal').modal('hide');
+                }).catch((error) => {
+                    console.error('Error updating announcement:', error);
+                    alert('Error updating announcement. Please try again.');
+                });
+            }
+        }
+
+        // Delete announcement function
+        function deleteAnnouncement(announcementId) {
+            if (confirm('Are you sure you want to delete this announcement?')) {
+                db.ref('announcements/' + announcementId).remove()
+                    .then(() => {
+                        alert('Announcement deleted successfully!');
+                    })
+                    .catch((error) => {
+                        console.error('Error deleting announcement:', error);
+                        alert('Error deleting announcement. Please try again.');
+                    });
+            }
+        }
+
+        // Load announcements when the page loads
+        document.addEventListener('DOMContentLoaded', loadAnnouncements);
+
+        // Logout function
+window.logout = function() {
+      // Clear user data from localStorage
+      localStorage.removeItem('userName');
+      // Redirect to login page
+      window.location.href = 'main_login';  // Adjust this URL as needed
+    }
+    </script>
 </body>
 </html>

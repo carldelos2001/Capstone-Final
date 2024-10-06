@@ -30,6 +30,7 @@ urlpatterns = [
     path('admin_staff_account', views.admin_staff_account, name='admin_staff_account'),
     path('admin_minutesmaker', views.admin_minutesmaker, name='admin_minutesmaker'),
     path('main_login', views.main_login, name='main_login'),
+    path('admin_serve', views.admin_serve, name='admin_serve'),
 
     path('admin_login_view/', views.admin_login_view, name='admin_login_view'),
 

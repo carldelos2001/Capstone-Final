@@ -21,6 +21,10 @@
     .header-menu-item{
       font-family: 'Poppins', sans-serif;
     }
+
+    .card{
+      margin-top: 100px;
+    }
    
   </style>
 </head>
@@ -39,26 +43,62 @@
     <label class="header-menu-item selected" id="announcement">Announcement</label>
   </div>
 
-  
-  
-  <input class="search_box" type="search" placeholder="Search Announcement...">
-  
-  
+  <!-- Announcements Container -->
+  <div id="announcementsList" class="container mt-4">
+    <!-- Announcements will be dynamically added here -->
+  </div>
 
   <script src="{% static 'user_announcement.js' %}"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.9.1/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.9.1/firebase-database-compat.js"></script>
   <script>
+    // Firebase configuration
+    const firebaseConfig = {
+      apiKey: "AIzaSyAMwvUHsWFkTmJyfzuh4DxzOrMYEjcXHvI",
+      authDomain: "lgucapstoneproject-b94fe.firebaseapp.com",
+      databaseURL: "https://lgucapstoneproject-b94fe-default-rtdb.firebaseio.com",
+      projectId: "lgucapstoneproject-b94fe",
+      storageBucket: "lgucapstoneproject-b94fe.appspot.com",
+      messagingSenderId: "984934888272",
+      appId: "1:984934888272:web:e835b8e02ae708629a7255",
+      measurementId: "G-F84YQS756S"
+    };
 
+    // Initialize Firebase
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.database();
+
+    // Load and display announcements
+    function loadAnnouncements() {
+      const announcementsList = document.getElementById('announcementsList');
+      db.ref('announcements').on('value', (snapshot) => {
+        announcementsList.innerHTML = '';
+        snapshot.forEach((childSnapshot) => {
+          const announcement = childSnapshot.val();
+          const announcementHtml = `
+            <div class="card mb-4">
+              <div class="card-body">
+                <h5 class="card-title">${announcement.title}</h5>
+                <p class="card-text">${announcement.content}</p>
+                <p class="card-text"><small class="text-muted">Posted on ${new Date(announcement.createdAt).toLocaleDateString()}</small></p>
+                ${announcement.documentUrl ? `<a href="${announcement.documentUrl}" class="btn btn-primary" target="_blank">View Attached Document</a>` : ''}
+              </div>
+            </div>
+          `;
+          announcementsList.insertAdjacentHTML('beforeend', announcementHtml);
+        });
+      });
+    }
+
+    // Navigation event listeners
     document.getElementById('home1').addEventListener('click', function() {
-      
       window.location.href = '/home';
     });
 
     document.getElementById('home').addEventListener('click', function() {
-      console.log('Home clicked');
       window.location.href = '/home';
     });
     document.getElementById('ordinances').addEventListener('click', function() {
-      console.log
       window.location.href = '/user_ordinance';
     });
     document.getElementById('resolutions').addEventListener('click', function() {
@@ -70,7 +110,9 @@
     document.getElementById('announcement').addEventListener('click', function() {
       window.location.href = '/user_announcement';
     });
-  
+
+    // Load announcements when the page loads
+    document.addEventListener('DOMContentLoaded', loadAnnouncements);
   </script>
 </body>
 </html>
