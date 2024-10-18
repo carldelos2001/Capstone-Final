@@ -129,6 +129,32 @@
   </style>
 </head>
 <body>
+  <style>
+    /* Add this style for the scrollbar */
+    ::-webkit-scrollbar {
+      width: 10px;
+    }
+
+    ::-webkit-scrollbar-track {
+      background: #f1f1f1;
+    }
+
+    ::-webkit-scrollbar-thumb {
+      background: #888;
+    }
+
+    ::-webkit-scrollbar-thumb:hover {
+      background: #555;
+    }
+
+    /* Add this style to limit the title content */
+    .truncate-title {
+      max-width: 200px; /* Adjust this value as needed */
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+  </style>
   
   <!-- Sidebar -->
   <div class="sidebar">
@@ -139,7 +165,7 @@
     <div class="nav-item" onclick="window.location.href='/admin_report'">Reports</div>
     <div class="nav-item" onclick="window.location.href='/admin_services'">Services</div>
     <div class="nav-item" onclick="window.location.href='/admin_feedback'">Feedbacks</div>
-    <div class="nav-item" onclick="window.location.href='/admin_announcement'">Session Agenda</div>
+    <div class="nav-item" onclick="window.location.href='/admin_announcement'">Session Notice</div>
     <div class="nav-item" onclick="window.location.href='/admin_attendance'">Attendance</div>
     <div class="nav-item" onclick="window.location.href='/admin_promanage'">Project Management</div>
     <div class="nav-item" onclick="window.location.href='/admin_staff_account'">Staff Account Management</div>
@@ -211,7 +237,10 @@
             <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
           </div>
           <div class="modal-body">
-            <iframe id="previewFrame" width="100%" height="500px" frameborder="0"></iframe>
+            <div id="documentPreview" class="preview-container">
+              <!-- Document content will be displayed here -->
+              <iframe id="previewFrame" style="width: 100%; height: 500px; border: none;"></iframe>
+            </div>
           </div>
         </div>
       </div>
@@ -244,7 +273,7 @@
     // Retrieve user name from localStorage
     const userName = localStorage.getItem('userName');
     if (userName) {
-      document.getElementById('welcomeMessage').textContent = ` ${userName}`;
+      document.getElementById('welcomeMessage').textContent = `Admin: ${userName}`;
     }
 
     // Function to parse the month from a date string (YYYY-MM-DD)
@@ -339,7 +368,7 @@
       Object.entries(data).forEach(([key, item]) => {
         const row = `
           <tr id="row-${key}">
-            <td>${item.title || 'No Title'}</td>
+            <td><div class="truncate-title" title="${item.title || 'No Title'}">${item.title || 'No Title'}</div></td>
             <td>${item.author || 'No Author'}</td>
             <td>${item.date_approved || 'No Date'}</td>
             <td>
@@ -356,7 +385,8 @@
     // Preview document
     window.previewDocument = function(url) {
       const previewFrame = document.getElementById('previewFrame');
-      previewFrame.src = url;
+      // Use Google Docs Viewer to preview the document
+      previewFrame.src = `https://docs.google.com/viewer?url=${encodeURIComponent(url)}&embedded=true`;
       const previewModal = new bootstrap.Modal(document.getElementById('previewModal'));
       previewModal.show();
     }

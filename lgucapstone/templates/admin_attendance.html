@@ -73,7 +73,7 @@
     }
     
     .main-content {
-      margin-left: 250px;
+      
       padding: 20px;
     }
     
@@ -127,6 +127,28 @@
   </style>
 </head>
 <body>
+  <style>
+    
+    ::-webkit-scrollbar {
+      width: 10px;
+    }
+
+    ::-webkit-scrollbar-track {
+      background: #f1f1f1;
+    }
+
+    ::-webkit-scrollbar-thumb {
+      background: #888;
+    }
+
+    ::-webkit-scrollbar-thumb:hover {
+      background: #555;
+    }
+    .btn-secondary{
+      background-color: #888;
+      border: #888;
+    }
+  </style>
   <div class="sidebar">
     <div class="logo">
       <img src="{% static 'argao_logo.jpg' %}" alt="Logo">
@@ -135,7 +157,7 @@
     <div class="nav-item" onclick="window.location.href='/admin_report'">Reports</div>
     <div class="nav-item" onclick="window.location.href='/admin_services'">Services</div>
     <div class="nav-item" onclick="window.location.href='/admin_feedback'">Feedbacks</div>
-    <div class="nav-item" onclick="window.location.href='/admin_announcement'">Session Agenda</div>
+    <div class="nav-item" onclick="window.location.href='/admin_announcement'">Session Notice</div>
     <div class="nav-item" onclick="window.location.href='/admin_attendance'">Attendance</div>
     <div class="nav-item" onclick="window.location.href='/admin_promanage'">Project Management</div>
     <div class="nav-item" onclick="window.location.href='/admin_staff_account'">Staff Account Management</div>
@@ -162,7 +184,6 @@
             <tr>
               <th>Name</th>
               <th>Status</th>
-              <th>Action</th>
             </tr>
           </thead>
           <tbody id="attendance-table-body">
@@ -172,25 +193,14 @@
       </div>
 
       <button type="button" class="btn btn-primary" onclick="addPerson()">Add Person</button>
-      <button type="button" class="btn btn-primary" onclick="submitAttendance()">Submit Attendance</button>
+      <button type="button" class="btn btn-secondary"  onclick="submitAttendance()">Submit Attendance</button>
     </div>
 
     <!-- Printable Attendance Report -->
     <div class="container mt-5">
       <h3>Attendance Report</h3>
       <div id="attendance-report" class="table-responsive">
-        <table class="table table-bordered">
-          <thead>
-            <tr>
-              <th>Session Date</th>
-              <th>Name</th>
-              <th>Status</th>
-            </tr>
-          </thead>
-          <tbody id="report-table-body">
-            <!-- Report rows will be added dynamically -->
-          </tbody>
-        </table>
+        <!-- Report tables will be added dynamically -->
       </div>
       <button type="button" class="btn btn-primary" onclick="printReport()">Print Report</button>
     </div>
@@ -221,7 +231,7 @@
     // Retrieve user name from localStorage
     const userName = localStorage.getItem('userName');
     if (userName) {
-      document.getElementById('welcomeMessage').textContent = ` ${userName}`;
+      document.getElementById('welcomeMessage').textContent = `Admin: ${userName}`;
     }
 
     document.addEventListener('DOMContentLoaded', function() {
@@ -257,7 +267,6 @@
             <option value="absent">Absent</option>
           </select>
         </td>
-        <td><button type="button" class="btn btn-delete" onclick="deleteRow(this)">Delete</button></td>
       `;
       
       tableBody.appendChild(row);
@@ -267,11 +276,6 @@
       const tableBody = document.getElementById('attendance-table-body');
       const rowCount = tableBody.rows.length;
       addRow(rowCount + 1);
-    }
-
-    function deleteRow(button) {
-      const row = button.closest('tr');
-      row.remove();
     }
 
     function submitAttendance() {
@@ -302,38 +306,124 @@
     }
 
     function loadAttendanceReport() {
-      const reportTableBody = document.getElementById('report-table-body');
-      reportTableBody.innerHTML = ''; // Clear existing rows
+      const reportContainer = document.getElementById('attendance-report');
+      reportContainer.innerHTML = ''; // Clear existing content
 
       db.ref('attendance').once('value', (snapshot) => {
+        const attendanceData = [];
         snapshot.forEach((childSnapshot) => {
           const sessionData = childSnapshot.val();
-          const sessionDate = sessionData.dateTime;
-          
-          sessionData.attendance.forEach((person) => {
-            const row = reportTableBody.insertRow();
-            row.insertCell(0).textContent = sessionDate;
-            row.insertCell(1).textContent = person.name;
-            row.insertCell(2).textContent = person.status;
+          attendanceData.push(sessionData);
+        });
+
+        // Sort attendance data by date
+        attendanceData.sort((a, b) => new Date(b.dateTime) - new Date(a.dateTime));
+
+        // Group attendance data by date
+        const groupedData = {};
+        attendanceData.forEach((session) => {
+          const date = new Date(session.dateTime).toLocaleDateString();
+          if (!groupedData[date]) {
+            groupedData[date] = [];
+          }
+          groupedData[date].push(session);
+        });
+
+        // Create a table for each date
+        Object.keys(groupedData).forEach((date) => {
+          const dateHeader = document.createElement('h4');
+          dateHeader.textContent = date;
+          reportContainer.appendChild(dateHeader);
+
+          const table = document.createElement('table');
+          table.className = 'table table-bordered mb-4';
+          table.innerHTML = `
+            <thead>
+              <tr>
+                <th>Time</th>
+                <th>Name</th>
+                <th>Status</th>
+              </tr>
+            </thead>
+            <tbody>
+            </tbody>
+          `;
+
+          const tableBody = table.querySelector('tbody');
+          groupedData[date].forEach((session) => {
+            const time = new Date(session.dateTime).toLocaleTimeString();
+            session.attendance.forEach((person) => {
+              const row = tableBody.insertRow();
+              row.insertCell(0).textContent = time;
+              row.insertCell(1).textContent = person.name;
+              row.insertCell(2).textContent = person.status;
+            });
           });
+
+          reportContainer.appendChild(table);
         });
       });
     }
 
     function printReport() {
-      const printContents = document.getElementById('attendance-report').innerHTML;
-      const originalContents = document.body.innerHTML;
+      const reportContainer = document.getElementById('attendance-report');
+      const printWindow = window.open('', '_blank');
+      
+      const header = `
+        <div class="report-header" style="text-align: center; margin-bottom: 20px;">
+          <img src="{% static 'argao_logo.jpg' %}" alt="Logo" style="width: 80px; height: auto;">
+          <h2 style="margin: 10px 0 5px;">Republic of the Philippines</h2>
+          <h3 style="margin: 5px 0;">Province of Cebu</h3>
+          <h3 style="margin: 5px 0;">Municipality of Argao</h3>
+          <h4 style="margin: 5px 0;">OFFICE OF THE SANGGUNIANG BAYAN</h4>
+          <p style="margin: 5px 0;">Tel. No.: 032-2590732</p>
+          <p style="margin: 5px 0;">Email: sbargao@gmail.com</p>
+        </div>
+      `;
 
-      document.body.innerHTML = printContents;
-      window.print();
-      document.body.innerHTML = originalContents;
+      let printContent = `
+        <html>
+          <head>
+            <title>Attendance Report</title>
+            <style>
+              body { font-family: Arial, sans-serif; }
+              .page-break { page-break-before: always; }
+              .report-header { position: fixed; top: 0; width: 100%; }
+              .report-content { margin-top: 200px; } /* Adjust based on header height */
+              table { width: 100%; border-collapse: collapse; }
+              th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
+              th { background-color: #f2f2f2; }
+            </style>
+          </head>
+          <body>
+      `;
 
-      // Reload the page to reinitialize everything
-      location.reload();
+      const tables = reportContainer.getElementsByTagName('table');
+      for (let i = 0; i < tables.length; i++) {
+        const date = reportContainer.getElementsByTagName('h4')[i].textContent;
+        printContent += `
+          ${i > 0 ? '<div class="page-break"></div>' : ''}
+          ${header}
+          <div class="report-content">
+            <h4>${date}</h4>
+            ${tables[i].outerHTML}
+          </div>
+        `;
+      }
+
+      printContent += `
+          </body>
+        </html>
+      `;
+
+      printWindow.document.write(printContent);
+      printWindow.document.close();
+      printWindow.print();
+      printWindow.close();
     }
 
     // Logout function
-window.logout = function() {
+    window.logout = function() {
       // Clear user data from localStorage
       localStorage.removeItem('userName');
       // Redirect to login page

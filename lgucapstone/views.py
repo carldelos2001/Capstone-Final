@@ -13,6 +13,7 @@ from django.urls import reverse
 from firebase_admin.exceptions import FirebaseError
 from firebase_admin import auth, db
 
+import bcrypt
 import random
 import string
 import firebase_admin
@@ -65,23 +66,22 @@ def signup(request):
             # Get the user ID from the created user
             user_id = user['localId']
             
-            # Set the user's role to "user" in the Firebase Realtime Database
+            # Set the user's data in the 'accounts' database
             data = {
-                "firstname": firstname,
-                "lastname": lastname,
+                "name": f"{firstname} {lastname}",
                 "email": email,
+                "password": password,  # Note: Storing passwords in plain text is not recommended
                 "role": "user"  # Automatically mark as "user"
             }
-            database.child("users").child(user_id).set(data)
+            database.child("accounts").child(user_id).set(data)
             
             # Redirect to login page or another page after successful sign-up
-            return redirect('login') 
+            return redirect('main_login') 
         except Exception as e:
             print(f"Error: {e}")  # Print the error for debugging
             messages.error(request, str(e))  # Display the error message to the user
 
     return render(request, 'signup.html')  
-
 
 
 
@@ -455,7 +455,7 @@ def verify_otp(request):
                     "email": email,
                     "role": "user"  # Automatically mark as "user"
                 }
-                database.child("users").child(user_id).set(user_data)
+                database.child("accounts").child(user_id).set(user_data)
 
                 # Clear OTP and email from session
                 del request.session['otp']
@@ -655,7 +655,25 @@ def get_account_data(request):
             return JsonResponse({"error": str(e)}, status=500)
     return JsonResponse({"error": "Invalid request."}, status=400)
 
+def get_user_data(request):
+    email = request.GET.get('email')
+    if email:
+        try:
+            ref = db.reference('accounts')  # Points to your Firebase "accounts" folder
+            accounts = ref.order_by_child('email').equal_to(email).get()
+            
+            for key, account_data in accounts.items():
+                if account_data.get('email') == email:
+                    return JsonResponse(account_data, safe=False)
+            
+            return JsonResponse({"error": "Account not found."}, status=404)
+        except Exception as e:
+            return JsonResponse({"error": str(e)}, status=500)
+    return JsonResponse({"error": "Invalid request."}, status=400)
+
+import bcrypt
 @csrf_exempt
+
 def admin_login_view(request):
     if request.method == 'POST':
         try:
@@ -664,31 +682,40 @@ def admin_login_view(request):
             email = data.get('email')
             password = data.get('password')
             
-            # Step 1: Verify if the account exists in Firebase Realtime Database
-            ref = db.reference('accounts')  # Assuming accounts are stored under the 'accounts' path in Firebase
+            ref = db.reference('accounts')  
             accounts = ref.order_by_child('email').equal_to(email).get()
             
             if not accounts:
                 return JsonResponse({'success': False, 'message': 'Invalid email or password'}, status=400)
 
-            # Step 2: Authenticate the user (pseudo-code to check password)
             for key, account in accounts.items():
-                if account.get('password') == password:  # Check if the password matches (implement password hashing for security)
-                    role = account.get('role')
+                role = account.get('role')
 
-                    # Step 3: Check the role and redirect accordingly
-                    if role == 'admin':
-                        return JsonResponse({'success': True, 'redirect_url': '/admin_dashboard/'})
-                    elif role == 'staff':
-                        return JsonResponse({'success': True, 'redirect_url': '/staff_dashboard/'})
-                    else:
-                        return JsonResponse({'success': False, 'message': 'Invalid role'}, status=403)
+                if role == 'user':
+                    try:
+                        # Authenticate user with Firebase Authentication
+                        authe.sign_in_with_email_and_password(email, password)
+                        return JsonResponse({'success': True, 'redirect_url': '/home/'})
+                    except:
+                        return JsonResponse({'success': False, 'message': 'Invalid email or password'}, status=400)
+                elif role == 'admin':
+                    if account.get('password') == password:
+                        return JsonResponse({'success': True, 'redirect_url': '/admin_dash/'})
+                elif role == 'staff':
+                    if account.get('password') == password:
+                        return JsonResponse({'success': True, 'redirect_url': '/staff_dash/'})
+                else:
+                    return JsonResponse({'success': False, 'message': 'Invalid role'}, status=403)
 
+            # If we've gone through all accounts and haven't returned, the credentials are incorrect
             return JsonResponse({'success': False, 'message': 'Invalid email or password'}, status=400)
         
+        except json.JSONDecodeError:
+            return JsonResponse({'success': False, 'message': 'Invalid JSON format'}, status=400)
         except FirebaseError as e:
             return JsonResponse({'success': False, 'message': f'Firebase error: {str(e)}'}, status=500)
         except Exception as e:
-            return JsonResponse({'success': False, 'message': str(e)}, status=500)
+            print(f'Error: {e}')  # Log the error for debugging
+            return JsonResponse({'success': False, 'message': 'An error occurred. Please try again.'}, status=500)
     
-    return JsonResponse({'message': 'Invalid request method'}, status=405)
+    return JsonResponse({'success': False, 'message': 'Invalid request method'}, status=405)

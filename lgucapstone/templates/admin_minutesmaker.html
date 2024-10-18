@@ -14,6 +14,34 @@
   <title>Minutes Maker</title>
 </head>
 <body>
+  <style>
+    ::-webkit-scrollbar {
+      width: 10px;
+    }
+
+    ::-webkit-scrollbar-track {
+      background: #f1f1f1;
+    }
+
+    ::-webkit-scrollbar-thumb {
+      background: #888;
+    }
+
+    ::-webkit-scrollbar-thumb:hover {
+      background: #555;
+    }
+
+    .content-box {
+      background-color: #ffffff;
+      border-radius: 8px;
+      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+      padding: 20px;
+      margin-bottom: 20px;
+      transition: all 0.3s ease;
+    }
+
+    
+  </style>
   <!-- Sidebar -->
   <div class="sidebar">
     <div class="logo">
@@ -23,7 +51,7 @@
     <div class="nav-item" onclick="window.location.href='/admin_report'">Reports</div>
     <div class="nav-item" onclick="window.location.href='/admin_services'">Services</div>
     <div class="nav-item" onclick="window.location.href='/admin_feedback'">Feedbacks</div>
-    <div class="nav-item" onclick="window.location.href='/admin_announcement'">Session Agenda</div>
+    <div class="nav-item" onclick="window.location.href='/admin_announcement'">Session Notice</div>
     <div class="nav-item" onclick="window.location.href='/admin_attendance'">Attendance</div>
     <div class="nav-item" onclick="window.location.href='/admin_promanage'">Project Management</div>
     <div class="nav-item" onclick="window.location.href='/admin_staff_account'">Staff Account Management</div>
@@ -40,57 +68,59 @@
     <div class="container mt-4">
       <h2>Minutes Maker</h2>
 
-      <!-- Form for Adding Minutes -->
-      <form id="minutes-form">
-        <div class="mb-3">
-          <label for="minutes-title" class="form-label">Minutes Title</label>
-          <input type="text" class="form-control" id="minutes-title" placeholder="Enter minutes title" required>
-        </div>
-        <div class="mb-3">
-          <label for="minutes-description" class="form-label">Minutes Description</label>
-          <textarea class="form-control" id="minutes-description" placeholder="Enter minutes description" required></textarea>
-        </div>
-        <div class="mb-3">
-          <label for="minutes-date" class="form-label">Date of Meeting</label>
-          <input type="date" class="form-control" id="minutes-date" required>
-        </div>
-        <div class="mb-3">
-          <label for="minutes-time" class="form-label">Time of Meeting</label>
-          <input type="time" class="form-control" id="minutes-time" required>
-        </div>
-        <div class="mb-3">
-          <label for="minutes-location" class="form-label">Location</label>
-          <input type="text" class="form-control" id="minutes-location" placeholder="Enter meeting location" required>
-        </div>
-        <div class="mb-3">
-          <label for="minutes-agenda" class="form-label">Agenda</label>
-          <textarea class="form-control" id="minutes-agenda" placeholder="Enter meeting agenda" required></textarea>
-        </div>
-        <div class="mb-3">
-          <label for="minutes-prepared-by" class="form-label">Prepared By</label>
-          <input type="text" class="form-control" id="minutes-prepared-by" placeholder="Enter name of preparer" required>
-        </div>
-        <div class="mb-3">
-          <label for="minutes-next-meeting" class="form-label">Next Meeting</label>
-          <input type="date" class="form-control" id="minutes-next-meeting">
-        </div>
-        <div class="mb-3">
-          <label for="minutes-adjournment" class="form-label">Adjournment Time</label>
-          <input type="time" class="form-control" id="minutes-adjournment">
-        </div>
-
-        <!-- Submit Button -->
-        <button type="submit" class="btn btn-success mt-4">Save Minutes</button>
-      </form>
-
       <!-- Search Bar -->
-      <div class="mt-5">
+      <div class="mb-3">
         <input type="text" id="search-bar" class="form-control" placeholder="Search Minutes">
       </div>
 
       <!-- Minutes Display -->
       <div id="minutes-list" class="mt-4">
         <!-- Minutes will be dynamically displayed here -->
+      </div>
+
+      <!-- Form for Adding Minutes -->
+      <div class="content-box">
+        <form id="minutes-form">
+          <div class="mb-3">
+            <label for="minutes-title" class="form-label">Minutes Title</label>
+            <input type="text" class="form-control" id="minutes-title" placeholder="Enter minutes title" required>
+          </div>
+          <div class="mb-3">
+            <label for="minutes-description" class="form-label">Minutes Description</label>
+            <textarea class="form-control" id="minutes-description" placeholder="Enter minutes description" required></textarea>
+          </div>
+          <div class="mb-3">
+            <label for="minutes-date" class="form-label">Date of Meeting</label>
+            <input type="date" class="form-control" id="minutes-date" required>
+          </div>
+          <div class="mb-3">
+            <label for="minutes-time" class="form-label">Time of Meeting</label>
+            <input type="time" class="form-control" id="minutes-time" required>
+          </div>
+          <div class="mb-3">
+            <label for="minutes-location" class="form-label">Location</label>
+            <input type="text" class="form-control" id="minutes-location" placeholder="Enter meeting location" required>
+          </div>
+          <div class="mb-3">
+            <label for="minutes-agenda" class="form-label">Agenda</label>
+            <textarea class="form-control" id="minutes-agenda" placeholder="Enter meeting agenda" required></textarea>
+          </div>
+          <div class="mb-3">
+            <label for="minutes-prepared-by" class="form-label">Prepared By</label>
+            <input type="text" class="form-control" id="minutes-prepared-by" placeholder="Enter name of preparer" required>
+          </div>
+          <div class="mb-3">
+            <label for="minutes-next-meeting" class="form-label">Next Meeting</label>
+            <input type="date" class="form-control" id="minutes-next-meeting">
+          </div>
+          <div class="mb-3">
+            <label for="minutes-adjournment" class="form-label">Adjournment Time</label>
+            <input type="time" class="form-control" id="minutes-adjournment">
+          </div>
+
+          <!-- Submit Button -->
+          <button type="submit" class="btn btn-success mt-4">Save Minutes</button>
+        </form>
       </div>
     </div>
   </div>
@@ -182,7 +212,7 @@
     // Retrieve user name from localStorage
     const userName = localStorage.getItem('userName');
     if (userName) {
-      document.getElementById('welcomeMessage').textContent = ` ${userName}`;
+      document.getElementById('welcomeMessage').textContent = `Admin: ${userName}`;
     }
 
     // Script to handle the minutes management functionality
@@ -242,7 +272,7 @@
         snapshot.forEach(childSnapshot => {
           const minutes = childSnapshot.val();
           const minutesItem = document.createElement('div');
-          minutesItem.className = 'minutes-item card mb-3';
+          minutesItem.className = 'minutes-item card mb-3 content-box';
           minutesItem.innerHTML = `
             <div class="card-body">
               <h3 class="card-title">${minutes.title}</h3>
@@ -341,24 +371,48 @@
         printWindow.document.write(`
           <html>
             <head>
-              <title>Minutes of Meeting - ${minutes.title}</title>
+              
               <style>
                 body { font-family: Arial, sans-serif; line-height: 1.6; }
-                h1 { text-align: center; }
                 .section { margin-bottom: 20px; }
                 .label { font-weight: bold; }
+                .header { 
+                  display: flex;
+                  flex-direction: column;
+                  align-items: center;
+                  justify-content: center;
+                  margin-bottom: 20px;
+                  text-align: center;
+                }
+                .header img {
+                  width: 80px;
+                  height: auto;
+                  margin-bottom: 10px;
+                }
+                .header-text h2 {
+                  margin: 0;
+                  font-size: 16px;
+                }
+                .header-text h3 {
+                  margin: 5px 0;
+                  font-size: 14px;
+                }
               </style>
             </head>
             <body>
-              <h1>Minutes of Meeting</h1>
-              <div class="section">
-                <span class="label">Title:</span> ${minutes.title}
+              <div class="header">
+                <img src="{% static 'argao_logo.jpg' %}" alt="Logo">
+                <div class="header-text">
+                  <h2>Republic of the Philippines</h2>
+                  <h2>Province of Cebu</h2>
+                  <h2>Municipality of Argao</h2>
+                  <h3>OFFICE OF THE SANGGUNIANG BAYAN</h3>
+                  <h3>Tel. No.: 825-007-012</h3>
+                  <h3>Email add: sbargao@gmail.com</h3>
+                </div>
               </div>
               <div class="section">
                 <span class="label">Date:</span> ${minutes.date}
-              </div>
-              <div class="section">
-                <span class="label">Time:</span> ${minutes.time}
               </div>
               <div class="section">
                 <span class="label">Location:</span> ${minutes.location}
@@ -462,7 +516,7 @@ window.logout = function() {
     }
     
     .main-content {
-      margin-left: 250px;
+      
       padding: 20px;
     }
   </style>

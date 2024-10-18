@@ -25,7 +25,13 @@
     .card{
       margin-top: 100px;
     }
-   
+    /* Add this to your CSS file */
+.rounded-circle {
+    border-radius: 50%; /* Ensures the image is rounded */
+    border: 2px solid #ddd; /* Optional: Add border */
+    object-fit: cover; /* Ensures the image covers the area */
+}
+    
   </style>
 </head>
 <body>
@@ -41,6 +47,17 @@
     <label class="header-menu-item" id="resolutions">Resolutions</label>
     <label class="header-menu-item" id="services">Services</label>
     <label class="header-menu-item selected" id="announcement">Announcement</label>
+
+    <!-- User Profile Dropdown -->
+    <div class="dropdown ms-auto">
+      <a href="#" class="d-flex align-items-center text-dark text-decoration-none dropdown-toggle" id="dropdownUser" data-bs-toggle="dropdown" aria-expanded="false">
+        <img src="{% static 'user_profile.png' %}" alt="User Profile" class="rounded-circle" width="32" height="32">
+        <span id="userName" class="ms-2">Guest</span>
+      </a>
+      <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="dropdownUser">
+        <li><a class="dropdown-item" href="{% url 'lgucapstone' %}" id="loginLogoutLink">Login</a></li>
+      </ul>
+    </div>
   </div>
 
   <!-- Announcements Container -->
@@ -51,6 +68,7 @@
   <script src="{% static 'user_announcement.js' %}"></script>
   <script src="https://www.gstatic.com/firebasejs/9.9.1/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.9.1/firebase-database-compat.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
   <script>
     // Firebase configuration
     const firebaseConfig = {
@@ -112,7 +130,34 @@
     });
 
     // Load announcements when the page loads
-    document.addEventListener('DOMContentLoaded', loadAnnouncements);
+    document.addEventListener('DOMContentLoaded', function() {
+      loadAnnouncements();
+      updateUserStatus();
+    });
+
+    // Logout function
+    function logout() {
+      localStorage.removeItem('userName');
+      updateUserStatus();
+      window.location.href = '/home';
+    }
+
+    // Update user status
+    function updateUserStatus() {
+      const userName = localStorage.getItem('userName');
+      const userNameElement = document.getElementById('userName');
+      const loginLogoutLink = document.getElementById('loginLogoutLink');
+
+      if (userName) {
+        userNameElement.textContent = userName;
+        loginLogoutLink.textContent = 'Logout';
+        loginLogoutLink.onclick = logout;
+      } else {
+        userNameElement.textContent = 'Guest';
+        loginLogoutLink.textContent = 'Login';
+        loginLogoutLink.onclick = null;
+      }
+    }
   </script>
 </body>
 </html>

@@ -56,5 +56,6 @@ urlpatterns = [
     path('update_user_info/', update_user_info, name='update_user_info'),
     path('api/submit-requirements/', submit_requirements, name='submit_requirements'),
     path('get_account_data/', views.get_account_data, name='get_account_data'),
+    path('get_user_data/', views.get_user_data, name='get_user_data'),
 
 ]

@@ -20,6 +20,32 @@
   <title>Reports</title>
 </head>
 <body>
+  <style>
+    
+    ::-webkit-scrollbar {
+      width: 10px;
+    }
+
+    ::-webkit-scrollbar-track {
+      background: #f1f1f1;
+    }
+
+    ::-webkit-scrollbar-thumb {
+      background: #888;
+    }
+
+    ::-webkit-scrollbar-thumb:hover {
+      background: #555;
+    }
+    .btn-print-report{
+      background-color: #888;
+      border: #888;
+    }
+    .btn-print-report :hover{
+      background-color: #555;
+      border: #555;
+    }
+  </style>
   <!-- Sidebar -->  
   <div class="sidebar">
     <div class="logo">
@@ -29,7 +55,7 @@
     <div class="nav-item" onclick="window.location.href='/admin_report'">Reports</div>
     <div class="nav-item" onclick="window.location.href='/admin_services'">Services</div>
     <div class="nav-item" onclick="window.location.href='/admin_feedback'">Feedbacks</div>
-    <div class="nav-item" onclick="window.location.href='/admin_announcement'">Session Agenda</div>
+    <div class="nav-item" onclick="window.location.href='/admin_announcement'">Session Notice</div>
     <div class="nav-item" onclick="window.location.href='/admin_attendance'">Attendance</div>
     <div class="nav-item" onclick="window.location.href='/admin_promanage'">Project Management</div>
     <div class="nav-item" onclick="window.location.href='/admin_staff_account'">Staff Account Management</div>
@@ -127,7 +153,7 @@
     // Retrieve user name from localStorage
     const userName = localStorage.getItem('userName');
     if (userName) {
-      document.getElementById('welcomeMessage').textContent = ` ${userName}`;
+      document.getElementById('welcomeMessage').textContent = `Admin: ${userName}`;
     }
     // Fetch and Update Chart Data
     async function fetchChartData() {
@@ -353,7 +379,16 @@ function printReport() {
         </style>
       </head>
       <body>
-        <h1>Project Management Report</h1>
+        <div class="report-header" style="text-align: center; margin-bottom: 20px;">
+          <img src="{% static 'argao_logo.jpg' %}" alt="Logo" style="width: 80px; height: auto;">
+          <h2 style="margin: 10px 0 5px;">Republic of the Philippines</h2>
+          <h3 style="margin: 5px 0;">Province of Cebu</h3>
+          <h3 style="margin: 5px 0;">Municipality of Argao</h3>
+          <h4 style="margin: 5px 0;">OFFICE OF THE SANGGUNIANG BAYAN</h4>
+          <p style="margin: 5px 0;">Tel. No.: 032-2590732</p>
+          <p style="margin: 5px 0;">Email: sbargao@gmail.com</p>
+        </div>
+        
         <p>Generated on: ${new Date().toLocaleDateString()}</p>
         
         <h2>Project Management</h2>
@@ -403,8 +438,7 @@ function printReport() {
   
   // Print the window
   printWindow.print();
-    }
-
+}
   // Logout function
 window.logout = function() {
       // Clear user data from localStorage

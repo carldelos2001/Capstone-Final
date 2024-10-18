@@ -73,8 +73,8 @@
     }
     
     .main-content {
-      margin-left: 250px;
-      padding: 20px;
+      
+      padding: 30px;
     }
     
     .user-profile {
@@ -132,9 +132,37 @@
     .btn-submit:hover {
       background-color: #4a9d6d;
     }
+
+    .btn-primary {
+      margin-top: 14px;
+    }
+    .btn-secondary {
+      margin-top: 14px;
+    }
+    .btn-danger {
+      margin-top: 14px;
+    }
   </style>
 </head>
 <body>
+  <style>
+    /* Add this style for the scrollbar */
+    ::-webkit-scrollbar {
+      width: 10px;
+    }
+
+    ::-webkit-scrollbar-track {
+      background: #f1f1f1;
+    }
+
+    ::-webkit-scrollbar-thumb {
+      background: #888;
+    }
+
+    ::-webkit-scrollbar-thumb:hover {
+      background: #555;
+    }
+  </style>
   <div class="sidebar">
     <div class="logo">
       <img src="{% static 'argao_logo.jpg' %}" alt="Logo">
@@ -143,7 +171,7 @@
     <div class="nav-item" onclick="window.location.href='/admin_report'">Reports</div>
     <div class="nav-item" onclick="window.location.href='/admin_services'">Services</div>
     <div class="nav-item" onclick="window.location.href='/admin_feedback'">Feedbacks</div>
-    <div class="nav-item" onclick="window.location.href='/admin_announcement'">Session Agenda</div>
+    <div class="nav-item" onclick="window.location.href='/admin_announcement'">Session Notice</div>
     <div class="nav-item" onclick="window.location.href='/admin_attendance'">Attendance</div>
     <div class="nav-item" onclick="window.location.href='/admin_promanage'">Project Management</div>
     <div class="nav-item" onclick="window.location.href='/admin_staff_account'">Staff Account Management</div>
@@ -152,58 +180,134 @@
       <span id="welcomeMessage">Staff:</span>
       <div class="nav-item" onclick="logout()">Log Out</div>
     </div>
-
   </div>
-
-  
 
   <!-- Main Content -->
   <div class="main-content">
     <div class="container mt-4">
-      <h2>Pending Service Applications</h2>
-      <div class="table-container mb-3">
+      <h1 class="mb-4">Services</h1>
+      
+      <!-- Search Bar -->
+      <div class="mb-4">
+        <input type="text" id="serviceSearch" class="form-control" placeholder="Search for a service...">
+      </div>
+
+      <!-- Services List -->
+      <div id="servicesList" class="mb-4">
         <table class="table table-bordered">
           <thead>
             <tr>
-              <th>Service Title</th>
-              <th>User Name</th>
-              <th>Application Date</th>
-              <th>Status</th>
-              <th>Action</th>
+              <th style="width: 60%;">Service Title</th>
+              <th style="width: 40%;">Actions</th>
             </tr>
           </thead>
-          <tbody id="applications-table-body">
-            <!-- Rows will be dynamically populated -->
+          <tbody>
+            <!-- Services will be dynamically added here -->
           </tbody>
         </table>
+      </div>
+
+      <h2>Add New Service</h2>
+      <form id="serviceForm">
+        <div class="mb-3">
+          <label for="serviceTitle" class="form-label">Title of Service</label>
+          <input type="text" class="form-control" id="serviceTitle" name="serviceTitle" required>
+        </div>
+        <table class="table table-bordered">
+          <tr>
+            <th>Office or Division</th>
+            <td><input type="text" class="form-control" name="officeOrDivision"></td>
+          </tr>
+          <tr>
+            <th>Classification</th>
+            <td><input type="text" class="form-control" name="classification"></td>
+          </tr>
+          <tr>
+            <th>Type of Transaction</th>
+            <td><input type="text" class="form-control" name="transactionType"></td>
+          </tr>
+          <tr>
+            <th>Who May Avail the Service</th>
+            <td><input type="text" class="form-control" name="whoMayAvail"></td>
+          </tr>
+        </table>
+        
+        <h4>Checklist of Requirements</h4>
+        <table class="table table-bordered">
+          <thead>
+            <tr>
+              <th>Requirement</th>
+              <th>Where to Secure</th>
+            </tr>
+          </thead>
+          <tbody id="requirementsTable">
+            <tr>
+              <td><input type="text" class="form-control" name="requirement[]"></td>
+              <td><input type="text" class="form-control" name="whereToSecure[]"></td>
+            </tr>
+          </tbody>
+        </table>
+        <button type="button" class="btn btn-primary" onclick="addRequirementRow()">Add Requirement</button>
+
+        <h4>Client Steps and Agency Actions</h4>
+        <table class="table table-bordered">
+          <thead>
+            <tr>
+              <th>Client Steps</th>
+              <th>Agency Action</th>
+              <th>Fees to be Paid</th>
+              <th>Processing Time</th>
+              <th>Person Responsible</th>
+            </tr>
+          </thead>
+          <tbody id="stepsTable">
+            <tr>
+              <td><input type="text" class="form-control" name="clientStep[]"></td>
+              <td><input type="text" class="form-control" name="agencyAction[]"></td>
+              <td><input type="text" class="form-control" name="fees[]"></td>
+              <td><input type="text" class="form-control" name="processingTime[]"></td>
+              <td><input type="text" class="form-control" name="personResponsible[]"></td>
+            </tr>
+          </tbody>
+        </table>
+        <button type="button" class="btn btn-primary" onclick="addStepRow()">Add Step</button>
+        
+        <button type="submit" class="btn btn-success mt-3">Submit Service Information</button>
+      </form>
+    </div>
+  </div>
+
+  <!-- Edit Service Modal -->
+  <div class="modal fade" id="editServiceModal" tabindex="-1" aria-labelledby="editServiceModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title" id="editServiceModalLabel">Edit Service</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
+          <!-- Edit form will be dynamically inserted here -->
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+          <button type="button" class="btn btn-primary" onclick="saveEditedService()">Save changes</button>
+        </div>
       </div>
     </div>
   </div>
 
-  <!-- Application Details Modal -->
-  <div class="modal fade" id="applicationModal" tabindex="-1" aria-labelledby="applicationModalLabel" aria-hidden="true">
+  <!-- View Service Modal -->
+  <div class="modal fade" id="viewServiceModal" tabindex="-1" aria-labelledby="viewServiceModalLabel" aria-hidden="true">
     <div class="modal-dialog modal-lg">
       <div class="modal-content">
         <div class="modal-header">
-          <h5 class="modal-title" id="applicationModalLabel">Service Application Details</h5>
+          <h5 class="modal-title" id="viewServiceModalLabel">View Service</h5>
           <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
         </div>
         <div class="modal-body">
-          <p><strong>Service Title:</strong> <span id="serviceTitle"></span></p>
-          <p><strong>User Name:</strong> <span id="userName"></span></p>
-          <p><strong>Application Date:</strong> <span id="applicationDate"></span></p>
-          <p><strong>Status:</strong> <span id="applicationStatus"></span></p>
-          <p><strong>Required Documents:</strong></p>
-          <ul id="documentsList"></ul>
-          
-          <div class="add-comment mt-3">
-            <label for="adminComment" class="form-label">Admin Comment</label>
-            <textarea class="form-control" id="adminComment" rows="3"></textarea>
-          </div>
+          <!-- Service details will be dynamically inserted here -->
         </div>
         <div class="modal-footer">
-          <button type="button" class="btn btn-approve" onclick="approveApplication()">Approve</button>
-          <button type="button" class="btn btn-disapprove" onclick="disapproveApplication()">Disapprove</button>
           <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
         </div>
       </div>
@@ -232,98 +336,293 @@
 
     firebase.initializeApp(firebaseConfig);
     const db = firebase.database();
-    
 
-    //Retrieve user name from localStorage
+    // Retrieve user name from localStorage
     const userName = localStorage.getItem('userName');
     if (userName) {
-      document.getElementById('welcomeMessage').textContent = ` ${userName}`;
+      document.getElementById('welcomeMessage').textContent = `Admin: ${userName}`;
     }
 
-    function loadPendingApplications() {
-      const applicationsTableBody = document.getElementById('applications-table-body');
-      db.ref('applications').on('value', snapshot => {
-        applicationsTableBody.innerHTML = '';
-        snapshot.forEach(childSnapshot => {
-          const application = childSnapshot.val();
-          const row = `
-            <tr>
-              <td>${application.applicationType || 'N/A'}</td>
-              <td>${application.applicantName || 'N/A'}</td>
-              <td>${application.applicationDate || 'N/A'}</td>
-              <td>${application.status || 'Pending'}</td>
-              <td><button class="btn btn-primary" onclick="openApplicationModal('${childSnapshot.key}')">Review</button></td>
-            </tr>
+    let requirementCount = 1;
+    function addRequirementRow() {
+      const tbody = document.getElementById('requirementsTable');
+      const newRow = tbody.insertRow();
+      newRow.innerHTML = `
+        <td><input type="text" class="form-control" name="requirement[]"></td>
+        <td><input type="text" class="form-control" name="whereToSecure[]"></td>
+      `;
+      requirementCount++;
+    }
+
+    let stepCount = 1;
+    function addStepRow() {
+      const tbody = document.getElementById('stepsTable');
+      const newRow = tbody.insertRow();
+      newRow.innerHTML = `
+        <td><input type="text" class="form-control" name="clientStep[]"></td>
+        <td><input type="text" class="form-control" name="agencyAction[]"></td>
+        <td><input type="text" class="form-control" name="fees[]"></td>
+        <td><input type="text" class="form-control" name="processingTime[]"></td>
+        <td><input type="text" class="form-control" name="personResponsible[]"></td>
+      `;
+      stepCount++;
+    }
+
+    document.getElementById('serviceForm').addEventListener('submit', function(e) {
+      e.preventDefault();
+      const formData = new FormData(this);
+      const data = {};
+      
+      for (let [key, value] of formData.entries()) {
+        if (key.endsWith('[]')) {
+          key = key.slice(0, -2);
+          if (!data[key]) data[key] = [];
+          data[key].push(value);
+        } else {
+          data[key] = value;
+        }
+      }
+
+      db.ref('services').push(data)
+        .then(() => {
+          alert('Service information submitted successfully!');
+          loadServices(); // Reload the services list
+          this.reset(); // Reset the form
+        })
+        .catch(error => console.error('Error submitting data:', error));
+    });
+
+    // Logout function
+    window.logout = function() {
+      localStorage.removeItem('userName');
+      window.location.href = 'main_login';
+    }
+
+    // Load services function
+    function loadServices() {
+      const servicesList = document.querySelector('#servicesList tbody');
+      servicesList.innerHTML = ''; // Clear existing list
+
+      db.ref('services').once('value', (snapshot) => {
+        snapshot.forEach((childSnapshot) => {
+          const service = childSnapshot.val();
+          const serviceKey = childSnapshot.key;
+          const row = servicesList.insertRow();
+          row.innerHTML = `
+            <td>${service.serviceTitle}</td>
+            <td>
+              <button class="btn btn-sm btn-primary" onclick="viewService('${serviceKey}')">View</button>
+              <button class="btn btn-sm btn-secondary" style="background-color: #888; border: #888;" onclick="editService('${serviceKey}')">Edit</button>
+              <button class="btn btn-sm btn-danger" onclick="deleteService('${serviceKey}')">Delete</button>
+            </td>
           `;
-          applicationsTableBody.insertAdjacentHTML('beforeend', row);
         });
       });
     }
 
-    function openApplicationModal(key) {
-      db.ref('applications/' + key).once('value', snapshot => {
-        const application = snapshot.val();
-        document.getElementById('serviceTitle').innerText = application.applicationType || 'N/A';
-        document.getElementById('userName').innerText = application.applicantName || 'N/A';
-        document.getElementById('applicationDate').innerText = application.applicationDate || 'N/A';
-        document.getElementById('applicationStatus').innerText = application.status || 'Pending';
-        
-        const documentsList = document.getElementById('documentsList');
-        documentsList.innerHTML = '';
-        if (application.documents) {
-          Object.entries(application.documents).forEach(([docName, docUrl]) => {
-            const li = document.createElement('li');
-            const a = document.createElement('a');
-            a.href = docUrl;
-            a.target = '_blank';
-            a.textContent = docName;
-            li.appendChild(a);
-            documentsList.appendChild(li);
-          });
+    // View service function
+    window.viewService = function(serviceKey) {
+      db.ref('services').child(serviceKey).once('value', (snapshot) => {
+        const service = snapshot.val();
+        const modalBody = document.querySelector('#viewServiceModal .modal-body');
+        modalBody.innerHTML = `
+          <h3>${service.serviceTitle || 'N/A'}</h3>
+          <p><strong>Office or Division:</strong> ${service.officeOrDivision || 'N/A'}</p>
+          <p><strong>Classification:</strong> ${service.classification || 'N/A'}</p>
+          <p><strong>Type of Transaction:</strong> ${service.transactionType || 'N/A'}</p>
+          <p><strong>Who May Avail:</strong> ${service.whoMayAvail || 'N/A'}</p>
+          <h4>Requirements:</h4>
+          <ul>
+            ${Array.isArray(service.requirement) && service.requirement.length > 0 
+              ? service.requirement.map((req, index) => `<li>${req || 'N/A'} - ${service.whereToSecure[index] || 'N/A'}</li>`).join('') 
+              : '<li>No requirements specified</li>'}
+          </ul>
+          <h4>Steps:</h4>
+          <table class="table table-bordered">
+            <thead>
+              <tr>
+                <th>Client Step</th>
+                <th>Agency Action</th>
+                <th>Fees</th>
+                <th>Processing Time</th>
+                <th>Person Responsible</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${Array.isArray(service.clientStep) && service.clientStep.length > 0
+                ? service.clientStep.map((step, index) => `
+                    <tr>
+                      <td>${step || 'N/A'}</td>
+                      <td>${service.agencyAction[index] || 'N/A'}</td>
+                      <td>${service.fees[index] || 'N/A'}</td>
+                      <td>${service.processingTime[index] || 'N/A'}</td>
+                      <td>${service.personResponsible[index] || 'N/A'}</td>
+                    </tr>
+                  `).join('')
+                : '<tr><td colspan="5">No steps specified</td></tr>'}
+            </tbody>
+          </table>
+        `;
+        const viewServiceModal = new bootstrap.Modal(document.getElementById('viewServiceModal'));
+        viewServiceModal.show();
+      });
+    }
+
+    // Edit service function
+    window.editService = function(serviceKey) {
+      db.ref('services').child(serviceKey).once('value', (snapshot) => {
+        const service = snapshot.val();
+        const modalBody = document.querySelector('#editServiceModal .modal-body');
+        modalBody.innerHTML = `
+          <form id="editServiceForm" data-service-key="${serviceKey}">
+            <div class="mb-3">
+              <label for="editServiceTitle" class="form-label">Title of Service</label>
+              <input type="text" class="form-control" id="editServiceTitle" name="serviceTitle" value="${service.serviceTitle}" required>
+            </div>
+            <table class="table table-bordered">
+              <tr>
+                <th>Office or Division</th>
+                <td><input type="text" class="form-control" name="officeOrDivision" value="${service.officeOrDivision}"></td>
+              </tr>
+              <tr>
+                <th>Classification</th>
+                <td><input type="text" class="form-control" name="classification" value="${service.classification}"></td>
+              </tr>
+              <tr>
+                <th>Type of Transaction</th>
+                <td><input type="text" class="form-control" name="transactionType" value="${service.transactionType}"></td>
+              </tr>
+              <tr>
+                <th>Who May Avail the Service</th>
+                <td><input type="text" class="form-control" name="whoMayAvail" value="${service.whoMayAvail}"></td>
+              </tr>
+            </table>
+            <h4>Checklist of Requirements</h4>
+            <table class="table table-bordered" id="editRequirementsTable">
+              <thead>
+                <tr>
+                  <th>Requirement</th>
+                  <th>Where to Secure</th>
+                </tr>
+              </thead>
+              <tbody>
+                ${Array.isArray(service.requirement) ? service.requirement.map((req, index) => `
+                  <tr>
+                    <td><input type="text" class="form-control" name="requirement[]" value="${req}"></td>
+                    <td><input type="text" class="form-control" name="whereToSecure[]" value="${service.whereToSecure[index] || ''}"></td>
+                  </tr>
+                `).join('') : ''}
+              </tbody>
+            </table>
+            <button type="button" class="btn btn-primary" onclick="addEditRequirementRow()">Add Requirement</button>
+
+            <h4>Client Steps and Agency Actions</h4>
+            <table class="table table-bordered" id="editStepsTable">
+              <thead>
+                <tr>
+                  <th>Client Steps</th>
+                  <th>Agency Action</th>
+                  <th>Fees to be Paid</th>
+                  <th>Processing Time</th>
+                  <th>Person Responsible</th>
+                </tr>
+              </thead>
+              <tbody>
+                ${Array.isArray(service.clientStep) ? service.clientStep.map((step, index) => `
+                  <tr>
+                    <td><input type="text" class="form-control" name="clientStep[]" value="${step}"></td>
+                    <td><input type="text" class="form-control" name="agencyAction[]" value="${service.agencyAction[index] || ''}"></td>
+                    <td><input type="text" class="form-control" name="fees[]" value="${service.fees[index] || ''}"></td>
+                    <td><input type="text" class="form-control" name="processingTime[]" value="${service.processingTime[index] || ''}"></td>
+                    <td><input type="text" class="form-control" name="personResponsible[]" value="${service.personResponsible[index] || ''}"></td>
+                  </tr>
+                `).join('') : ''}
+              </tbody>
+            </table>
+            <button type="button" class="btn btn-primary" onclick="addEditStepRow()">Add Step</button>
+          </form>
+        `;
+        const editServiceModal = new bootstrap.Modal(document.getElementById('editServiceModal'));
+        editServiceModal.show();
+      });
+    }
+
+    function addEditRequirementRow() {
+      const tbody = document.getElementById('editRequirementsTable').getElementsByTagName('tbody')[0];
+      const newRow = tbody.insertRow();
+      newRow.innerHTML = `
+        <td><input type="text" class="form-control" name="requirement[]"></td>
+        <td><input type="text" class="form-control" name="whereToSecure[]"></td>
+      `;
+    }
+
+    function addEditStepRow() {
+      const tbody = document.getElementById('editStepsTable').getElementsByTagName('tbody')[0];
+      const newRow = tbody.insertRow();
+      newRow.innerHTML = `
+        <td><input type="text" class="form-control" name="clientStep[]"></td>
+        <td><input type="text" class="form-control" name="agencyAction[]"></td>
+        <td><input type="text" class="form-control" name="fees[]"></td>
+        <td><input type="text" class="form-control" name="processingTime[]"></td>
+        <td><input type="text" class="form-control" name="personResponsible[]"></td>
+      `;
+    }
+
+    // Save edited service function
+    window.saveEditedService = function() {
+      const form = document.getElementById('editServiceForm');
+      const formData = new FormData(form);
+      const data = {};
+      
+      for (let [key, value] of formData.entries()) {
+        if (key.endsWith('[]')) {
+          key = key.slice(0, -2);
+          if (!data[key]) data[key] = [];
+          data[key].push(value);
         } else {
-          documentsList.innerHTML = '<li>No documents uploaded</li>';
+          data[key] = value;
         }
+      }
 
-        document.getElementById('adminComment').value = application.adminComment || '';
-        document.getElementById('applicationModal').dataset.key = key;
-        new bootstrap.Modal(document.getElementById('applicationModal')).show();
+      const serviceKey = form.dataset.serviceKey;
+      db.ref('services').child(serviceKey).update(data)
+        .then(() => {
+          alert('Service updated successfully!');
+          loadServices(); // Reload the services list
+          bootstrap.Modal.getInstance(document.getElementById('editServiceModal')).hide();
+        })
+        .catch(error => console.error('Error updating service:', error));
+    }
+
+    // Delete service function
+    window.deleteService = function(serviceKey) {
+      if (confirm('Are you sure you want to delete this service?')) {
+        db.ref('services').child(serviceKey).remove()
+          .then(() => {
+            alert('Service deleted successfully!');
+            loadServices(); // Reload the services list
+          })
+          .catch(error => console.error('Error deleting service:', error));
+      }
+    }
+
+    // Search functionality
+    document.getElementById('serviceSearch').addEventListener('input', function(e) {
+      const searchTerm = e.target.value.toLowerCase();
+      const serviceRows = document.querySelectorAll('#servicesList tbody tr');
+      
+      serviceRows.forEach(row => {
+        const title = row.querySelector('td').textContent.toLowerCase();
+        if (title.includes(searchTerm)) {
+          row.style.display = '';
+        } else {
+          row.style.display = 'none';
+        }
       });
-    }
+    });
 
-    function approveApplication() {
-      updateApplicationStatus('approved');
-    }
-
-    function disapproveApplication() {
-      updateApplicationStatus('disapproved');
-    }
-
-    function updateApplicationStatus(status) {
-      const key = document.getElementById('applicationModal').dataset.key;
-      const comment = document.getElementById('adminComment').value;
-      db.ref('applications/' + key).update({ 
-        status: status,
-        adminComment: comment,
-        statusUpdateDate: new Date().toISOString()
-      }).then(() => {
-        alert(`Application ${status}.`);
-        bootstrap.Modal.getInstance(document.getElementById('applicationModal')).hide();
-      }).catch(error => {
-        console.error("Error updating application:", error);
-        alert("An error occurred. Please try again.");
-      });
-    }
-
-    document.addEventListener('DOMContentLoaded', loadPendingApplications);
-
-    // Logout function
-window.logout = function() {
-      // Clear user data from localStorage
-      localStorage.removeItem('userName');
-      // Redirect to login page
-      window.location.href = 'main_login';  // Adjust this URL as needed
-    }
-
+    // Load services when the page loads
+    document.addEventListener('DOMContentLoaded', loadServices);
   </script>
 </body>
 </html>

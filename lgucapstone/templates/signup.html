@@ -61,7 +61,7 @@
       <button class="button_signup2" type="submit"> SIGN UP </button>
       
       <div class="login">
-        <label class="text2"> Already have an account? <a href="{% url 'login' %}" class="text3">Log In</a></label>
+        <label class="text2"> Already have an account? <a href="{% url 'main_login' %}" class="text3">Log In</a></label>
       </div>
     </form>
   </div>
@@ -132,16 +132,21 @@
   }
 .otp-container {
   display: flex;
-  justify-content: center;
+  justify-content: flex-end;
   align-items: center;
   height: 100vh;
-  
+  position: fixed;
+  top: 0;
+  right: 0;
+  width: 100%;
+  pointer-events: none;
 }
 
 .otp-modal {
   display: flex;
   justify-content: center;
   align-items: center;
+  pointer-events: auto;
 }
 
 .otp-popup {
@@ -151,6 +156,7 @@
   box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
   max-width: 400px;
   width: 100%;
+  margin-right: 20px;
 }
 
 .otp-form {
@@ -262,11 +268,14 @@
     document.getElementById('otp-form').addEventListener('submit', async function(event) {
       event.preventDefault();
 
-      // Manually retrieve OTP
+      // Manually retrieve OTP and form data
       const otp = document.querySelector('input[name="otp"]').value;
+      const firstName = document.querySelector('input[name="first_name"]').value;
+      const lastName = document.querySelector('input[name="last_name"]').value;
+      const email = document.querySelector('input[name="email"]').value;
       const password = document.querySelector('input[name="password"]').value;
 
-      // Send OTP and password to server for verification
+      // Send OTP and user data to server for verification and account creation
       try {
         const response = await fetch('{% url "verify_otp" %}', {
           method: 'POST',
@@ -276,6 +285,9 @@
           },
           body: JSON.stringify({
             otp: otp,
+            first_name: firstName,
+            last_name: lastName,
+            email: email,
             password: password,
           }),
         });
@@ -285,6 +297,7 @@
 
           if (data.success) {
             // Redirect or show success message
+            alert('Account created successfully!');
             window.location.href = "{% url 'login' %}";  // Adjust the redirect URL
           } else {
             alert('OTP verification failed');
@@ -294,7 +307,7 @@
         }
       } catch (error) {
         console.error('Error:', error);
-        alert('An error occurred while verifying the OTP');
+        alert('An error occurred while verifying the OTP and creating the account');
       }
     });
   </script>

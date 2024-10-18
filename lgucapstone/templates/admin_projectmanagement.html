@@ -23,9 +23,9 @@
     </div>
     <div class="nav-item" onclick="window.location.href='/admin_dash'">Dashboard</div>
     <div class="nav-item" onclick="window.location.href='/admin_report'">Reports</div>
-    <div class="nav-item" onclick="window.location.href='/user_resolution'">Services</div>
-    <div class="nav-item" onclick="window.location.href='/user_services'">Feedbacks</div>
-    <div class="nav-item" onclick="window.location.href='/user_announcement'">Session Agenda</div>
+    <div class="nav-item" onclick="window.location.href='/admin_services'">Services</div>
+    <div class="nav-item" onclick="window.location.href='/admin_feedback'">Feedbacks</div>
+    <div class="nav-item" onclick="window.location.href='/admin_announcement'">Session Notice</div>
     <div class="nav-item" onclick="window.location.href='/admin_attendance'">Attendance</div>
     <div class="nav-item" onclick="window.location.href='/admin_promanage'">Project Management</div>
     <div class="nav-item" onclick="window.location.href='/admin_staff_account'">Staff Account Management</div>
@@ -153,7 +153,7 @@
     // Retrieve user name from localStorage
     const userName = localStorage.getItem('userName');
     if (userName) {
-      document.getElementById('welcomeMessage').textContent = ` ${userName}`;
+      document.getElementById('welcomeMessage').textContent = `Admin: ${userName}`;
     }
     // Budget Input Formatting
     document.getElementById('project-budget').addEventListener('input', function (e) {
@@ -220,7 +220,7 @@
               <p class="card-text">${project.description}</p>
               <p class="card-text"><strong>Budget:</strong> ₱${Number(project.budget).toLocaleString()}</p>
               <button class="btn btn-primary" onclick="viewProject('${projectId}')">View Details</button>
-              <button class="btn btn-warning" onclick="editProject('${projectId}')">Edit</button>
+              <button class="btn" style="background-color: #888; color: white;" onclick="editProject('${projectId}')">Edit</button>
               <button class="btn btn-danger" onclick="deleteProject('${projectId}')">Delete</button>
             </div>
           `;
@@ -390,7 +390,7 @@ window.logout = function() {
   }
 
   .main-content {
-    margin-left: 250px;
+    
     padding: 20px;
   }
 

@@ -25,7 +25,7 @@
         <div class="nav-item" onclick="window.location.href='/admin_report'">Reports</div>
         <div class="nav-item" onclick="window.location.href='/admin_services'">Services</div>
         <div class="nav-item" onclick="window.location.href='/admin_feedback'">Feedbacks</div>
-        <div class="nav-item" onclick="window.location.href='/admin_announcement'">Session Agenda</div>
+        <div class="nav-item" onclick="window.location.href='/admin_announcement'">Session Notice</div>
         <div class="nav-item" onclick="window.location.href='/admin_attendance'">Attendance</div>
         <div class="nav-item" onclick="window.location.href='/admin_promanage'">Project Management</div>
         <div class="nav-item" onclick="window.location.href='/admin_staff_account'">Staff Account Management</div>
@@ -41,7 +41,7 @@
       <!-- Main Content -->
       <main class="col-md-10 ms-sm-auto col-lg-10 px-4">
         <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
-          <h1 class="h2">Announcement Board</h1>
+          <h1 class="h2">Notice of Session</h1>
           
         </div>
 
@@ -55,7 +55,7 @@
               <label for="recipients" class="form-label">Recipients (comma-separated emails)</label>
               <input type="text" class="form-control" id="recipients" required>
             </div>
-            <button type="submit" class="btn btn-primary">Send Announcement</button>
+            <button type="submit" class="btn btn-primary">Send Notice</button>
           </form>
         </div>
       </main>
@@ -89,7 +89,7 @@
     // Retrieve user name from localStorage
     const userName = localStorage.getItem('userName');
     if (userName) {
-      document.getElementById('welcomeMessage').textContent = `   ${userName}`;
+      document.getElementById('welcomeMessage').textContent = `Admin:   ${userName}`;
     }
     document.getElementById('announcement-form').addEventListener('submit', async function (e) {
   e.preventDefault();
@@ -210,7 +210,7 @@ window.logout = function() {
     }
 
     .main-content {
-      margin-left: 250px;
+    
       padding: 20px;
     }
 

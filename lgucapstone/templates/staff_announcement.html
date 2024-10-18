@@ -117,6 +117,28 @@
         .add-announcement textarea {
             resize: none;
         }
+        main {
+            margin-left: 250px;
+            padding: 20px;
+            max-width: calc(100% - 250px);
+            overflow-x: hidden;
+        }
+        ::-webkit-scrollbar {
+      width: 10px;
+    }
+
+    ::-webkit-scrollbar-track {
+      background: #f1f1f1;
+    }
+
+    ::-webkit-scrollbar-thumb {
+      background: #888;
+    }
+
+    ::-webkit-scrollbar-thumb:hover {
+      background: #555;
+    }
+    
     </style>
 </head>
 <body>
@@ -134,15 +156,12 @@
         <div class="sidebar-footer">
             <span id="welcomeMessage">Staff:</span>
             <div class="nav-item" onclick="logout()">Log Out</div>
-          </div>   
+        </div>   
     </div>
 
-    
-
-    <main class="container-fluid" style="margin-left: 250px;"> <!-- Adjust for sidebar width -->
+    <main class="container-fluid" style="margin-left: 250px; padding-right: 20px;"> <!-- Adjust for sidebar width and add right padding -->
         <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
             <h1 class="h2">Announcements Board</h1>
-            
         </div>
 
         <div class="container mt-4">

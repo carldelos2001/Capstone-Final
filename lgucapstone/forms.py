@@ -5,7 +5,7 @@ class CalendarDateInput(forms.DateInput):
     format = '%Y-%m-%d'
 
 class OrdinanceResolutionForm(forms.Form):
-    title = forms.CharField(max_length=255)
+    title = forms.CharField(max_length=999)
     year = forms.CharField(max_length=4)
     date_proposed = forms.DateField(
         widget=CalendarDateInput()

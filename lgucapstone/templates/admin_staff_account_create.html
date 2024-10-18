@@ -74,7 +74,7 @@
     }
     
     .main-content {
-      margin-left: 250px;
+      
       padding: 20px;
     }
     
@@ -136,6 +136,24 @@
   </style>
 </head>
 <body>
+  <style>
+   
+    ::-webkit-scrollbar {
+      width: 10px;
+    }
+
+    ::-webkit-scrollbar-track {
+      background: #f1f1f1;
+    }
+
+    ::-webkit-scrollbar-thumb {
+      background: #888;
+    }
+
+    ::-webkit-scrollbar-thumb:hover {
+      background: #555;
+    }
+  </style>
   <div class="container-fluid">
     <div class="row">
       <!-- Sidebar -->
@@ -147,7 +165,7 @@
         <div class="nav-item" onclick="window.location.href='/admin_report'">Reports</div>
         <div class="nav-item" onclick="window.location.href='/admin_services'">Services</div>
         <div class="nav-item" onclick="window.location.href='/admin_feedback'">Feedbacks</div>
-        <div class="nav-item" onclick="window.location.href='/admin_announcement'">Session Agenda</div>
+        <div class="nav-item" onclick="window.location.href='/admin_announcement'">Session Notice</div>
         <div class="nav-item" onclick="window.location.href='/admin_attendance'">Attendance</div>
         <div class="nav-item" onclick="window.location.href='/admin_promanage'">Project Management</div>
         <div class="nav-item" onclick="window.location.href='/admin_staff_account'">Staff Account Management</div>
@@ -178,9 +196,12 @@
           <table class="table table-striped">
             <thead>
               <tr>
+                <th>Photo</th>
                 <th>Account Type</th>
                 <th>Name</th>
                 <th>Email</th>
+                <th>Phone</th>
+                <th>Address</th>
                 <th>Actions</th>
               </tr>
             </thead>
@@ -223,7 +244,40 @@
               <label for="password">Password</label>
               <input type="password" id="password" class="form-control" required>
             </div>
+            <div class="form-group mb-3">
+              <label for="phone">Phone Number</label>
+              <input type="tel" id="phone" class="form-control" required>
+            </div>
+            <div class="form-group mb-3">
+              <label for="address">Address</label>
+              <textarea id="address" class="form-control" required></textarea>
+            </div>
+            <div class="form-group mb-3">
+              <label for="photo">Photo</label>
+              <input type="file" id="photo" class="form-control" accept="image/*">
+            </div>
             <button type="submit" class="btn btn-success">Save</button>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Password Verification Modal -->
+  <div class="modal fade" id="passwordVerificationModal" tabindex="-1" aria-labelledby="passwordVerificationModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title" id="passwordVerificationModalLabel">Verify Password</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
+          <form id="passwordVerificationForm">
+            <div class="form-group mb-3">
+              <label for="verificationPassword">Enter account password to edit:</label>
+              <input type="password" id="verificationPassword" class="form-control" required>
+            </div>
+            <button type="submit" class="btn btn-primary">Verify</button>
           </form>
         </div>
       </div>
@@ -236,6 +290,7 @@
    <script type="module">
      import { initializeApp } from "https://www.gstatic.com/firebasejs/9.9.1/firebase-app.js";
      import { getDatabase, ref, push, onValue, remove, update, get } from "https://www.gstatic.com/firebasejs/9.9.1/firebase-database.js";
+     import { getStorage, ref as storageRef, uploadBytes, getDownloadURL } from "https://www.gstatic.com/firebasejs/9.9.1/firebase-storage.js";
  
      // Firebase configuration
      const firebaseConfig = {
@@ -252,12 +307,13 @@
      // Initialize Firebase
      const app = initializeApp(firebaseConfig);
      const database = getDatabase(app);
+     const storage = getStorage(app);
      
 
      // Retrieve user name from localStorage
      const userName = localStorage.getItem('userName');
      if (userName) {
-       document.getElementById('welcomeMessage').textContent = ` ${userName}`;
+       document.getElementById('welcomeMessage').textContent = `Admin: ${userName}`;
      }
      // Staff management logic
      document.addEventListener('DOMContentLoaded', function() {
@@ -273,6 +329,9 @@
          const name = document.getElementById('name').value;
          const email = document.getElementById('email').value;
          const password = document.getElementById('password').value;
+         const phone = document.getElementById('phone').value;
+         const address = document.getElementById('address').value;
+         const photoFile = document.getElementById('photo').files[0];
  
          // Check if email already exists
          const emailExists = await checkEmailExists(email);
@@ -281,24 +340,34 @@
            return;
          }
  
+         let photoURL = '';
+         if (photoFile) {
+           const photoRef = storageRef(storage, `staff_photos/${Date.now()}_${photoFile.name}`);
+           await uploadBytes(photoRef, photoFile);
+           photoURL = await getDownloadURL(photoRef);
+         }
+ 
+         const accountData = {
+           role,
+           name,
+           email,
+           phone,
+           address,
+           photoURL
+         };
+ 
+         if (password) {
+           // Store a hashed version of the password or a placeholder
+           accountData.hasPassword = true;
+         }
+ 
          if (editingAccountId) {
            // Update existing account
-           update(ref(database, 'accounts/' + editingAccountId), {
-             role,
-             name,
-             email,
-             // Only update password if it's not empty
-             ...(password && { password })
-           });
+           update(ref(database, 'accounts/' + editingAccountId), accountData);
            editingAccountId = null;
          } else {
            // Save new account
-           push(ref(database, 'accounts'), {
-             role,
-             name,
-             email,
-             password // Note: In a real application, never store passwords in plain text
-           });
+           push(ref(database, 'accounts'), accountData);
          }
  
          // Clear form and close modal
@@ -313,18 +382,24 @@
          accountList.innerHTML = ''; // Clear existing list
          for (let id in accounts) {
            const account = accounts[id];
-           const row = `
-             <tr>
-               <td>${account.role}</td>
-               <td>${account.name}</td>
-               <td>${account.email}</td>
-               <td>
-                 <button class="btn btn-sm btn-primary edit-btn" data-id="${id}">Edit</button>
-                 <button class="btn btn-sm btn-danger delete-btn" data-id="${id}">Delete</button>
-               </td>
-             </tr>
-           `;
-           accountList.innerHTML += row;
+           // Only display staff and admin accounts
+           if (account.role === 'staff' || account.role === 'admin') {
+             const row = `
+               <tr>
+                 <td><img src="${account.photoURL || 'path/to/default/image.jpg'}" alt="Staff Photo" style="width: 50px; height: 50px; object-fit: cover;"></td>
+                 <td>${account.role}</td>
+                 <td>${account.name}</td>
+                 <td>${account.email}</td>
+                 <td>${account.phone}</td>
+                 <td>${account.address}</td>
+                 <td>
+                   <button class="btn btn-sm btn-primary edit-btn" data-id="${id}">Update</button>
+                   <button class="btn btn-sm btn-danger delete-btn" data-id="${id}">Delete</button>
+                 </td>
+               </tr>
+             `;
+             accountList.innerHTML += row;
+           }
          }
  
          // Add event listeners for edit and delete buttons
@@ -333,13 +408,42 @@
              editingAccountId = this.dataset.id;
              const account = accounts[editingAccountId];
              if (account) {
-               document.getElementById('role').value = account.role || '';
-               document.getElementById('name').value = account.name || '';
-               document.getElementById('email').value = account.email || '';
-               document.getElementById('password').value = ''; // Clear password field for security
-               document.getElementById('addAccountModalLabel').textContent = 'Edit Account';
-               const modal = new bootstrap.Modal(document.getElementById('addAccountModal'));
-               modal.show();
+               // Show password verification modal
+               const passwordVerificationModal = new bootstrap.Modal(document.getElementById('passwordVerificationModal'));
+               passwordVerificationModal.show();
+
+               // Handle password verification
+               document.getElementById('passwordVerificationForm').onsubmit = async function(e) {
+                 e.preventDefault();
+                 const enteredPassword = document.getElementById('verificationPassword').value;
+                 
+                 // Here you should implement a secure way to verify the password
+                 // For demonstration, we're using a simple check. In a real application,
+                 // you should use a secure server-side verification.
+                 if (enteredPassword === account.password) { // Replace with secure verification
+                   passwordVerificationModal.hide();
+                   
+                   // Clear the entered password
+                   document.getElementById('verificationPassword').value = '';
+                   
+                   // Populate form with account data
+                   document.getElementById('role').value = account.role || '';
+                   document.getElementById('name').value = account.name || '';
+                   document.getElementById('email').value = account.email || '';
+                   document.getElementById('password').value = ''; // Clear password field for security
+                   document.getElementById('phone').value = account.phone || '';
+                   document.getElementById('address').value = account.address || '';
+                   
+                   document.getElementById('addAccountModalLabel').textContent = 'Edit Account';
+                   const editModal = new bootstrap.Modal(document.getElementById('addAccountModal'));
+                   editModal.show();
+                   
+                 } else {
+                   alert('Incorrect password. Please try again.');
+                   // Clear the entered password even if it's incorrect
+                   document.getElementById('verificationPassword').value = '';
+                 }
+               };
              } else {
                console.error('Account not found:', editingAccountId);
              }
@@ -362,7 +466,7 @@
          const rows = accountList.getElementsByTagName('tr');
  
          for (let i = 0; i < rows.length; i++) {
-           const nameColumn = rows[i].getElementsByTagName('td')[1];
+           const nameColumn = rows[i].getElementsByTagName('td')[2]; // Updated index to match new table structure
            if (nameColumn) {
              const nameValue = nameColumn.textContent || nameColumn.innerText;
              if (nameValue.toUpperCase().indexOf(filter) > -1) {
