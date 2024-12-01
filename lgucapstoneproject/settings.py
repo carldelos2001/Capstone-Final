@@ -132,7 +132,7 @@ EMAIL_HOST = 'smtp.gmail.com'  # If using Gmail, for example
 EMAIL_PORT = 587
 EMAIL_USE_TLS = True
 EMAIL_HOST_USER = 'stevendelosreyes123@gmail.com'
-EMAIL_HOST_PASSWORD = 'vzwy bfin ksje lbow'
+EMAIL_HOST_PASSWORD = 'oyju fbtl ifnb lbxx'
 DEFAULT_FROM_EMAIL = 'stevendelosreyes123@gmail.com'
 
 SESSION_ENGINE = 'django.contrib.sessions.backends.db'

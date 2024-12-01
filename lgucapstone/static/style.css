@@ -2859,16 +2859,16 @@ fieldset:disabled a.btn {
 }
 
 .btn-outline-secondary {
-  color: #fd5190;
-  border-color: #fd5190;
+  color: #888;
+  border-color: #888;
 }
 .btn-outline-secondary:hover {
   color: #ffffff;
-  background-color: #fd5190;
-  border-color: #fd5190;
+  background-color: #555;
+  border-color: #555;
 }
 .btn-outline-secondary:focus, .btn-outline-secondary.focus {
-  box-shadow: 0 0 0 0.2rem rgba(253, 81, 144, 0.5);
+  box-shadow: 0 0 0 0.2rem rgba(232, 238, 238, 0.5);
 }
 .btn-outline-secondary.disabled, .btn-outline-secondary:disabled {
   color: #fd5190;

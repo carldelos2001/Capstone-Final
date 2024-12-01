@@ -8,6 +8,16 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.1.72/pdfmake.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.1.72/vfs_fonts.js"></script>
 
+  
+  <!-- html2canvas library -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+  
+  <!-- jsPDF library -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <script>
+  window.jsPDF = window.jspdf.jsPDF;
+  </script>
+
   <!-- Bootstrap CSS -->
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
   
@@ -41,7 +51,19 @@
       background-color: #888;
       border: #888;
     }
-    .btn-print-report :hover{
+    .btn-print-report:hover{
+      background-color: #555;
+      border: #555;
+    }
+    .btn-print-report:active{
+      background-color: #555;
+      border: #555;
+    }
+    .btn-print-report::before{
+      background-color: #888;
+      border: #888;
+    }
+    .btn-generate-report:focus{
       background-color: #555;
       border: #555;
     }
@@ -52,14 +74,14 @@
       <img src="{% static 'argao_logo.jpg' %}" alt="Logo">
     </div>
     <div class="nav-item" onclick="window.location.href='/admin_dash'">Dashboard</div>
+    <div class="nav-item" onclick="window.location.href='/admin_services'">Information Bulletin</div>
     <div class="nav-item" onclick="window.location.href='/admin_report'">Reports</div>
-    <div class="nav-item" onclick="window.location.href='/admin_services'">Services</div>
-    <div class="nav-item" onclick="window.location.href='/admin_feedback'">Feedbacks</div>
-    <div class="nav-item" onclick="window.location.href='/admin_announcement'">Session Notice</div>
-    <div class="nav-item" onclick="window.location.href='/admin_attendance'">Attendance</div>
-    <div class="nav-item" onclick="window.location.href='/admin_promanage'">Project Management</div>
     <div class="nav-item" onclick="window.location.href='/admin_staff_account'">Staff Account Management</div>
-    <div class="nav-item" onclick="window.location.href='/admin_minutesmaker'">Minutes Maker</div>
+    <div class="nav-item" onclick="window.location.href='/admin_feedback'">Feedbacks</div>
+    <div class="nav-item" onclick="window.location.href='/admin_notice'">Session Notice</div>
+    <div class="nav-item" onclick="window.location.href='/admin_attendance'">Attendance</div>
+    <div class="nav-item" onclick="window.location.href='/admin_minutes'">Minutes Maker</div>
+    <div class="nav-item" onclick="window.location.href='/admin_board'">Announcement Board</div>
     <div class="sidebar-footer">
       <span id="welcomeMessage">Staff:</span>
       <div class="nav-item" onclick="logout()">Log Out</div>
@@ -102,28 +124,6 @@
       </div>
     </div>
 
-    <!-- Project Management Table -->
-    <div class="row mt-3">
-      <div class="col-md-12">
-        <div class="card">
-          <div class="card-body">
-            <h5>Project Management</h5>
-            <table class="table table-bordered" id="projectsTable">
-              <thead>
-                <tr>
-                  <th>Project Name</th>
-                  <th>Budget Allocation</th>
-                </tr>
-              </thead>
-              <tbody>
-                <!-- Project rows will be added here -->
-              </tbody>
-            </table>
-          </div>
-        </div>
-      </div>
-    </div>
-
     <!-- Generate PDF Button -->
     <button class="btn btn-primary btn-generate-report" onclick="generateReport()">Generate Report</button>
     <!-- Print Report Button -->
@@ -160,17 +160,14 @@
       try {
         const ordinancesRef = ref(db, 'ordinances');
         const resolutionsRef = ref(db, 'resolutions');
-        const projectsRef = ref(db, 'projects');
 
-        const [ordinancesSnapshot, resolutionsSnapshot, projectsSnapshot] = await Promise.all([
+        const [ordinancesSnapshot, resolutionsSnapshot] = await Promise.all([
           get(ordinancesRef),
-          get(resolutionsRef),
-          get(projectsRef)
+          get(resolutionsRef)
         ]);
 
         const ordinancesData = ordinancesSnapshot.val() || {};
         const resolutionsData = resolutionsSnapshot.val() || {};
-        const projectsData = projectsSnapshot.val() || {};
 
         const ordinanceCounts = new Array(12).fill(0);
         const resolutionCounts = new Array(12).fill(0);
@@ -195,17 +192,6 @@
         pieChartResolution.data.datasets[0].data = [Object.keys(resolutionsData).length];
         pieChartResolution.update();
 
-        // Populate Project Management Table
-        const projectsTableBody = document.querySelector('#projectsTable tbody');
-        projectsTableBody.innerHTML = ''; // Clear existing rows
-        Object.entries(projectsData).forEach(([projectId, project]) => {
-          const row = document.createElement('tr');
-          row.innerHTML = `
-            <td>${project.title}</td>
-            <td>₱${Number(project.budget).toLocaleString()}</td>
-          `;
-          projectsTableBody.appendChild(row);
-        });
       } catch (error) {
         console.error('Error fetching data: ', error);
       }
@@ -300,67 +286,146 @@
     });
 
     function generateReport() {
-  // Fetch real-time chart data
-  const ordinanceCounts = barChart.data.datasets[0].data; // Ordinances data from bar chart
-  const resolutionCounts = barChart.data.datasets[1].data; // Resolutions data from bar chart
+      // Create temporary element
+      const element = document.createElement('div');
+      element.style.position = 'relative';
+      element.style.margin = '0 auto';
+      element.style.maxWidth = '8.5in';
+      element.style.minHeight = '11in';
+      element.style.backgroundColor = 'white';
+      element.style.boxShadow = '0 0 10px rgba(0,0,0,0.1)';
+      element.style.width = '8.5in';
+      element.style.padding = '0.5in';
+      element.style.color = '#000000'; // Add black font color
+      
+      element.innerHTML = `
+      <style>
+                  body { 
+                    font-family: Times New Roman, sans-serif;
+                    padding: 20px;
+                    max-width: 800px;
+                    margin: 0 auto;
+                    color: #000000;
+                  }
+                  .header {
+                    text-align: center;
+                    margin-bottom: 40px;
+                    position: relative;
+                  }
+                  .logo-left {
+                    position: absolute;
+                    left: 0;
+                    top: 0;
+                    width: 100px;
+                  }
+                  .logo-right {
+                    position: absolute;
+                    right: 0;
+                    top: 0;
+                    width: 100px;
+                  }
+                  .letterhead-text {
+                    font-size: 12px;
+                    line-height: 1.5;
+                    margin: 0;
+                    font-weight: bold;
+                    color: #000000;
+                  }
+                  table {
+                    width: 100%;
+                    border-collapse: collapse;
+                    margin: 20px 0;
+                  }
+                  th, td {
+                    border: 1px solid #000;
+                    padding: 8px;
+                    text-align: center;
+                    color: #000000;
+                  }
+                  th {
+                    background-color: #f2f2f2;
+                    color: #000000;
+                  }
+      </style>
+        <div style="font-family: Times New Roman, sans-serif; color: #000000;">
+          <div class="header">
+            <div style="margin: 15px 0;">
+              <img src="{% static 'argao_logo.jpg' %}" alt="Left Logo" class="logo-left">
+              <img src="{% static 'basers101.png' %}" alt="Right Logo" class="logo-right">
+              <p class="letterhead-text">Republic of the Philippines</p>
+              <p class="letterhead-text">Province of Cebu</p>
+              <p class="letterhead-text">Municipality of Argao</p>
+              <p class="letterhead-text">OFFICE OF THE SANGGUNIANG BAYAN</p>
+              <p class="letterhead-text">Tel. No.: (032) 367-7623</p>
+              <p class="letterhead-text">Email: sbargao@gmail.com</p>
+            </div>
+            <h3>Ordinance and Resolution Statistics Report</h3>
+            <p>Generated on: ${new Date().toLocaleDateString()}</p>
+          </div>
 
-  // Prepare table rows with real-time data
-  const reportData = [
-    ['January', ordinanceCounts[0], resolutionCounts[0]],
-    ['February', ordinanceCounts[1], resolutionCounts[1]],
-    ['March', ordinanceCounts[2], resolutionCounts[2]],
-    ['April', ordinanceCounts[3], resolutionCounts[3]],
-    ['May', ordinanceCounts[4], resolutionCounts[4]],
-    ['June', ordinanceCounts[5], resolutionCounts[5]],
-    ['July', ordinanceCounts[6], resolutionCounts[6]],
-    ['August', ordinanceCounts[7], resolutionCounts[7]],
-    ['September', ordinanceCounts[8], resolutionCounts[8]],
-    ['October', ordinanceCounts[9], resolutionCounts[9]],
-    ['November', ordinanceCounts[10], resolutionCounts[10]],
-    ['December', ordinanceCounts[11], resolutionCounts[11]],
-  ];
+          <div class="content">
+            <table>
+              <thead>
+                <tr>
+                  <th>Month</th>
+                  <th>Ordinances</th>
+                  <th>Resolutions</th>
+                </tr>
+              </thead>
+              <tbody>
+                ${['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'].map((month, index) => `
+                  <tr>
+                    <td>${month}</td>
+                    <td>${barChart.data.datasets[0].data[index]}</td>
+                    <td>${barChart.data.datasets[1].data[index]}</td>
+                  </tr>
+                `).join('')}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      `;
 
-  // Define the PDF document
-  const docDefinition = {
-    content: [
-      { text: 'Project Management Report', style: 'header' },
-      { text: 'Generated on: ' + new Date().toLocaleDateString(), style: 'subheader' },
-      {
-        table: {
-          headerRows: 1,
-          widths: ['*', '*'],
-          body: [
-            ['Project Name', 'Budget Allocation'],
-            ...Array.from(document.querySelectorAll('#projectsTable tbody tr')).map(row => [
-              row.cells[0].textContent,
-              row.cells[1].textContent
-            ])
-          ]
-        },
-        style: 'table'
-      },
-      { text: 'Ordinance and Resolution Statistics', style: 'header' },
-      {
-        table: {
-          headerRows: 1,
-          widths: ['*', '*', '*'],
-          body: [
-            ['Month', 'Ordinances', 'Resolutions'],
-            ...reportData // Inserting the real-time data into the table
-          ]
-        },
-        style: 'table'
-      }
-    ],
-    styles: {
-      header: { fontSize: 18, bold: true, margin: [0, 0, 0, 10] },
-      subheader: { fontSize: 14, bold: true, margin: [0, 10, 0, 5] },
-      table: { margin: [0, 5, 0, 15] }
+      // Add element to document body
+      document.body.appendChild(element);
+
+      // Use html2canvas to capture the element
+      html2canvas(element, {
+        scale: 2,
+        useCORS: true,
+        logging: true,
+        height: element.offsetHeight,
+        windowHeight: element.offsetHeight
+      }).then((canvas) => {
+        const pdf = new jsPDF('p', 'pt', 'letter');
+        const imgData = canvas.toDataURL('image/png');
+
+        const imgWidth = 612; // PDF width in points for letter size
+        const pageHeight = 792; // PDF height in points for letter size
+        const imgHeight = (canvas.height * imgWidth) / canvas.width;
+        let heightLeft = imgHeight;
+        let position = 0;
+
+        // Add first page
+        pdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight);
+        heightLeft -= pageHeight;
+
+        // Add additional pages if content overflows
+        while (heightLeft > 0) {
+          position = heightLeft - imgHeight;
+          pdf.addPage();
+          pdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight);
+          heightLeft -= pageHeight;
+        }
+
+        pdf.save('ordinance_resolution_report.pdf');
+        document.body.removeChild(element);
+        console.log('PDF generated successfully');
+      }).catch((error) => {
+        console.error('Error generating PDF:', error);
+        document.body.removeChild(element);
+      });
     }
-  };
-
-  pdfMake.createPdf(docDefinition).download('project_management_report.pdf');
-}
 
 function printReport() {
   // Create a new window for printing
@@ -370,44 +435,46 @@ function printReport() {
   const reportContent = `
     <html>
       <head>
-        <title>Project Management Report</title>
+        <title>Ordinance and Resolution Report</title>
         <style>
-          body { font-family: Arial, sans-serif; }
+          body { 
+          font-family: Arial, sans-serif; }
+          table { 
+          width: 100%; border-collapse: collapse; }
+          th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
+          th { background-color: #f2f2f2; }
+          body { font-family: Times New Roman, sans-serif; }
           table { width: 100%; border-collapse: collapse; }
           th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
           th { background-color: #f2f2f2; }
+
+          .logo-left {
+          position: absolute;
+          left: 0;
+          top: 0;
+          width: 100px;
+          }
+          .logo-right {
+          position: absolute;
+          right: 0;
+          top: 0;
+          width: 100px;
+          }
         </style>
       </head>
       <body>
         <div class="report-header" style="text-align: center; margin-bottom: 20px;">
-          <img src="{% static 'argao_logo.jpg' %}" alt="Logo" style="width: 80px; height: auto;">
-          <h2 style="margin: 10px 0 5px;">Republic of the Philippines</h2>
-          <h3 style="margin: 5px 0;">Province of Cebu</h3>
-          <h3 style="margin: 5px 0;">Municipality of Argao</h3>
-          <h4 style="margin: 5px 0;">OFFICE OF THE SANGGUNIANG BAYAN</h4>
-          <p style="margin: 5px 0;">Tel. No.: 032-2590732</p>
-          <p style="margin: 5px 0;">Email: sbargao@gmail.com</p>
+          <img src="{% static 'argao_logo.jpg' %}" alt="Left Logo" class="logo-left">
+                  <img src="{% static 'basers101.png' %}" alt="Right Logo" class="logo-right">
+                  <p class="letterhead-text">Republic of the Philippines</p>
+                  <p class="letterhead-text">Province of Cebu</p>
+                  <p class="letterhead-text">Municipality of Argao</p>
+                  <p class="letterhead-text">OFFICE OF THE SANGGUNIANG BAYAN</p>
+                  <p class="letterhead-text">Tel. No.: (032) 367-7623</p>
+                  <p class="letterhead-text">Email: sbargao@gmail.com</p>
         </div>
         
         <p>Generated on: ${new Date().toLocaleDateString()}</p>
-        
-        <h2>Project Management</h2>
-        <table>
-          <thead>
-            <tr>
-              <th>Project Name</th>
-              <th>Budget Allocation</th>
-            </tr>
-          </thead>
-          <tbody>
-            ${Array.from(document.querySelectorAll('#projectsTable tbody tr')).map(row => `
-              <tr>
-                <td>${row.cells[0].textContent}</td>
-                <td>${row.cells[1].textContent}</td>
-              </tr>
-            `).join('')}
-          </tbody>
-        </table>
         
         <h2>Ordinance and Resolution Statistics</h2>
         <table>
@@ -486,6 +553,7 @@ window.logout = function() {
     border-right: 1px solid #ddd;
     display: flex;
     flex-direction: column;
+    color: black;
   }
 
   .sidebar .logo {
@@ -548,6 +616,7 @@ window.logout = function() {
     margin-top: 20px;
     margin-right: 10px;
   }
+  
   #pieChartOrdinance,
 #pieChartResolution {
 max-width: 300px; /* Smaller size */

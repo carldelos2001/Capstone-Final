@@ -28,6 +28,7 @@
   body {
   font-family: "Poppins", sans-serif;
   font-size: 1rem;
+  color: black;
   }
   .sidebar-footer {
       margin-top: auto;
@@ -162,14 +163,14 @@
           <img src="{% static 'argao_logo.jpg' %}" alt="Logo">
         </div>
         <div class="nav-item" onclick="window.location.href='/admin_dash'">Dashboard</div>
-        <div class="nav-item" onclick="window.location.href='/admin_report'">Reports</div>
-        <div class="nav-item" onclick="window.location.href='/admin_services'">Services</div>
-        <div class="nav-item" onclick="window.location.href='/admin_feedback'">Feedbacks</div>
-        <div class="nav-item" onclick="window.location.href='/admin_announcement'">Session Notice</div>
-        <div class="nav-item" onclick="window.location.href='/admin_attendance'">Attendance</div>
-        <div class="nav-item" onclick="window.location.href='/admin_promanage'">Project Management</div>
-        <div class="nav-item" onclick="window.location.href='/admin_staff_account'">Staff Account Management</div>
-        <div class="nav-item" onclick="window.location.href='/admin_minutesmaker'">Minutes Maker</div>
+    <div class="nav-item" onclick="window.location.href='/admin_services'">Information Bulletin</div>
+    <div class="nav-item" onclick="window.location.href='/admin_report'">Reports</div>
+    <div class="nav-item" onclick="window.location.href='/admin_staff_account'">Staff Account Management</div>
+    <div class="nav-item" onclick="window.location.href='/admin_feedback'">Feedbacks</div>
+    <div class="nav-item" onclick="window.location.href='/admin_notice'">Session Notice</div>
+    <div class="nav-item" onclick="window.location.href='/admin_attendance'">Attendance</div>
+    <div class="nav-item" onclick="window.location.href='/admin_minutes'">Minutes Maker</div>
+    <div class="nav-item" onclick="window.location.href='/admin_board'">Announcement Board</div>
         <div class="sidebar-footer">
           <span id="welcomeMessage">Staff:</span>
           <div class="nav-item" onclick="logout()">Log Out</div>
@@ -198,7 +199,8 @@
               <tr>
                 <th>Photo</th>
                 <th>Account Type</th>
-                <th>Name</th>
+                <th>First Name</th>
+                <th>Last Name</th>
                 <th>Email</th>
                 <th>Phone</th>
                 <th>Address</th>
@@ -232,8 +234,12 @@
               </select>
             </div>
             <div class="form-group mb-3">
-              <label for="name">Name</label>
-              <input type="text" id="name" class="form-control" required>
+              <label for="firstName">First Name</label>
+              <input type="text" id="firstName" class="form-control" required>
+            </div>
+            <div class="form-group mb-3">
+              <label for="lastName">Last Name</label>
+              <input type="text" id="lastName" class="form-control" required>
             </div>
             <div class="form-group mb-3">
               <label for="email">Email</label>
@@ -256,7 +262,28 @@
               <label for="photo">Photo</label>
               <input type="file" id="photo" class="form-control" accept="image/*">
             </div>
-            <button type="submit" class="btn btn-success">Save</button>
+            <button type="submit" class="btn btn-success" id="submitBtn">Save</button>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- OTP Verification Modal -->
+  <div class="modal fade" id="otpVerificationModal" tabindex="-1" aria-labelledby="otpVerificationModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title" id="otpVerificationModalLabel">Verify OTP</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
+          <form id="otpVerificationForm">
+            <div class="form-group mb-3">
+              <label for="otp">Enter OTP sent to your email:</label>
+              <input type="text" id="otp" class="form-control" required>
+            </div>
+            <button type="submit" class="btn btn-primary">Verify OTP</button>
           </form>
         </div>
       </div>
@@ -309,86 +336,166 @@
      const database = getDatabase(app);
      const storage = getStorage(app);
      
-
      // Retrieve user name from localStorage
      const userName = localStorage.getItem('userName');
      if (userName) {
        document.getElementById('welcomeMessage').textContent = `Admin: ${userName}`;
      }
+
      // Staff management logic
      document.addEventListener('DOMContentLoaded', function() {
        const accountForm = document.getElementById('accountForm');
        const accountList = document.getElementById('accountList');
        let editingAccountId = null;
- 
+       let isEditing = false;
+       let tempAccountData = null;
+
        // Save or update account
        accountForm.addEventListener('submit', async function(e) {
          e.preventDefault();
          
-         const role = document.getElementById('role').value;
-         const name = document.getElementById('name').value;
-         const email = document.getElementById('email').value;
-         const password = document.getElementById('password').value;
-         const phone = document.getElementById('phone').value;
-         const address = document.getElementById('address').value;
-         const photoFile = document.getElementById('photo').files[0];
- 
-         // Check if email already exists
-         const emailExists = await checkEmailExists(email);
-         if (emailExists && !editingAccountId) {
-           document.getElementById('emailError').textContent = 'This email is already registered.';
-           return;
-         }
- 
-         let photoURL = '';
-         if (photoFile) {
-           const photoRef = storageRef(storage, `staff_photos/${Date.now()}_${photoFile.name}`);
-           await uploadBytes(photoRef, photoFile);
-           photoURL = await getDownloadURL(photoRef);
-         }
- 
-         const accountData = {
-           role,
-           name,
-           email,
-           phone,
-           address,
-           photoURL
+         const formData = {
+           role: document.getElementById('role').value,
+           firstName: document.getElementById('firstName').value,
+           lastName: document.getElementById('lastName').value,
+           email: document.getElementById('email').value,
+           password: document.getElementById('password').value,
+           phone: document.getElementById('phone').value,
+           address: document.getElementById('address').value
          };
- 
-         if (password) {
-           // Store a hashed version of the password or a placeholder
-           accountData.hasPassword = true;
-         }
- 
-         if (editingAccountId) {
-           // Update existing account
-           update(ref(database, 'accounts/' + editingAccountId), accountData);
-           editingAccountId = null;
+         
+         const photoFile = document.getElementById('photo').files[0];
+
+         if (isEditing) {
+           // Handle edit mode - direct update without OTP
+           try {
+             let updateData = { ...formData };
+             delete updateData.password; // Don't update password unless changed
+
+             if (photoFile) {
+               const photoRef = storageRef(storage, `staff_photos/${Date.now()}_${photoFile.name}`);
+               await uploadBytes(photoRef, photoFile);
+               updateData.photoURL = await getDownloadURL(photoRef);
+             }
+
+             if (formData.password) {
+               updateData.hasPassword = true;
+             }
+
+             await update(ref(database, 'accounts/' + editingAccountId), updateData);
+             alert('Account updated successfully!');
+             bootstrap.Modal.getInstance(document.getElementById('addAccountModal')).hide();
+           } catch (error) {
+             console.error('Error updating account:', error);
+             alert('Failed to update account. Please try again.');
+           }
          } else {
-           // Save new account
-           push(ref(database, 'accounts'), accountData);
+           // Handle new account creation with OTP
+           try {
+             const emailExists = await checkEmailExists(formData.email);
+             if (emailExists) {
+               document.getElementById('emailError').textContent = 'This email is already registered.';
+               return;
+             }
+
+             let photoURL = '';
+             if (photoFile) {
+               const photoRef = storageRef(storage, `staff_photos/${Date.now()}_${photoFile.name}`);
+               await uploadBytes(photoRef, photoFile);
+               photoURL = await getDownloadURL(photoRef);
+             }
+
+             // Store data temporarily
+             tempAccountData = {
+               ...formData,
+               photoURL
+             };
+
+             // Send OTP
+             const response = await fetch('/send-otp/', {
+               method: 'POST',
+               headers: {
+                 'Content-Type': 'application/json',
+                 'X-CSRFToken': getCookie('csrftoken')
+               },
+               body: JSON.stringify({
+                 email: formData.email,
+                 password: formData.password
+               })
+             });
+
+             if (!response.ok) throw new Error('Failed to send OTP');
+
+             // Show OTP verification modal
+             const otpModal = new bootstrap.Modal(document.getElementById('otpVerificationModal'));
+             otpModal.show();
+
+             // Clear form and close add account modal
+             this.reset();
+             document.getElementById('emailError').textContent = '';
+             bootstrap.Modal.getInstance(document.getElementById('addAccountModal')).hide();
+           } catch (error) {
+             console.error("Error in account creation:", error);
+             alert("Failed to create account. Please try again.");
+           }
          }
- 
-         // Clear form and close modal
-         this.reset();
-         document.getElementById('emailError').textContent = '';
-         bootstrap.Modal.getInstance(document.getElementById('addAccountModal')).hide();
        });
- 
+
+       // Handle OTP verification for new accounts
+       document.getElementById('otpVerificationForm').addEventListener('submit', async function(e) {
+         e.preventDefault();
+         const enteredOTP = document.getElementById('otp').value;
+
+         try {
+           const response = await fetch('/verify-otp-only/', {
+             method: 'POST',
+             headers: {
+               'Content-Type': 'application/json',
+               'X-CSRFToken': getCookie('csrftoken')
+             },
+             body: JSON.stringify({
+               otp: enteredOTP,
+               email: tempAccountData.email,
+               password: tempAccountData.password,
+               first_name: tempAccountData.firstName,
+               last_name: tempAccountData.lastName,
+               role: tempAccountData.role
+             })
+           });
+
+           const result = await response.json();
+
+           if (result.success) {
+             delete tempAccountData.password;
+             tempAccountData.hasPassword = true;
+             await push(ref(database, 'accounts'), tempAccountData);
+             alert('Account created successfully!');
+             bootstrap.Modal.getInstance(document.getElementById('otpVerificationModal')).hide();
+             tempAccountData = null;
+           } else {
+             alert('Invalid OTP. Please try again.');
+           }
+         } catch (error) {
+           console.error("Error verifying OTP:", error);
+           alert('Failed to verify OTP. Please try again.');
+         }
+
+         this.reset();
+       });
+
        // Load and display accounts
        onValue(ref(database, 'accounts'), (snapshot) => {
          const accounts = snapshot.val();
-         accountList.innerHTML = ''; // Clear existing list
+         accountList.innerHTML = '';
          for (let id in accounts) {
            const account = accounts[id];
-           // Only display staff and admin accounts
            if (account.role === 'staff' || account.role === 'admin') {
              const row = `
                <tr>
                  <td><img src="${account.photoURL || 'path/to/default/image.jpg'}" alt="Staff Photo" style="width: 50px; height: 50px; object-fit: cover;"></td>
                  <td>${account.role}</td>
-                 <td>${account.name}</td>
+                 <td>${account.firstName}</td>
+                 <td>${account.lastName}</td>
                  <td>${account.email}</td>
                  <td>${account.phone}</td>
                  <td>${account.address}</td>
@@ -401,7 +508,7 @@
              accountList.innerHTML += row;
            }
          }
- 
+
          // Add event listeners for edit and delete buttons
          document.querySelectorAll('.edit-btn').forEach(btn => {
            btn.addEventListener('click', function() {
@@ -417,39 +524,54 @@
                  e.preventDefault();
                  const enteredPassword = document.getElementById('verificationPassword').value;
                  
-                 // Here you should implement a secure way to verify the password
-                 // For demonstration, we're using a simple check. In a real application,
-                 // you should use a secure server-side verification.
-                 if (enteredPassword === account.password) { // Replace with secure verification
-                   passwordVerificationModal.hide();
-                   
-                   // Clear the entered password
-                   document.getElementById('verificationPassword').value = '';
-                   
-                   // Populate form with account data
-                   document.getElementById('role').value = account.role || '';
-                   document.getElementById('name').value = account.name || '';
-                   document.getElementById('email').value = account.email || '';
-                   document.getElementById('password').value = ''; // Clear password field for security
-                   document.getElementById('phone').value = account.phone || '';
-                   document.getElementById('address').value = account.address || '';
-                   
-                   document.getElementById('addAccountModalLabel').textContent = 'Edit Account';
-                   const editModal = new bootstrap.Modal(document.getElementById('addAccountModal'));
-                   editModal.show();
-                   
-                 } else {
-                   alert('Incorrect password. Please try again.');
-                   // Clear the entered password even if it's incorrect
+                 try {
+                   const response = await fetch('/verify-password/', {
+                     method: 'POST',
+                     headers: {
+                       'Content-Type': 'application/json',
+                       'X-CSRFToken': getCookie('csrftoken')
+                     },
+                     body: JSON.stringify({
+                       email: account.email,
+                       password: enteredPassword
+                     })
+                   });
+
+                   const result = await response.json();
+
+                   if (result.success) {
+                     passwordVerificationModal.hide();
+                     document.getElementById('verificationPassword').value = '';
+                     
+                     // Set editing mode
+                     isEditing = true;
+                     
+                     // Populate form with account data
+                     document.getElementById('role').value = account.role || '';
+                     document.getElementById('firstName').value = account.firstName || '';
+                     document.getElementById('lastName').value = account.lastName || '';
+                     document.getElementById('email').value = account.email || '';
+                     document.getElementById('password').value = ''; 
+                     document.getElementById('phone').value = account.phone || '';
+                     document.getElementById('address').value = account.address || '';
+                     
+                     document.getElementById('addAccountModalLabel').textContent = 'Edit Account';
+                     const editModal = new bootstrap.Modal(document.getElementById('addAccountModal'));
+                     editModal.show();
+                   } else {
+                     alert('Incorrect password. Please try again.');
+                     document.getElementById('verificationPassword').value = '';
+                   }
+                 } catch (error) {
+                   console.error('Error verifying password:', error);
+                   alert('Failed to verify password. Please try again.');
                    document.getElementById('verificationPassword').value = '';
                  }
                };
-             } else {
-               console.error('Account not found:', editingAccountId);
              }
            });
          });
- 
+
          document.querySelectorAll('.delete-btn').forEach(btn => {
            btn.addEventListener('click', function() {
              if (confirm('Are you sure you want to delete this account?')) {
@@ -458,18 +580,19 @@
            });
          });
        });
- 
+
        // Search accounts
        window.searchAccounts = function() {
          const input = document.getElementById('searchInput');
          const filter = input.value.toUpperCase();
          const rows = accountList.getElementsByTagName('tr');
- 
+
          for (let i = 0; i < rows.length; i++) {
-           const nameColumn = rows[i].getElementsByTagName('td')[2]; // Updated index to match new table structure
-           if (nameColumn) {
-             const nameValue = nameColumn.textContent || nameColumn.innerText;
-             if (nameValue.toUpperCase().indexOf(filter) > -1) {
+           const firstNameColumn = rows[i].getElementsByTagName('td')[2];
+           const lastNameColumn = rows[i].getElementsByTagName('td')[3];
+           if (firstNameColumn && lastNameColumn) {
+             const fullName = (firstNameColumn.textContent + ' ' + lastNameColumn.textContent) || '';
+             if (fullName.toUpperCase().indexOf(filter) > -1) {
                rows[i].style.display = '';
              } else {
                rows[i].style.display = 'none';
@@ -480,9 +603,12 @@
 
        // Reset form when modal is closed
        document.getElementById('addAccountModal').addEventListener('hidden.bs.modal', function () {
-         accountForm.reset();
-         document.getElementById('addAccountModalLabel').textContent = 'Add Account';
-         document.getElementById('emailError').textContent = '';
+         if (!isEditing) {
+           accountForm.reset();
+           document.getElementById('addAccountModalLabel').textContent = 'Add Account';
+           document.getElementById('emailError').textContent = '';
+         }
+         isEditing = false;
          editingAccountId = null;
        });
 
@@ -492,16 +618,29 @@
          const accounts = snapshot.val();
          return Object.values(accounts).some(account => account.email === email);
        }
+
+       // Function to get CSRF token
+       function getCookie(name) {
+         let cookieValue = null;
+         if (document.cookie && document.cookie !== '') {
+           const cookies = document.cookie.split(';');
+           for (let i = 0; i < cookies.length; i++) {
+             const cookie = cookies[i].trim();
+             if (cookie.substring(0, name.length + 1) === (name + '=')) {
+               cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+               break;
+             }
+           }
+         }
+         return cookieValue;
+       }
      });
 
      // Logout function
-window.logout = function() {
-      // Clear user data from localStorage
-      localStorage.removeItem('userName');
-      // Redirect to login page
-      window.location.href = 'main_login';  // Adjust this URL as needed
-    }
-
+     window.logout = function() {
+       localStorage.removeItem('userName');
+       window.location.href = 'main_login';
+     }
    </script>
 </body>
 </html>

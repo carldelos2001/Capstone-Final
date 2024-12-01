@@ -19,3 +19,19 @@ class OrdinanceResolutionForm(forms.Form):
         ('ordinance', 'Ordinance'),
     ])
     document = forms.FileField()
+
+class StaffOrdinanceResolutionForm(forms.Form):
+    title = forms.CharField(max_length=999)
+    year = forms.CharField(max_length=4)
+    date_proposed = forms.DateField(
+        widget=CalendarDateInput()
+    )
+    date_approved = forms.DateField(
+        widget=CalendarDateInput()
+    )
+    author = forms.CharField(max_length=255)
+    file_type = forms.ChoiceField(choices=[
+        ('resolution', 'Resolution'),
+        ('ordinance', 'Ordinance'),
+    ])
+    document = forms.FileField()

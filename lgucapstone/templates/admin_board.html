@@ -147,15 +147,17 @@
         <div class="logo">
             <img src="{% static 'argao_logo.jpg' %}" alt="Logo">
         </div>
-        <div class="nav-item" onclick="window.location.href='/staff_dash'">Dashboard</div>
-        <div class="nav-item" onclick="window.location.href='/staff_report'">Reports</div>
-        <div class="nav-item" onclick="window.location.href='/staff_services'">Information Bulletin</div>
-        <div class="nav-item" onclick="window.location.href='/staff_feedback'">Feedbacks</div>
-        <div class="nav-item" onclick="window.location.href='/staff_session'">Session Agenda</div>
-        <div class="nav-item" onclick="window.location.href='/staff_announcement'">Announcements Board</div>
-
+        <div class="nav-item" onclick="window.location.href='/admin_dash'">Dashboard</div>
+        <div class="nav-item" onclick="window.location.href='/admin_services'">Information Bulletin</div>
+        <div class="nav-item" onclick="window.location.href='/admin_report'">Reports</div>
+        <div class="nav-item" onclick="window.location.href='/admin_staff_account'">Staff Account Management</div>
+        <div class="nav-item" onclick="window.location.href='/admin_feedback'">Feedbacks</div>
+        <div class="nav-item" onclick="window.location.href='/admin_notice'">Session Notice</div>
+        <div class="nav-item" onclick="window.location.href='/admin_attendance'">Attendance</div>
+        <div class="nav-item" onclick="window.location.href='/admin_minutes'">Minutes Maker</div>
+        <div class="nav-item" onclick="window.location.href='/admin_board'">Announcement Board</div>
         <div class="sidebar-footer">
-            <span id="welcomeMessage">Staff:</span>
+            <span id="welcomeMessage">Admin:</span>
             <div class="nav-item" onclick="logout()">Log Out</div>
         </div>   
     </div>
@@ -253,11 +255,11 @@
         const db = firebase.database();
         const storage = firebase.storage();
 
-        // Retrieve user name and email from localStorage
+        // Retrieve user name from localStorage
         const userName = localStorage.getItem('userName');
         const userEmail = localStorage.getItem('userEmail');
         if (userName) {
-            document.getElementById('welcomeMessage').textContent = `Staff: ${userName}`;
+            document.getElementById('welcomeMessage').textContent = `Admin: ${userName}`;
         }
 
         // Handle form submission
@@ -312,13 +314,13 @@
                     const timeString = announcement.updatedAt ? 
                         `Edited on ${new Date(announcement.updatedAt).toLocaleDateString()} by ${announcement.postedBy || 'Unknown'}` :
                         `Posted on ${new Date(announcement.createdAt).toLocaleDateString()} by ${announcement.postedBy || 'Unknown'}`;
+                    
                     const announcementHtml = `
                         <div class="announcement-card">
                             <div class="header">
                                 <h5>${announcement.title}</h5>
                                 <div class="actions">
                                     <button class="edit-btn" onclick="openEditModal('${childSnapshot.key}')">Edit</button>
-                                    
                                 </div>
                             </div>
                             <p class="content mt-3">${announcement.content}</p>
@@ -380,8 +382,6 @@
                 });
             }
         }
-
-        
 
         // Load announcements when the page loads
         document.addEventListener('DOMContentLoaded', loadAnnouncements);

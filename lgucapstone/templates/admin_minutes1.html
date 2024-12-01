@@ -1,0 +1,1387 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  {% load static %}
+  
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <!-- Bootstrap CSS -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;700&display=swap" rel="stylesheet">
+  
+  <!-- Custom CSS -->
+  <link rel="stylesheet" href="{% static 'style.css' %}">
+
+  <title>Minutes Maker</title>
+  <style>
+    @font-face {
+      font-family: "Poppins";
+      src: url("{% static 'fonts/Poppins-Regular.ttf' %}") format("truetype");
+    }
+
+    @font-face {
+      font-family: "Poppins";
+      src: url("{% static 'fonts/Poppins-Bold.ttf' %}") format("truetype");
+      font-weight: bold;
+    }
+
+    body {
+      font-family: "Poppins", sans-serif;
+      font-size: 1rem;
+      color: black;
+    }
+    .btn-secondary {
+      background-color: #52AE77;
+      border-color: #52AE77;
+    }
+    .btn-secondary:hover {
+      background-color: #459B68;
+      border-color: #459B68;
+    }
+    .btn-secondary:focus {
+      background-color: #459B68;
+      border-color: #459B68;
+    }
+    .btn-secondary:active {
+      background-color: #459B68;
+      border-color: #459B68;
+    }
+    .sidebar-footer {
+      margin-top: auto;
+      padding: 15px 20px;
+      border-top: 1px solid #ddd;
+    }
+
+    .sidebar-footer #welcomeMessage {
+      display: block;
+      margin-bottom: 10px;
+    }
+    .sidebar {
+      position: fixed;
+      top: 0;
+      left: 0;
+      height: 100%;
+      width: 250px;
+      background-color: #f8f9fa;
+      padding-top: 20px;
+      border-right: 1px solid #ddd;
+      display: flex;
+      flex-direction: column;
+    }
+    
+    .sidebar .logo {
+      text-align: center;
+      margin-bottom: 20px;
+    }
+    
+    .sidebar .logo img {
+      width: 100px;
+      border-radius: 50%;
+    }
+    
+    .sidebar .nav-item {
+      padding: 15px 20px;
+      text-align: center;
+      border-bottom: 1px solid #ddd;
+    }
+    
+    .sidebar .nav-item:hover {
+      background-color: #e9ecef;
+      cursor: pointer;
+    }
+    
+    .main-content {
+      padding: 20px;
+    }
+    
+    .user-profile {
+      position: fixed;
+      top: 20px;
+      right: 20px;
+      display: flex;
+      align-items: center;
+      z-index: 10;
+    }
+    
+    .user-profile img {
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+    }
+
+    ::-webkit-scrollbar {
+      width: 10px;
+    }
+
+    ::-webkit-scrollbar-track {
+      background: #f1f1f1;
+    }
+
+    ::-webkit-scrollbar-thumb {
+      background: #888;
+    }
+
+    ::-webkit-scrollbar-thumb:hover {
+      background: #555;
+    }
+
+    /* Add error handling styles */
+    .error-message {
+      color: #dc3545;
+      padding: 10px;
+      margin: 10px 0;
+      border: 1px solid #dc3545;
+      border-radius: 4px;
+      display: none;
+    }
+
+    .error-message.show {
+      display: block;
+    }
+  </style>
+
+  <!-- Add error handling script -->
+  <script>
+    function handleError(error) {
+      console.error('Error:', error);
+      const errorDiv = document.getElementById('errorMessage');
+      if (errorDiv) {
+        errorDiv.textContent = 'An error occurred. Please try again later.';
+        errorDiv.classList.add('show');
+        setTimeout(() => {
+          errorDiv.classList.remove('show');
+        }, 5000);
+      }
+    }
+
+    window.onerror = function(msg, url, line) {
+      handleError(`${msg} at ${url}:${line}`);
+      return false;
+    };
+  </script>
+</head>
+<body>
+  <!-- Sidebar -->
+  <div class="sidebar">
+    <div class="logo">
+      <img src="{% static 'argao_logo.jpg' %}" alt="Logo">
+    </div>
+    <div class="nav-item" onclick="window.location.href='/admin_dash'">Dashboard</div>
+    <div class="nav-item" onclick="window.location.href='/admin_services'">Information Bulletin</div>
+    <div class="nav-item" onclick="window.location.href='/admin_report'">Reports</div>
+    <div class="nav-item" onclick="window.location.href='/admin_staff_account'">Staff Account Management</div>
+    <div class="nav-item" onclick="window.location.href='/admin_feedback'">Feedbacks</div>
+    <div class="nav-item" onclick="window.location.href='/admin_notice'">Session Notice</div>
+    <div class="nav-item" onclick="window.location.href='/admin_attendance'">Attendance</div>
+    <div class="nav-item" onclick="window.location.href='/admin_minutes'">Minutes Maker</div>
+    <div class="nav-item" onclick="window.location.href='/admin_board'">Announcement Board</div>
+    <div class="sidebar-footer">
+      <span id="welcomeMessage">Admin: <span id="userFirstName"></span></span>
+      <div class="nav-item" onclick="logout()">Log Out</div>
+    </div>
+  </div>
+
+  <!-- Main Content -->
+  <div class="main-content" style="margin-left: 250px;">
+    <div class="container mt-4">
+      <h2>Minutes Maker</h2>
+      
+      <!-- Minutes Form -->
+      <div class="card mb-4">
+        <div class="card-body">
+          <div class="mb-3">
+            <label for="minutesNo" class="form-label">Minutes No.</label>
+            <input type="text" class="form-control" id="minutesNo" placeholder="Enter minutes number">
+          </div>
+          <div class="mb-3">
+            <label for="sessionDate" class="form-label">Session Date</label>
+            <input type="date" class="form-control" id="sessionDate">
+          </div>
+          <div class="mb-3">
+            <label class="form-label">1. CALL TO ORDER</label>
+            <textarea class="form-control" id="callToOrder" rows="2"></textarea>
+          </div>
+          <div class="mb-3">
+            <label class="form-label">2. INVOCATION</label>
+            <textarea class="form-control" id="invocation" rows="2"></textarea>
+          </div>
+          <div class="mb-3">
+            <label class="form-label">3. NATIONAL ANTHEM</label>
+            <textarea class="form-control" id="nationalAnthem" rows="2"></textarea>
+          </div>
+          <div class="mb-3">
+            <label class="form-label">4. SUGBO HYMN</label>
+            <textarea class="form-control" id="sugboHymn" rows="2"></textarea>
+          </div>
+          <div class="mb-3">
+            <label class="form-label">5. ROLL CALL</label>
+            <textarea class="form-control" id="rollCall" rows="2"></textarea>
+          </div>
+          
+          <!-- Section 6 with dynamic subsections -->
+          <div class="mb-3">
+            <label class="form-label">6. ADOPTION OF MINUTES OF THE PREVIOUS SESSION</label>
+            <div id="adoptionMinutesContainer">
+              <div class="input-group mb-2">
+                <span class="input-group-text">6.1</span>
+                <textarea class="form-control" id="adoptionMinutes" rows="2"></textarea>
+              </div>
+            </div>
+            <button type="button" class="btn btn-secondary btn-sm" onclick="addSubsection('adoptionMinutesContainer', 6)">+ Add Subsection</button>
+          </div>
+
+          <!-- Section 7 with dynamic subsections -->
+          <div class="mb-3">
+            <label class="form-label">7. COMMUNICATIONS RECEIVED</label>
+            <div id="communicationsContainer">
+              <div class="input-group mb-2">
+                <span class="input-group-text">7.1</span>
+                <textarea class="form-control" id="communications" rows="2"></textarea>
+              </div>
+            </div>
+            <button type="button" class="btn btn-secondary btn-sm" onclick="addSubsection('communicationsContainer', 7)">+ Add Subsection</button>
+          </div>
+
+          <!-- Section 8 with dynamic subsections -->
+          <div class="mb-3">
+            <label class="form-label">8. COMMITTEE REPORT</label>
+            <div id="committeeReportContainer">
+              <div class="input-group mb-2">
+                <span class="input-group-text">8.1</span>
+                <textarea class="form-control" id="committeeReport" rows="2"></textarea>
+              </div>
+            </div>
+            <button type="button" class="btn btn-secondary btn-sm" onclick="addSubsection('committeeReportContainer', 8)">+ Add Subsection</button>
+          </div>
+
+          <!-- Section 9 with dynamic subsections -->
+          <div class="mb-3">
+            <label class="form-label">9. FIRST READING</label>
+            <div id="firstReadingContainer">
+              <div class="input-group mb-2">
+                <span class="input-group-text">9.1</span>
+                <textarea class="form-control" id="firstReading" rows="2"></textarea>
+              </div>
+            </div>
+            <button type="button" class="btn btn-secondary btn-sm" onclick="addSubsection('firstReadingContainer', 9)">+ Add Subsection</button>
+          </div>
+
+          <div class="mb-3">
+            <label class="form-label">10. OTHER MATTERS</label>
+            <textarea class="form-control" id="otherMatters" rows="2"></textarea>
+          </div>
+          <div class="mb-3">
+            <label class="form-label">11. ADJOURNMENT</label>
+            <textarea class="form-control" id="adjournment" rows="2"></textarea>
+          </div>
+
+          <!-- Added Prepared By and Approved By fields -->
+          <div class="mb-3">
+            <label class="form-label">PREPARED BY:</label>
+            <input type="text" class="form-control" id="preparedBy" placeholder="Enter name">
+          </div>
+          <div class="mb-3">
+            <label class="form-label">ATTESTED BY:</label>
+            <input type="text" class="form-control" id="attestedBy" placeholder="Enter name">
+          </div>
+          <div class="mb-3">
+            <label class="form-label">APPROVED:</label>
+            <input type="text" class="form-control" id="approvedBy" placeholder="Enter name">
+          </div>
+
+          <button class="btn btn-primary" onclick="saveMinutes()">Save Minutes</button>
+         
+        </div>
+      </div>
+
+      <!-- Minutes List -->
+      <div class="card">
+        <div class="card-body">
+          <h4>Saved Minutes</h4>
+          <div id="minutesList"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Edit Minutes Modal -->
+  <div class="modal fade" id="editMinutesModal" tabindex="-1">
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title">Edit Minutes</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+        </div>
+        <div class="modal-body">
+          <input type="hidden" id="editMinutesId">
+          <div class="mb-3">
+            <label for="editMinutesNo" class="form-label">Minutes No.</label>
+            <input type="text" class="form-control" id="editMinutesNo">
+          </div>
+          <div class="mb-3">
+            <label for="editSessionDate" class="form-label">Session Date</label>
+            <input type="date" class="form-control" id="editSessionDate">
+          </div>
+          <div class="mb-3">
+            <label class="form-label">1. CALL TO ORDER</label>
+            <textarea class="form-control" id="editCallToOrder" rows="2"></textarea>
+          </div>
+          <div class="mb-3">
+            <label class="form-label">2. INVOCATION</label>
+            <textarea class="form-control" id="editInvocation" rows="2"></textarea>
+          </div>
+          <div class="mb-3">
+            <label class="form-label">3. NATIONAL ANTHEM</label>
+            <textarea class="form-control" id="editNationalAnthem" rows="2"></textarea>
+          </div>
+          <div class="mb-3">
+            <label class="form-label">4. SUGBO HYMN</label>
+            <textarea class="form-control" id="editSugboHymn" rows="2"></textarea>
+          </div>
+          <div class="mb-3">
+            <label class="form-label">5. ROLL CALL</label>
+            <textarea class="form-control" id="editRollCall" rows="2"></textarea>
+          </div>
+          <div class="mb-3">
+            <label class="form-label">6. ADOPTION OF MINUTES OF THE PREVIOUS SESSION</label>
+            <div id="editAdoptionMinutesContainer">
+              <!-- Container will be populated dynamically -->
+            </div>
+            <button type="button" class="btn btn-secondary btn-sm" onclick="addSubsection('editAdoptionMinutesContainer', 6)">+ Add Subsection</button>
+          </div>
+          <div class="mb-3">
+            <label class="form-label">7. COMMUNICATIONS RECEIVED</label>
+            <div id="editCommunicationsContainer">
+              <!-- Container will be populated dynamically -->
+            </div>
+            <button type="button" class="btn btn-secondary btn-sm" onclick="addSubsection('editCommunicationsContainer', 7)">+ Add Subsection</button>
+          </div>
+          <div class="mb-3">
+            <label class="form-label">8. COMMITTEE REPORT</label>
+            <div id="editCommitteeReportContainer">
+              <!-- Container will be populated dynamically -->
+            </div>
+            <button type="button" class="btn btn-secondary btn-sm" onclick="addSubsection('editCommitteeReportContainer', 8)">+ Add Subsection</button>
+          </div>
+          <div class="mb-3">
+            <label class="form-label">9. FIRST READING</label>
+            <div id="editFirstReadingContainer">
+              <!-- Container will be populated dynamically -->
+            </div>
+            <button type="button" class="btn btn-secondary btn-sm" onclick="addSubsection('editFirstReadingContainer', 9)">+ Add Subsection</button>
+          </div>
+          <div class="mb-3">
+            <label class="form-label">10. OTHER MATTERS</label>
+            <textarea class="form-control" id="editOtherMatters" rows="2"></textarea>
+          </div>
+          <div class="mb-3">
+            <label class="form-label">11. ADJOURNMENT</label>
+            <textarea class="form-control" id="editAdjournment" rows="2"></textarea>
+          </div>
+          <div class="mb-3">
+            <label class="form-label">PREPARED BY:</label>
+            <input type="text" class="form-control" id="editPreparedBy">
+          </div>
+          <div class="mb-3">
+            <label class="form-label">ATTESTED BY:</label>
+            <input type="text" class="form-control" id="editAttestedBy">
+          </div>
+          <div class="mb-3">
+            <label class="form-label">APPROVED:</label>
+            <input type="text" class="form-control" id="editApprovedBy">
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+          <button type="button" class="btn btn-primary" onclick="updateMinutes()">Save Changes</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- SMTP.js library -->
+  <script src="https://smtpjs.com/v3/smtp.js"></script>
+  
+  <!-- Bootstrap JS -->
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+
+  <!-- Firebase SDK -->
+  <script src="https://www.gstatic.com/firebasejs/9.9.1/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.9.1/firebase-database-compat.js"></script>
+
+  <!-- html2pdf library -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+  <!-- html2canvas library -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+  <!-- jsPDF library -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <script>
+    window.jsPDF = window.jspdf.jsPDF;
+  </script>
+
+  <!-- JavaScript -->
+  <script>
+    // Firebase configuration
+    const firebaseConfig = {
+      apiKey: "AIzaSyAMwvUHsWFkTmJyfzuh4DxzOrMYEjcXHvI",
+      authDomain: "lgucapstoneproject-b94fe.firebaseapp.com", 
+      databaseURL: "https://lgucapstoneproject-b94fe-default-rtdb.firebaseio.com",
+      projectId: "lgucapstoneproject-b94fe",
+      storageBucket: "lgucapstoneproject-b94fe.appspot.com",
+      messagingSenderId: "984934888272",
+      appId: "1:984934888272:web:e835b8e02ae708629a7255",
+      measurementId: "G-F84YQS756S"
+    };
+
+    // Initialize Firebase
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.database();
+
+    // Function to add subsection
+    function addSubsection(containerId, sectionNumber) {
+      const container = document.getElementById(containerId);
+      const subsectionCount = container.children.length + 1;
+      const newSubsection = document.createElement('div');
+      newSubsection.className = 'input-group mb-2';
+      newSubsection.innerHTML = `
+        <span class="input-group-text">${sectionNumber}.${subsectionCount}</span>
+        <textarea class="form-control" rows="2"></textarea>
+        <button class="btn btn-outline-danger" type="button" onclick="removeSubsection(this, '${containerId}', ${sectionNumber})">Remove</button>
+      `;
+      container.appendChild(newSubsection);
+      updateSubsectionNumbers(containerId, sectionNumber);
+    }
+
+    // Function to remove subsection and update numbers
+    function removeSubsection(button, containerId, sectionNumber) {
+      button.parentElement.remove();
+      updateSubsectionNumbers(containerId, sectionNumber);
+    }
+
+    // Function to update subsection numbers
+    function updateSubsectionNumbers(containerId, sectionNumber) {
+      const container = document.getElementById(containerId);
+      const subsections = container.children;
+      for(let i = 0; i < subsections.length; i++) {
+        const numberSpan = subsections[i].querySelector('.input-group-text');
+        numberSpan.textContent = `${sectionNumber}.${i + 1}`;
+      }
+    }
+
+    // Retrieve user name from localStorage
+    const userName = localStorage.getItem('userName');
+    if (userName) {
+      document.getElementById('welcomeMessage').textContent = `Admin: ${userName}`;
+    }
+
+    // Function to get subsection contents
+    function getSubsectionContents(containerId) {
+      const container = document.getElementById(containerId);
+      const subsections = container.children;
+      const contents = [];
+      for(let i = 0; i < subsections.length; i++) {
+        const textarea = subsections[i].querySelector('textarea');
+        contents.push(textarea.value);
+      }
+      return contents;
+    }
+
+    // Save notice to Firebase
+    function saveMinutes() {
+      const minutesNo = document.getElementById('minutesNo').value;
+      const sessionDate = document.getElementById('sessionDate').value;
+      const callToOrder = document.getElementById('callToOrder').value;
+      const invocation = document.getElementById('invocation').value;
+      const nationalAnthem = document.getElementById('nationalAnthem').value;
+      const sugboHymn = document.getElementById('sugboHymn').value;
+      const rollCall = document.getElementById('rollCall').value;
+      
+      // Get subsection contents
+      const adoptionMinutesSubsections = getSubsectionContents('adoptionMinutesContainer');
+      const communicationsSubsections = getSubsectionContents('communicationsContainer');
+      const committeeReportSubsections = getSubsectionContents('committeeReportContainer');
+      const firstReadingSubsections = getSubsectionContents('firstReadingContainer');
+      
+      const otherMatters = document.getElementById('otherMatters').value;
+      const adjournment = document.getElementById('adjournment').value;
+      const preparedBy = document.getElementById('preparedBy').value;
+      const attestedBy = document.getElementById('attestedBy').value;
+      const approvedBy = document.getElementById('approvedBy').value;
+      const timestamp = new Date().toISOString();
+
+      if (!minutesNo || !sessionDate) {
+        alert('Please fill in Minutes No. and Session Date');
+        return;
+      }
+
+      db.ref('minutes').push({
+        minutesNo,
+        sessionDate,
+        callToOrder,
+        invocation,
+        nationalAnthem,
+        sugboHymn,
+        rollCall,
+        adoptionMinutesSubsections,
+        communicationsSubsections,
+        committeeReportSubsections,
+        firstReadingSubsections,
+        otherMatters,
+        adjournment,
+        preparedBy,
+        attestedBy,
+        approvedBy,
+        timestamp
+      }).then(() => {
+        // Clear form
+        document.getElementById('minutesNo').value = '';
+        document.getElementById('sessionDate').value = '';
+        document.getElementById('callToOrder').value = '';
+        document.getElementById('invocation').value = '';
+        document.getElementById('nationalAnthem').value = '';
+        document.getElementById('sugboHymn').value = '';
+        document.getElementById('rollCall').value = '';
+        
+        // Clear subsection containers
+        document.getElementById('adoptionMinutesContainer').innerHTML = `
+          <div class="input-group mb-2">
+            <span class="input-group-text">6.1</span>
+            <textarea class="form-control" id="adoptionMinutes" rows="2"></textarea>
+          </div>
+        `;
+        document.getElementById('communicationsContainer').innerHTML = `
+          <div class="input-group mb-2">
+            <span class="input-group-text">7.1</span>
+            <textarea class="form-control" id="communications" rows="2"></textarea>
+          </div>
+        `;
+        document.getElementById('committeeReportContainer').innerHTML = `
+          <div class="input-group mb-2">
+            <span class="input-group-text">8.1</span>
+            <textarea class="form-control" id="committeeReport" rows="2"></textarea>
+          </div>
+        `;
+        document.getElementById('firstReadingContainer').innerHTML = `
+          <div class="input-group mb-2">
+            <span class="input-group-text">9.1</span>
+            <textarea class="form-control" id="firstReading" rows="2"></textarea>
+          </div>
+        `;
+        
+        document.getElementById('otherMatters').value = '';
+        document.getElementById('adjournment').value = '';
+        document.getElementById('preparedBy').value = '';
+        document.getElementById('attestedBy').value = '';
+        document.getElementById('approvedBy').value = '';
+      });
+    }
+
+    // Delete notice
+    function deleteMinutes(minutesId) {
+      if (confirm('Are you sure you want to delete this minutes?')) {
+        db.ref('minutes/' + minutesId).remove();
+      }
+    }
+
+    // Open edit modal with notice data
+    function openEditModal(minutesId, minutes) {
+      document.getElementById('editMinutesId').value = minutesId;
+      document.getElementById('editMinutesNo').value = minutes.minutesNo;
+      document.getElementById('editSessionDate').value = minutes.sessionDate;
+      document.getElementById('editCallToOrder').value = minutes.callToOrder || '';
+      document.getElementById('editInvocation').value = minutes.invocation || '';
+      document.getElementById('editNationalAnthem').value = minutes.nationalAnthem || '';
+      document.getElementById('editSugboHymn').value = minutes.sugboHymn || '';
+      document.getElementById('editRollCall').value = minutes.rollCall || '';
+
+      // Handle subsections by splitting data and creating new fields as needed
+      function populateSubsections(containerId, data, prefix) {
+        const container = document.getElementById(containerId);
+        container.innerHTML = ''; // Clear existing content
+        
+        if (!data) return;
+        
+        // Handle both string and non-string data
+        let subsections = [];
+        if (typeof data === 'string') {
+          subsections = data.split('\n').filter(item => item.trim());
+        } else if (Array.isArray(data)) {
+          subsections = data.filter(item => item && item.trim());
+        } else {
+          // If data is neither string nor array, treat as single item
+          subsections = [data.toString()];
+        }
+        
+        subsections.forEach((content, index) => {
+          const div = document.createElement('div');
+          div.className = 'input-group mb-2';
+          div.innerHTML = `
+            <span class="input-group-text">${prefix}.${index + 1}</span>
+            <textarea class="form-control" rows="2">${content}</textarea>
+            ${index === subsections.length - 1 ? 
+              `<button type="button" class="btn btn-primary" onclick="addSubsection('${containerId}', '${prefix}')">+</button>` : 
+              `<button type="button" class="btn btn-danger" onclick="removeSubsection(this)">-</button>`}
+          `;
+          container.appendChild(div);
+        });
+
+        // If no data, add one empty field
+        if (subsections.length === 0) {
+          const div = document.createElement('div');
+          div.className = 'input-group mb-2';
+          div.innerHTML = `
+            <span class="input-group-text">${prefix}.1</span>
+            <textarea class="form-control" rows="2"></textarea>
+            <button type="button" class="btn btn-primary" onclick="addSubsection('${containerId}', '${prefix}')">+</button>
+          `;
+          container.appendChild(div);
+        }
+      }
+
+      // Populate each subsection container
+      populateSubsections('editAdoptionMinutesContainer', minutes.adoptionMinutesSubsections, '6');
+      populateSubsections('editCommunicationsContainer', minutes.communicationsSubsections, '7');
+      populateSubsections('editCommitteeReportContainer', minutes.committeeReportSubsections, '8');
+      populateSubsections('editFirstReadingContainer', minutes.firstReadingSubsections, '9');
+
+      document.getElementById('editOtherMatters').value = minutes.otherMatters || '';
+      document.getElementById('editAdjournment').value = minutes.adjournment || '';
+      document.getElementById('editPreparedBy').value = minutes.preparedBy || '';
+      document.getElementById('editAttestedBy').value = minutes.attestedBy || '';
+      document.getElementById('editApprovedBy').value = minutes.approvedBy || '';
+      
+      const editModal = new bootstrap.Modal(document.getElementById('editMinutesModal'));
+      editModal.show();
+    }
+
+    // Update notice
+    function updateMinutes() {
+      const minutesId = document.getElementById('editMinutesId').value;
+      
+      // Get subsection contents from edit modal
+      const adoptionMinutesSubsections = getSubsectionContents('editAdoptionMinutesContainer');
+      const communicationsSubsections = getSubsectionContents('editCommunicationsContainer'); 
+      const committeeReportSubsections = getSubsectionContents('editCommitteeReportContainer');
+      const firstReadingSubsections = getSubsectionContents('editFirstReadingContainer');
+
+      const updatedMinutes = {
+        minutesNo: document.getElementById('editMinutesNo').value,
+        sessionDate: document.getElementById('editSessionDate').value,
+        callToOrder: document.getElementById('editCallToOrder').value,
+        invocation: document.getElementById('editInvocation').value,
+        nationalAnthem: document.getElementById('editNationalAnthem').value,
+        sugboHymn: document.getElementById('editSugboHymn').value,
+        rollCall: document.getElementById('editRollCall').value,
+        adoptionMinutesSubsections,
+        communicationsSubsections,
+        committeeReportSubsections,
+        firstReadingSubsections,
+        otherMatters: document.getElementById('editOtherMatters').value,
+        adjournment: document.getElementById('editAdjournment').value,
+        preparedBy: document.getElementById('editPreparedBy').value,
+        attestedBy: document.getElementById('editAttestedBy').value,
+        approvedBy: document.getElementById('editApprovedBy').value
+      };
+
+      db.ref('minutes/' + minutesId).update(updatedMinutes).then(() => {
+        const editModal = bootstrap.Modal.getInstance(document.getElementById('editMinutesModal'));
+        editModal.hide();
+      });
+    }
+
+    // Function to fetch attendance by date and format for minutes
+    function fetchAttendanceByDate(date) {
+      return new Promise((resolve, reject) => {
+        db.ref('attendance')
+          .orderByChild('date')
+          .equalTo(date)
+          .once('value')
+          .then((snapshot) => {
+            const attendance = snapshot.val();
+            if (attendance) {
+              // Convert object to array and sort by name
+              const attendanceArray = Object.values(attendance).sort((a, b) => {
+                return a.name.localeCompare(b.name);
+              });
+              
+              // Format attendance for minutes display
+              let presentMembers = [];
+              let absentMembers = [];
+              
+              attendanceArray.forEach(record => {
+                if (record.status === 'present') {
+                  presentMembers.push(record.name);
+                } else if (record.status === 'absent') {
+                  absentMembers.push(record.name);
+                }
+              });
+
+              // Create formatted attendance text
+              let attendanceText = "PRESENT:\n" + presentMembers.join("\n");
+              if (absentMembers.length > 0) {
+                attendanceText += "\n\nABSENT:\n" + absentMembers.join("\n");
+              }
+
+              resolve(attendanceText);
+            } else {
+              resolve("No attendance record found for this date"); 
+            }
+          })
+          .catch((error) => {
+            console.error("Error fetching attendance:", error);
+            reject(error);
+          });
+      });
+    }
+
+   
+    // Load and display notices
+    function loadMinutes() {
+      const minutesContainer = document.getElementById('minutesList');
+      if (!minutesContainer) {
+        console.error('Minutes container not found');
+        return;
+      }
+      
+      // Remove any existing listeners before adding a new one
+      db.ref('minutes').off();
+      
+      db.ref('minutes').on('value', (snapshot) => {
+        minutesContainer.innerHTML = ''; // Clear existing notices
+        
+        const minutes = snapshot.val();
+        if (minutes) {
+          Object.keys(minutes).forEach((minutesId) => {
+            const minutesData = minutes[minutesId];
+            const minutesCard = document.createElement('div');
+            minutesCard.className = 'card mb-3';
+            minutesCard.innerHTML = `
+              <div class="card-body">
+                <h5 class="card-title">Minutes No: ${minutesData.minutesNo}</h5>
+                <h6 class="card-subtitle mb-2 text-muted">Session Date: ${minutesData.sessionDate}</h6>
+                <div class="mt-3">
+                  <button class="btn btn-primary btn-sm me-2" onclick="printMinutes('${minutesId}')">Print</button>
+                  <button class="btn btn-success btn-sm me-2" onclick="downloadPDF('${minutesId}')">Download PDF</button>
+                  <button class="btn btn-info btn-sm me-2" onclick="sendEmailToOfficials('${minutesId}')">Send to Officials</button>
+                  <button class="btn btn-warning btn-sm me-2" onclick="openEditModal('${minutesId}', ${JSON.stringify(minutesData).replace(/"/g, '&quot;')})">Edit</button>
+                  <button class="btn btn-danger btn-sm" onclick="deleteMinutes('${minutesId}')">Delete</button>
+                </div>
+              </div>
+            `;
+            minutesContainer.appendChild(minutesCard);
+          });
+        }
+      });
+    }
+
+    // Function to send email to officials
+    function sendEmailToOfficials(minutesId) {
+      // Confirm action
+      if (!confirm("Are you sure you want to send emails to all officials?")) {
+        return;
+      }
+
+      // Show loading indicator
+      const minutesList = document.getElementById('minutesList');
+      if (!minutesList) {
+        console.error('Minutes list container not found');
+        return;
+      }
+
+      const loadingIndicator = document.createElement('div');
+      loadingIndicator.className = 'alert alert-info';
+      loadingIndicator.textContent = 'Sending emails...';
+      minutesList.prepend(loadingIndicator);
+
+      // Get the minutes data from Firebase
+      db.ref(`minutes/${minutesId}`).once('value')
+        .then(snapshot => {
+          const minutesData = snapshot.val();
+          if (!minutesData) {
+            throw new Error('Minutes data not found.');
+          }
+
+          // Send the AJAX request with minutes data
+          return fetch('/send_email_to_officials_minutes/', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'X-CSRFToken': getCookie('csrftoken')
+            },
+            body: JSON.stringify({ minutes_id: minutesId })
+          });
+        })
+        .then(response => {
+          if (!response.ok) {
+            return response.json().then(data => {
+              throw new Error(data.message || `HTTP error! Status: ${response.status}`);
+            });
+          }
+          return response.json();
+        })
+        .then(data => {
+          // Success response
+          loadingIndicator.className = 'alert alert-success';
+          loadingIndicator.textContent = data.message || 'Emails sent successfully.';
+          setTimeout(() => loadingIndicator.remove(), 5000);
+        })
+        .catch(error => {
+          // Handle errors
+          console.error('Error:', error);
+          loadingIndicator.className = 'alert alert-danger';
+          loadingIndicator.textContent = error.message || 'An error occurred while sending emails. Please try again.';
+          setTimeout(() => loadingIndicator.remove(), 5000);
+        });
+    }
+
+    // Function to get the CSRF token
+    function getCookie(name) {
+      const cookies = document.cookie.split(';');
+      for (let cookie of cookies) {
+        cookie = cookie.trim();
+        if (cookie.startsWith(`${name}=`)) {
+          return decodeURIComponent(cookie.substring(name.length + 1));
+        }
+      }
+      return null;
+    }
+
+
+    function printMinutes(minutesId) {
+      db.ref('minutes/' + minutesId).once('value').then((snapshot) => {
+        const minutes = snapshot.val();
+        
+        // Get attendance data for the session date
+        const dateParts = minutes.sessionDate.split('-');
+        const year = dateParts[0];
+        const month = dateParts[1];
+        const day = dateParts[2];
+        
+        // First get the attendance data
+        db.ref(`attendance/${month}/${day}/${year}/attendance`).once('value').then((attendanceSnapshot) => {
+          const attendanceData = attendanceSnapshot.val() || [];
+          
+          // Ensure attendanceData is an array
+          const attendanceArray = Array.isArray(attendanceData) ? attendanceData : Object.values(attendanceData);
+          
+          // Separate officials into present and absent
+          const presentOfficials = attendanceArray.filter(official => official.status === 'present');
+          const absentOfficials = attendanceArray.filter(official => official.status === 'absent');
+          
+          let attendanceHtml = '<div style="text-align: left; margin-left: 20px;">';
+          
+          // Present officials
+          attendanceHtml += '<h2>Present:</h2>';
+          if (presentOfficials.length > 0) {
+            presentOfficials.forEach(official => {
+              attendanceHtml += `<p>${official.name}`;
+              if (official.remarks) {
+                attendanceHtml += ` (${official.remarks})`;
+              }
+              attendanceHtml += '</p>';
+            });
+          } else {
+            attendanceHtml += '<p>No officials present</p>';
+          }
+
+          // Absent officials 
+          attendanceHtml += '<h2>Absent:</h2>';
+          if (absentOfficials.length > 0) {
+            absentOfficials.forEach(official => {
+              attendanceHtml += `<p>${official.name}`;
+              if (official.remarks) {
+                attendanceHtml += ` (${official.remarks})`;
+              }
+              attendanceHtml += '</p>';
+            });
+          } else {
+            attendanceHtml += '<p>No officials absent</p>';
+          }
+          
+          attendanceHtml += '</div>';
+
+          const printWindow = window.open('', '', 'width=800,height=600');
+          
+          let adoptionMinutesHtml = '';
+          if (minutes.adoptionMinutesSubsections) {
+            minutes.adoptionMinutesSubsections.forEach((content, index) => {
+              adoptionMinutesHtml += `<div>6.${index + 1} ${content}</div>`;
+            });
+          }
+
+          let communicationsHtml = '';
+          if (minutes.communicationsSubsections) {
+            minutes.communicationsSubsections.forEach((content, index) => {
+              communicationsHtml += `<div>7.${index + 1} ${content}</div>`;
+            });
+          }
+
+          let committeeReportHtml = '';
+          if (minutes.committeeReportSubsections) {
+            minutes.committeeReportSubsections.forEach((content, index) => {
+              committeeReportHtml += `<div>8.${index + 1} ${content}</div>`;
+            });
+          }
+
+          let firstReadingHtml = '';
+          if (minutes.firstReadingSubsections) {
+            minutes.firstReadingSubsections.forEach((content, index) => {
+              firstReadingHtml += `<div>9.${index + 1} ${content}</div>`;
+            });
+          }
+
+          printWindow.document.write(`
+            <html>
+              <head>
+                <title>Session Minutes</title>
+                <style>
+                  body { 
+                    font-family: Times New Roman, sans-serif;
+                    padding: 20px;
+                    max-width: 800px;
+                    margin: 0 auto;
+                    margin-bottom: 10px;
+                  }
+                  .header {
+                    text-align: center;
+                    margin-bottom: 40px;
+                    position: relative;
+                  }
+                  .logo-left {
+                    position: absolute;
+                    left: 0;
+                    top: 0;
+                    width: 100px;
+                  }
+                  .logo-right {
+                    position: absolute;
+                    right: 0;
+                    top: 0;
+                    width: 100px;
+                  }
+                  .letterhead-text {
+                    font-size: 12px;
+                    line-height: 1.5;
+                    margin: 0;
+                    
+                    font-weight: bold;
+                  }
+                  .title {
+                    text-align: center;
+                    font-size: 16px;
+                    font-weight: bold;
+                    text-transform: uppercase;
+                  }
+                  .content {
+                    font-size: 14px;
+                    line-height: 1.6;
+                    text-align: justify;
+                    margin-top: 30px;
+                  }
+                  .session-info {
+                    text-align: center;
+                    margin: 20px 0;
+                    font-size: 14px;
+                  }
+                  .agenda-item {
+                    margin: 15px 0;
+                  }
+                  .agenda-label {
+                    font-weight: bold;
+                  }
+                  .signatures {
+                    margin-top: 50px;
+                    display: flex;
+                    justify-content: flex-end;
+                    gap: 20px;
+                  }
+                  .signature-block {
+                    text-align: center;
+                    width: 45%;
+                  }
+                  .signature-line {
+                    margin: 10px 0;
+                  }
+                  .signature-title {
+                    font-size: 12px;
+                    font-style: italic;
+                  }
+                </style>
+              </head>
+              <body>
+                <div class="header">
+                <div style="margin: 15px 0;">
+                  <img src="{% static 'argao_logo.jpg' %}" alt="Left Logo" class="logo-left">
+                  <img src="{% static 'basers101.png' %}" alt="Right Logo" class="logo-right">
+                  <p class="letterhead-text">Republic of the Philippines</p>
+                  <p class="letterhead-text">Province of Cebu</p>
+                  <p class="letterhead-text">Municipality of Argao</p>
+                  <p class="letterhead-text">OFFICE OF THE SANGGUNIANG BAYAN</p>
+                  <p class="letterhead-text">Tel. No.: (032) 367-7623</p>
+                  <p class="letterhead-text">Email: sbargao@gmail.com</p>
+                </div>
+                  <p class="letterhead-text"> MINUTES OF THE REGULAR SESSION OF THE SANGGUNIANG BAYAN OF THE MUNICIPALITY OF ARGAO
+                  ,PROVINCE OF CEBU, HELD ON ${minutes.sessionDate} AT THE ARGAO MUNICIPAL SESSION HALL ARGAO, CEBU</p>
+                <p>Minutes No: ${minutes.minutesNo}</p>
+                  ${attendanceHtml}
+                </div>
+                <div class="content">
+                  <h2>1. CALL TO ORDER</h2>
+                  <p>${minutes.callToOrder || ''}</p>
+
+                  <h2>2. INVOCATION</h2>
+                  <p>${minutes.invocation || ''}</p>
+
+                  <h2>3. NATIONAL ANTHEM</h2>
+                  <p>${minutes.nationalAnthem || ''}</p>
+
+                  <h2>4. SUGBO HYMN</h2>
+                  <p>${minutes.sugboHymn || ''}</p>
+
+                  <h2>5. ROLL CALL</h2>
+                  <p>${minutes.rollCall || ''}</p>
+
+                  <h2>6. ADOPTION OF MINUTES OF THE PREVIOUS SESSION</h2>
+                  ${adoptionMinutesHtml}
+
+                  <h2>7. COMMUNICATIONS RECEIVED</h2>
+                  ${communicationsHtml}
+
+                  <h2>8. COMMITTEE REPORT</h2>
+                  ${committeeReportHtml}
+
+                  <h2>9. FIRST READING</h2>
+                  ${firstReadingHtml}
+
+                  <h2>10. OTHER MATTERS</h2>
+                  <p>${minutes.otherMatters || ''}</p>
+
+                  <h2>11. ADJOURNMENT</h2>
+                  <p>${minutes.adjournment || ''}</p>
+                </div>
+                
+                  <div class="signature-block" style="margin-left: 350px;">
+                    <p>${minutes.preparedBy || ''}</p>
+                    <p style="font-weight: bold;"> Sangguniang Bayan Secretary </p>
+                  </div>
+
+                  <div class="signature-block">
+                    <p>Attested:________________</p>
+                    <p>${minutes.attestedBy || ''}</p>
+                    <p style="font-weight: bold;">Municipal Vice Mayor & Presiding Officer</p>
+                  </div>
+
+                  <div class="signature-block" style="margin-left: 350px;">
+                    <p>Approved:________________</p>
+                    <p>${minutes.approvedBy || ''}</p>
+                    <p style="font-weight: bold;">Municipal Mayor</p>
+                  </div>
+                
+              </body>
+            </html>
+          `);
+          printWindow.document.close();
+          printWindow.print();
+        }).catch(error => {
+          console.error('Error getting attendance data:', error);
+          alert('Error getting attendance data. Please try again.');
+        });
+      }).catch(error => {
+        console.error('Error getting notice data:', error);
+        alert('Error getting notice data. Please try again.');
+      });
+    }
+
+    // Download PDF function
+    function downloadPDF(minutesId) {
+      db.ref('minutes/' + minutesId).once('value').then((snapshot) => {
+        const minutes = snapshot.val();
+
+        if (!minutes) {
+          console.error('No data found for the given minutesId:', minutesId);
+          alert('Error: No data found for this minutes.');
+          return;
+          }
+          // Generate HTML content for subsections
+          let adoptionMinutesHtml = '';
+          if (Array.isArray(minutes.adoptionMinutesSubsections)) {
+            minutes.adoptionMinutesSubsections.forEach((content, index) => {
+              adoptionMinutesHtml += `<div>6.${index + 1} ${content}</div>`;
+            });
+          }
+
+          let communicationsHtml = '';
+          if (Array.isArray(minutes.communicationsSubsections)) {
+            minutes.communicationsSubsections.forEach((content, index) => {
+              communicationsHtml += `<div>7.${index + 1} ${content}</div>`;
+            });
+          }
+
+          let committeeReportHtml = '';
+          if (Array.isArray(minutes.committeeReportSubsections)) {
+            minutes.committeeReportSubsections.forEach((content, index) => {
+              committeeReportHtml += `<div>8.${index + 1} ${content}</div>`;
+            });
+          }
+
+          let firstReadingHtml = '';
+          if (Array.isArray(minutes.firstReadingSubsections)) {
+            minutes.firstReadingSubsections.forEach((content, index) => {
+              firstReadingHtml += `<div>9.${index + 1} ${content}</div>`;
+            });
+          }
+
+          // Helper function to handle empty/null values
+          const safeText = (text) => text || '';
+
+          // Create temporary element
+          const element = document.createElement('div');
+          element.style.position = 'relative';
+          element.style.margin = '10px 10px 50px 10px'; // Added larger bottom margin
+          element.style.maxWidth = '8.5in';
+          element.style.minHeight = '11in'; // Changed to minHeight to allow content to flow
+          element.style.backgroundColor = 'white';
+          element.style.boxShadow = '0 0 10px rgba(0,0,0,0.1)';
+          element.style.width = '8.5in';
+          element.style.padding = '0.5in';
+          
+          element.innerHTML = `
+            <style>
+              body { 
+                font-family: Times New Roman, sans-serif;
+                padding: 20px;
+                max-width: 800px;
+                margin: 0 auto;
+                font-size: 14px; /* Increased base font size */
+                margin-bottom: 10px;
+              }
+              .header {
+                text-align: center;
+                margin-bottom: 20px;
+                position: relative;
+              }
+              .logo-left {
+                position: absolute;
+                left: 0;
+                top: 0;
+                width: 100px; /* Increased logo size */
+              }
+              .logo-right {
+                position: absolute;
+                right: 0;
+                top: 0;
+                width: 100px; /* Increased logo size */
+              }
+              .letterhead-text {
+                font-size: 14px; /* Increased font size */
+                line-height: 1.2;
+                margin: 0;
+              
+                font-weight: bold;
+              }
+              .title {
+                text-align: center;
+                font-size: 16px; /* Increased font size */
+                font-weight: bold;
+                text-transform: uppercase;
+              }
+              .content {
+                font-size: 14px; /* Increased font size */
+                line-height: 1.4;
+                text-align: justify;
+                margin-top: 15px;
+              }
+              .session-info {
+                text-align: center;
+                margin: 10px 0;
+                font-size: 14px; /* Increased font size */
+              }
+              .agenda-item {
+                margin: 8px 0;
+              }
+              .agenda-label {
+                font-weight: bold;
+              }
+              .signatures {
+                margin-top: 20px;
+                display: flex;
+                justify-content: flex-end;
+                gap: 20px;
+              }
+              .signature-block {
+                text-align: center;
+                width: 45%;
+              }
+              .signature-line {
+                margin: 5px 0;
+              }
+              .signature-title {
+                font-size: 14px; /* Increased font size */
+                font-style: italic;
+              }
+              p {
+                margin: 5px 0;
+                font-size: 14px; /* Increased font size */
+              }
+              div {
+                margin-bottom: 10px;
+              }
+            </style>
+            <div style="font-family: Times New Roman, sans-serif;">
+              <div class="header">
+                <div style="margin: 10px 0;">
+                  <img src="{% static 'argao_logo.jpg' %}" alt="Left Logo" class="logo-left">
+                  <img src="{% static 'basers101.png' %}" alt="Right Logo" class="logo-right">
+                  <p class="letterhead-text">Republic of the Philippines</p>
+                  <p class="letterhead-text">Province of Cebu</p>
+                  <p class="letterhead-text">Municipality of Argao</p>
+                  <p class="letterhead-text">OFFICE OF THE SANGGUNIANG BAYAN</p>
+                  <p class="letterhead-text">Tel. No.: (032) 367-7623</p>
+                  <p class="letterhead-text">Email: sbargao@gmail.com</p>
+                </div>
+                <p class="letterhead-text"> MINUTES OF THE REGULAR SESSION OF THE SANGGUNIANG BAYAN OF THE MUNICIPALITY OF ARGAO
+                  ,PROVINCE OF CEBU, HELD ON ${minutes.sessionDate} AT THE ARGAO MUNICIPAL SESSION HALL ARGAO, CEBU</p>
+                <p>Minutes No: ${minutes.minutesNo}</p>
+              </div>
+              
+             
+              
+              <div style="margin-bottom: 10px;">
+                <p style="font-weight: bold;">1. CALL TO ORDER</p>
+                <p>${safeText(minutes.callToOrder)}</p>
+              </div>
+
+              <div style="margin-bottom: 10px;">
+                <p style="font-weight: bold;">2. INVOCATION</p>
+                <p>${safeText(minutes.invocation)}</p>
+              </div>
+
+              <div style="margin-bottom: 10px;">
+                <p style="font-weight: bold;">3. NATIONAL ANTHEM</p>
+                <p>${safeText(minutes.nationalAnthem)}</p>
+              </div>
+
+              <div style="margin-bottom: 10px;">
+                <p style="font-weight: bold;">4. SUGBO HYMN</p>
+                <p>${safeText(minutes.sugboHymn)}</p>
+              </div>
+
+              <div style="margin-bottom: 10px;">
+                <p style="font-weight: bold;">5. ROLL CALL</p>
+              
+                <p>${safeText(minutes.rollCall)}</p>
+              </div>
+
+              <div style="margin-bottom: 10px;">
+                <p style="font-weight: bold;">6. ADOPTION OF MINUTES</p>
+                ${adoptionMinutesHtml || '<p>No Adoption Minutes Available</p>'}
+              </div>
+
+              <div style="margin-bottom: 10px;">
+                <p style="font-weight: bold;">7. COMMUNICATIONS</p>
+                ${communicationsHtml || '<p>No Communications Available</p>'}
+              </div>
+
+              <div style="margin-bottom: 10px;">
+                <p style="font-weight: bold;">8. COMMITTEE REPORT</p>
+                ${committeeReportHtml || '<p>No Committee Reports Available</p>'}
+              </div>
+
+              <div style="margin-bottom: 10px;">
+                <p style="font-weight: bold;">9. FIRST READING</p>
+                ${firstReadingHtml || '<p>No First Readings Available</p>'}
+              </div>
+
+              <div style="margin-bottom: 10px;">
+                <p style="font-weight: bold;">10. OTHER MATTERS</p>
+                <p>${safeText(minutes.otherMatters)}</p>
+              </div>
+
+              <div style="margin-bottom: 10px;">
+                <p style="font-weight: bold;">11. ADJOURNMENT</p>
+                <p>${safeText(minutes.adjournment)}</p>
+              </div>
+
+             
+                <div style="text-align: center; width: 45%; margin-left: 350px;">
+                  <p style="margin-bottom: 2px;">${safeText(minutes.preparedBy)}</p>
+                  <p style="margin-top: 0; font-weight: bold;">Secretary to the Sangguniang Bayan</p>
+                </div>
+                
+                <div style="text-align: center; width: 45%; margin-left: 350px;">
+                  <p style="font-weight: bold;">Attested:________________</p>
+                  <p style="margin-bottom: 2px;">${safeText(minutes.attestedBy)}</p>
+                  <p style="margin-top: 0; font-weight: bold;">Municipal Vice Mayor & Presiding Officer</p>
+                </div>
+                
+                <div style="text-align: center; width: 45%; margin-left: 350px;">
+                  <p style="font-weight: bold;">Approved:________________</p>
+                  <p style="margin-bottom: 2px;">${safeText(minutes.approvedBy)}</p>
+                  <p style="margin-top: 0; font-weight: bold;">Municipal Mayor </p>
+                </div>
+             
+            </div>
+          `;
+
+          // Add element to document body
+          document.body.appendChild(element);
+
+          // Use html2canvas to capture the element
+          html2canvas(element, {
+            scale: 2,
+            useCORS: true,
+            logging: true,
+            height: element.offsetHeight,
+            windowHeight: element.offsetHeight,
+          }).then((canvas) => {
+            const pdf = new jsPDF('p', 'pt', 'letter'); // Use 'pt' for more precise dimensions
+            const imgData = canvas.toDataURL('image/png');
+
+            const imgWidth = 612; // PDF width in points for a letter-sized page
+            const pageHeight = 792; // PDF height in points for a letter-sized page
+            const imgHeight = (canvas.height * imgWidth) / canvas.width; // Calculate image height maintaining aspect ratio
+            let heightLeft = imgHeight; // Track how much of the image is left to render
+
+            let position = 0; // Y-coordinate to start rendering on the page
+
+            // Add the first page
+            pdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight);
+            heightLeft -= pageHeight;
+
+            // Add additional pages if content overflows
+            while (heightLeft > 0) {
+              position = heightLeft - imgHeight; // Calculate new position
+                pdf.addPage(); // Add a new page
+              pdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight);
+              heightLeft -= pageHeight;
+            }
+
+            pdf.save(`minutes_${minutes.minutesNo || 'default'}.pdf`);
+              document.body.removeChild(element);
+            console.log('Multi-page PDF generated successfully');
+          }).catch((error) => {
+              console.error('Error generating PDF:', error);
+            document.body.removeChild(element);
+          });
+
+        
+      }).catch(error => {
+        console.error('Error retrieving notice data:', error);
+      });
+    }
+
+
+
+
+    // Load notices when page loads 
+    window.onload = function() {
+      loadMinutes();
+    };
+    window.logout = function() {
+      localStorage.removeItem('userName');
+      window.location.href = 'main_login';
+    }
+  </script>
+</body>
+</html>

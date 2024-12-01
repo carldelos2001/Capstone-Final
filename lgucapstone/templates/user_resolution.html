@@ -85,7 +85,7 @@
     <label class="header-menu-item selected" id="resolutions">Resolutions</label>
     <label class="header-menu-item" id="services">Services</label>
     <label class="header-menu-item" id="announcement">Announcement</label>
-
+    <label class="header-menu-item" id="feedback">Feedback</label>
     <!-- User Profile Dropdown -->
     <div class="dropdown ms-auto">
       <a href="#" class="d-flex align-items-center text-dark text-decoration-none dropdown-toggle" id="dropdownUser" data-bs-toggle="dropdown" aria-expanded="false">
@@ -249,6 +249,10 @@
     
     document.getElementById('announcement').addEventListener('click', function() {
       window.location.href = '/user_announcement';
+    });
+
+    document.getElementById('feedback').addEventListener('click', function() {
+      window.location.href = '/user_feedback';
     });
 
     // Logout function

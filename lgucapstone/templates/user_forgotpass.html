@@ -9,6 +9,16 @@
   <title>Forgot Password</title>
   <link rel="icon" type="image/jpeg" href="{% static 'argao_logo.jpg' %}">
   <style>
+     @font-face {
+            font-family: "Poppins";
+            src: url("{% static 'fonts/Poppins-Regular.ttf' %}") format("truetype");
+        }
+        
+        @font-face {
+            font-family: "Poppins";
+            src: url("{% static 'fonts/Poppins-Bold.ttf' %}") format("truetype");
+            font-weight: bold;
+        }
     .img_logo {
       width: 70px;
       height: 70px;
@@ -17,24 +27,45 @@
     .hidden {
       display: none;
     }
+    body {
+      font-family: 'Poppins', sans-serif;
+      font-size: 1rem;
+    }
+    .btn-primary {
+      background-color: #52AE77FF;
+      border-color: #52AE77FF;
+    }
+    .btn-primary:hover {
+      background-color: #499B6AFF;
+      border-color: #499B6AFF;
+    }
+    .link {
+      color: #555;
+      
+      margin-top: 20px;
+      margin-left: 300px;
+    }
+    .link-primary:hover {
+      color: black;
+    }
   </style>
 </head>
 <body class="d-flex align-items-center justify-content-center vh-100 bg-light">
   <div class="container text-center">
     <img class="img_logo mb-3" src="{% static 'argao_logo.jpg' %}" alt="Logo">
     
-    <div class="card p-4 shadow-sm" style="max-width: 400px; margin: auto;">
+    <div class="card p-4 shadow-sm" style="max-width: 500px;margin: auto; max-height: 500px;">
       <h3 class="mb-4">Forgot Password</h3>
       
       <!-- Forgot Password Form -->
       <form method="post" id="forgot-password-form">
         {% csrf_token %}
         <div class="mb-3">
-          <input class="form-control" type="text" name="email" placeholder="Enter your email" required>
+          <input class="form-control" type="email" name="email" placeholder="Enter your email" required>
         </div>
         <button class="btn btn-primary" type="button" id="send-otp-btn">Send OTP</button>
       </form>
-
+      <a href="{% url 'main_login' %}" class="link"> Back to Login</a>
       <!-- OTP Verification Form (Initially Hidden) -->
       <form method="post" id="otp-form" class="hidden">
         {% csrf_token %}
@@ -44,51 +75,34 @@
         <div class="mb-3">
           <input class="form-control" type="password" name="new_password" placeholder="New Password" required>
         </div>
+        <div class="mb-3">
+          <input class="form-control" type="password" name="confirm_password" placeholder="Confirm New Password" required>
+        </div>
         <button class="btn btn-primary" type="submit">Reset Password</button>
       </form>
 
+      <div id="error-message" class="alert alert-danger mt-3 hidden" role="alert"></div>
     </div>
   </div>
 
   <script>
+    const sendOtpBtn = document.getElementById('send-otp-btn');
+    const forgotPasswordForm = document.getElementById('forgot-password-form');
+    const otpForm = document.getElementById('otp-form');
+    const errorMessage = document.getElementById('error-message');
 
-const sendOtpBtn = document.getElementById('send-otp-btn');
-
-sendOtpBtn.addEventListener('click', async function() {
-  const email = document.querySelector('input[name="email"]').value;
-
-  try {
-    const response = await fetch('{% url "send_forgot_password_otp" %}', {
-      method: 'POST',
-      headers: {
-        'X-CSRFToken': document.querySelector('input[name="csrfmiddlewaretoken"]').value,
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify({   
-email })
-    });
-
-    if (response.ok) {
-      const data = await response.json();
-      if (data.success) {
-        // Show success message or handle success case (e.g., disable form)
-        alert('OTP sent successfully!');
-      } else {
-        alert('Failed to send OTP');
-      }
-    } else {
-      alert('Server error: ' + response.statusText);
+    function showError(message) {
+      errorMessage.textContent = message;
+      errorMessage.classList.remove('hidden');
     }
-  } catch (error) {
-    console.error('Error:', error);
-    alert('An error occurred while sending the OTP');
-  }
-});
 
-    // Handle Forgot Password Form Submission
-    document.getElementById('forgot-password-form').addEventListener('submit', async function(event) {
-      event.preventDefault();
+    function hideError() {
+      errorMessage.classList.add('hidden');
+    }
+
+    sendOtpBtn.addEventListener('click', async function() {
       const email = document.querySelector('input[name="email"]').value;
+      hideError();
 
       try {
         const response = await fetch('{% url "send_forgot_password_otp" %}', {
@@ -100,29 +114,33 @@ email })
           body: JSON.stringify({ email })
         });
 
-        if (response.ok) {
-          const data = await response.json();
-          if (data.success) {
-            // Show OTP form
-            document.getElementById('forgot-password-form').classList.add('hidden');
-            document.getElementById('otp-form').classList.remove('hidden');
-          } else {
-            alert('Failed to send OTP');
-          }
+        const data = await response.json();
+        if (response.ok && data.success) {
+          alert('OTP sent successfully!');
+          forgotPasswordForm.classList.add('hidden');
+          otpForm.classList.remove('hidden');
         } else {
-          alert('Server error: ' + response.statusText);
+          showError(data.message || 'Failed to send OTP. Please try again.');
         }
       } catch (error) {
         console.error('Error:', error);
-        alert('An error occurred while sending the OTP');
+        showError('An error occurred while sending the OTP. Please try again.');
       }
     });
 
     // Handle OTP Form Submission
-    document.getElementById('otp-form').addEventListener('submit', async function(event) {
+    otpForm.addEventListener('submit', async function(event) {
       event.preventDefault();
+      const email = document.querySelector('input[name="email"]').value;
       const otp = document.querySelector('input[name="otp"]').value;
       const newPassword = document.querySelector('input[name="new_password"]').value;
+      const confirmPassword = document.querySelector('input[name="confirm_password"]').value;
+      hideError();
+
+      if (newPassword !== confirmPassword) {
+        showError('Passwords do not match.');
+        return;
+      }
 
       try {
         const response = await fetch('{% url "reset_password_with_otp" %}', {
@@ -131,22 +149,19 @@ email })
             'X-CSRFToken': document.querySelector('input[name="csrfmiddlewaretoken"]').value,
             'Content-Type': 'application/json'
           },
-          body: JSON.stringify({ otp, new_password: newPassword })
+          body: JSON.stringify({ email, otp, new_password: newPassword })
         });
 
-        if (response.ok) {
-          const data = await response.json();
-          if (data.success) {
-            window.location.href = "{% url 'login' %}";
-          } else {
-            alert('OTP verification failed or invalid password');
-          }
+        const data = await response.json();
+        if (response.ok && data.success) {
+          alert('Password reset successfully!');
+          window.location.href = "{% url 'main_login' %}";
         } else {
-          alert('Server error: ' + response.statusText);
+          showError(data.message || 'OTP verification failed or invalid password. Please try again.');
         }
       } catch (error) {
         console.error('Error:', error);
-        alert('An error occurred while resetting the password');
+        showError('An error occurred while resetting the password. Please try again.');
       }
     });
   </script>

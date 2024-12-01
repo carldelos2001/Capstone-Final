@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  {% load static %}
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Document</title>
+</head>
+<body>
+  <div class="header">
+    <div style="margin: 15px 0;">
+      <img src="{% static 'argao_logo.jpg' %}" alt="Left Logo" class="logo-left">
+      <img src="{% static 'basers101.png' %}" alt="Right Logo" class="logo-right">
+      <p class="letterhead-text">Republic of the Philippines</p>
+      <p class="letterhead-text">Province of Cebu</p>
+      <p class="letterhead-text">Municipality of Argao</p>
+      <p class="letterhead-text">OFFICE OF THE SANGGUNIANG BAYAN</p>
+      <p class="letterhead-text">Tel. No.: (032) 367-7623</p>
+      <p class="letterhead-text">Email: sbargao@gmail.com</p>
+    </div>
+    <p class="letterhead-text"> MINUTES OF THE REGULAR SESSION OF THE SANGGUNIANG BAYAN OF THE MUNICIPALITY OF ARGAO
+      ,PROVINCE OF CEBU, HELD ON {{ notice.sessionDate }} AT THE ARGAO MUNICIPAL SESSION HALL ARGAO, CEBU</p>
+    <p>Minutes No: {{ notice.minutesNo }}</p>
+   
+  </div>
+
+  <div style="text-align: left; margin-left: 20px;">
+    <p style="font-weight: bold;">Present:</p>
+    {% if present_officials %}
+      {% for official in present_officials %}
+        <p>{{ official.name }}{% if official.remarks %} ({{ official.remarks }}){% endif %}</p>
+      {% endfor %}
+    {% else %}
+      <p>No officials present</p>
+    {% endif %}
+    
+    <p style="font-weight: bold;">Absent:</p>
+    {% if absent_officials %}
+      {% for official in absent_officials %}
+        <p>{{ official.name }}{% if official.remarks %} ({{ official.remarks }}){% endif %}</p>
+      {% endfor %}
+    {% else %}
+      <p>No officials absent</p>
+    {% endif %}
+  </div>
+
+  <div class="content">
+    <h2>1. CALL TO ORDER</h2>
+    <p>{{ notice.callToOrder }}</p>
+
+    <h2>2. INVOCATION</h2>
+    <p>{{ notice.invocation }}</p>
+
+    <h2>3. NATIONAL ANTHEM</h2>
+    <p>{{ notice.nationalAnthem }}</p>
+
+    <h2>4. SUGBO HYMN</h2>
+    <p>{{ notice.sugboHymn }}</p>
+
+    <h2>5. ROLL CALL</h2>
+    <p>{{ notice.rollCall }}</p>
+
+    <h2>6. ADOPTION OF MINUTES OF THE PREVIOUS SESSION</h2>
+    {% if notice.adoptionMinutesSubsections %}
+      {% for content in notice.adoptionMinutesSubsections %}
+        {% if content %}
+          <div>6.{{ forloop.counter }} {{ content }}</div>
+        {% endif %}
+      {% endfor %}
+    {% endif %}
+
+    <h2>7. COMMUNICATIONS RECEIVED</h2>
+    {% if notice.communicationsSubsections %}
+      {% for content in notice.communicationsSubsections %}
+        {% if content %}
+          <div>7.{{ forloop.counter }} {{ content }}</div>
+        {% endif %}
+      {% endfor %}
+    {% endif %}
+
+    <h2>8. COMMITTEE REPORT</h2>
+    {% if notice.committeeReportSubsections %}
+      {% for content in notice.committeeReportSubsections %}
+        {% if content %}
+          <div>8.{{ forloop.counter }} {{ content }}</div>
+        {% endif %}
+      {% endfor %}
+    {% endif %}
+
+    <h2>9. FIRST READING</h2>
+    {% if notice.firstReadingSubsections %}
+      {% for content in notice.firstReadingSubsections %}
+        {% if content %}
+          <div>9.{{ forloop.counter }} {{ content }}</div>
+        {% endif %}
+      {% endfor %}
+    {% endif %}
+
+    <h2>10. OTHER MATTERS</h2>
+    <p>{{ notice.otherMatters }}</p>
+
+    <h2>11. ADJOURNMENT</h2>
+    <p>{{ notice.adjournment }}</p>
+  </div>
+  
+  <div class="signatures">
+    <div class="signature-block">
+      <p>{{ notice.preparedBy }}</p>
+      <p>Secretary to the Sangguniang Bayan</p>
+    </div>
+    <div class="signature-block">
+      
+      <p>{{ notice.attestedBy }}</p>
+      <p>Municipal Vice Mayor & Presiding Officer</p>
+    </div>
+    <div class="signature-block">
+     
+      <p>{{ notice.approvedBy }}</p>
+      <p>Municipal Mayor</p>
+    </div>
+  </div>
+</body>
+</html>

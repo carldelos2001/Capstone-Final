@@ -77,12 +77,22 @@
             color: #52AE77;
             font-size: 1rem;
         }
+        .text10:hover {
+            color: black;
+        }
         .text3 {
             color: #52AE77;
             font-size: 1rem;
         }
+        .text3:hover {
+            color: black;
+        }
         .mt-3 {
             font-size: 1rem;
+            color: #555;
+        }
+        .mt-3:hover {
+            color: black;
         }
         .mb-4 {
             font-weight: bold;
@@ -98,7 +108,7 @@
             <div class="logo">
                 <img class="img_logo mb-3" src="{% static 'argao_logo.jpg' %}" alt="Logo">
             </div>
-            <h3 class="mb-4">ARGAO-LGU-SB MANAGEMENT PLATFORM</h3>
+            <h3 class="mb-4">LGU- ARGAO SB MANAGEMENT PORTAL</h3>
             
             <!-- Login Form -->
             <form id="loginForm" method="POST">
@@ -152,10 +162,12 @@
                         if (accountData) {
                             // Check user role and redirect accordingly
                             if (accountData.role === "admin") {
-                                localStorage.setItem('userName', accountData.name || 'Admin');
+                                localStorage.setItem('userName', accountData.firstName || 'Admin');
+                                localStorage.setItem('userEmail', email);
                                 window.location.href = '{% url "admin_dash" %}';
                             } else if (accountData.role === "staff") {
-                                localStorage.setItem('userName', accountData.name || 'Staff');
+                                localStorage.setItem('userName', accountData.firstName || 'Staff');
+                                localStorage.setItem('userEmail', email);
                                 window.location.href = '{% url "staff_dash" %}';
                             } else if (accountData.role === "user") {
                                 // For users, we need to fetch additional data
@@ -169,9 +181,8 @@
                                 .then(response => response.json())
                                 .then(userData => {
                                     if (userData) {
-                                        const firstName = userData.firstname || '';
-                                        const lastName = userData.lastname || '';
-                                        localStorage.setItem('userName', `${firstName} ${lastName}`.trim() || 'User');
+                                        localStorage.setItem('userName', userData.firstname || 'User');
+                                        localStorage.setItem('userEmail', email);
                                         window.location.href = '{% url "home" %}';
                                     } else {
                                         throw new Error('User data not found');

@@ -85,6 +85,7 @@
     <label class="header-menu-item" id="resolutions">Resolutions</label>
     <label class="header-menu-item" id="services">Services</label>
     <label class="header-menu-item" id="announcement">Announcement</label>
+    <label class="header-menu-item" id="feedback">Feedback</label>
 
     <!-- User Profile Dropdown -->
     <div class="dropdown ms-auto">
@@ -236,6 +237,10 @@
     
     document.getElementById('announcement').addEventListener('click', function() {
       window.location.href = '/user_announcement';
+    });
+
+    document.getElementById('feedback').addEventListener('click', function() {
+      window.location.href = '/user_feedback';
     });
 
     // Get user from localStorage

@@ -2,7 +2,7 @@ from django.http import HttpResponse
 from django.template import loader
 from django.shortcuts import render, redirect
 from django.contrib import messages
-from .forms import OrdinanceResolutionForm
+from .forms import OrdinanceResolutionForm, StaffOrdinanceResolutionForm
 from .firebase_config import firebase_db, storage
 from firebase_admin import storage, credentials, db
 from django.core.mail import send_mail
@@ -12,6 +12,9 @@ from django.views.decorators.csrf import csrf_exempt
 from django.urls import reverse
 from firebase_admin.exceptions import FirebaseError
 from firebase_admin import auth, db
+from firebase_admin import db
+from django.core.mail import EmailMultiAlternatives
+from django.template.loader import render_to_string
 
 import bcrypt
 import random
@@ -189,8 +192,10 @@ def user_announcement(request):
     return render(request, 'user_announcement.html')
 def admin_report(request):
     return render(request, 'admin_report.html')
-def admin_announcement(request):
-    return render(request, 'admin_announcement.html')
+
+def admin_minutes(request):
+    return render(request, 'admin_minutes1.html')
+
 def admin_attendance(request):
     return render(request, 'admin_attendance.html')
 def user_forgotpass(request):
@@ -201,8 +206,8 @@ def admin_services(request):
     return render(request, 'admin_services.html')
 def admin_staff_account(request):
     return render(request, 'admin_staff_account_create.html')
-def admin_minutesmaker(request):
-    return render(request, 'admin_minutesmaker.html')
+def admin_notice(request):
+    return render(request, 'admin_notice1.html')
 def staff_announcement(request):
     return render(request, 'staff_announcement.html')
 def main_login(request):
@@ -217,9 +222,17 @@ def staff_feedback(request):
     return render(request, 'staff_feedback.html')
 def staff_session(request):
     return render(request, 'staff_session.html')
+
+
+
 def admin_serve(request):
     return render(request, 'admin_serve.html')
-
+def user_feedback(request):
+    return render(request, 'user_feedback.html')
+def admin_feedback(request):
+    return render(request, 'admin_feedback.html')
+def admin_board(request):
+    return render(request, 'admin_board.html')
 
 # >>>> ADMIN LOG IN
 def admin_login(request):
@@ -357,6 +370,51 @@ def add_ordinance_resolution(request):
 
     return render(request, 'admin_ordi_reso.html', {'form': form})
 
+# >>>>>>> ADDING ORDINANCE AND RESOLUTIONNN
+def staff_ordi_reso(request):
+    if request.method == 'POST':
+        form = StaffOrdinanceResolutionForm(request.POST, request.FILES)
+        if form.is_valid():
+            # Extract form data
+            title = form.cleaned_data['title']
+            year = form.cleaned_data['year']
+            date_proposed = form.cleaned_data['date_proposed']
+            date_approved = form.cleaned_data['date_approved']
+            author = form.cleaned_data['author']
+            file_type = form.cleaned_data['file_type']
+            document = request.FILES['document']  # Use the uploaded file
+
+            # Determine the storage path based on file type
+            if file_type == 'ordinance':
+                storage_path = f'ordinances/{document.name}'
+                db_path = 'ordinances'
+            elif file_type == 'resolution':
+                storage_path = f'resolutions/{document.name}'
+                db_path = 'resolutions'
+            else:
+                storage_path = f'other/{document.name}'
+                db_path = 'other_documents'
+
+            # Upload the document to Firebase Storage
+            document_url = upload_file_to_firebase_storage(document, storage_path)
+
+            # Save data to Firebase Realtime Database based on file type
+            firebase_db.child(db_path).push({
+                'title': title,
+                'year': year,
+                'date_proposed': date_proposed.isoformat(),
+                'date_approved': date_approved.isoformat(),
+                'author': author,
+                'file_type': file_type,
+                'document_url': document_url  # Save the document URL
+            })
+
+            return redirect('staff_dash')  # Replace with your desired redirect
+    else:
+        form = StaffOrdinanceResolutionForm()
+
+    return render(request, 'staff_ordi_reso.html', {'form': form})
+
 
 def upload_file_to_firebase_storage(file, storage_path):
     # Firebase Storage reference
@@ -473,7 +531,68 @@ def verify_otp(request):
         except Exception as e:
             print(f'Error: {e}')
             return JsonResponse({'success': False, 'message': str(e)}, status=500)
+@csrf_exempt
+def verify_otp_only(request):
+    if request.method == 'POST':
+        try:
+            data = json.loads(request.body)
+            otp = data.get('otp')
+            email = data.get('email')
+            password = data.get('password')
+            first_name = data.get('first_name') 
+            last_name = data.get('last_name')
+            role = data.get('role')
 
+            # Check OTP from session
+            session_otp = request.session.get('otp')
+
+            # Validate required fields
+            if not all([otp, email, password, first_name, last_name, role]):
+                return JsonResponse({'success': False, 'message': 'Missing required fields'}, status=400)
+
+            if otp != str(session_otp):
+                return JsonResponse({'success': False, 'message': 'Invalid OTP'}, status=400)
+
+            try:
+                # Create Firebase user
+                user = authe.create_user_with_email_and_password(email, password)
+                user_id = user['localId']
+
+                # Store user data in Firebase
+                user_data = {
+                    "firstname": first_name,
+                    "lastname": last_name, 
+                    "email": email,
+                    "role": role
+                }
+
+                database.child("accounts").child(user_id).set(user_data)
+
+                # Clear session data
+                session_keys = ['otp', 'otp_email']
+                for key in session_keys:
+                    if key in request.session:
+                        del request.session[key]
+
+                return JsonResponse({'success': True})
+
+            except Exception as e:
+                print(f'Firebase Error: {str(e)}')
+                return JsonResponse({
+                    'success': False, 
+                    'message': 'Failed to create account. Please try again.'
+                }, status=400)
+
+        except json.JSONDecodeError:
+            return JsonResponse({'success': False, 'message': 'Invalid request format'}, status=400)
+        except Exception as e:
+            print(f'Error: {e}')
+            return JsonResponse({
+                'success': False,
+                'message': 'An error occurred. Please try again.'
+            }, status=500)
+
+    return JsonResponse({'success': False, 'message': 'Method not allowed'}, status=405)
 @csrf_exempt
 def send_login_otp(request):
     if request.method == 'POST':
@@ -584,26 +703,37 @@ def reset_password_with_otp(request):
             data = json.loads(request.body)
             otp = data.get('otp')
             new_password = data.get('new_password')
+            email = data.get('email')
 
             # Check OTP from session
             session_otp = request.session.get('forgot_password_otp')
-            email = request.session.get('forgot_password_email')
+            session_email = request.session.get('forgot_password_email')
 
-            if not otp or not new_password:
-                return JsonResponse({'success': False, 'message': 'OTP and new password are required'}, status=400)
+            if not otp or not new_password or not email:
+                return JsonResponse({'success': False, 'message': 'OTP, new password, and email are required'}, status=400)
 
-            if otp == str(session_otp):
-                # OTP is correct, reset the password
-                user = authe.sign_in_with_email_and_password(email, new_password)  # Sign in to confirm email
+            if otp == str(session_otp) and email == session_email:
+                try:
+                    # Update the user's password in Firebase
+                    accounts_ref = db.reference('accounts')
+                    account_query = accounts_ref.order_by_child('email').equal_to(email).get()
+                    
+                    if account_query:
+                        account_key = list(account_query.keys())[0]
+                        accounts_ref.child(account_key).update({'password': new_password})
 
-                # Clear OTP from session
-                del request.session['forgot_password_otp']
-                del request.session['forgot_password_email']
+                        # Clear OTP from session
+                        del request.session['forgot_password_otp']
+                        del request.session['forgot_password_email']
 
-                return JsonResponse({'success': True})
-
+                        return JsonResponse({'success': True})
+                    else:
+                        return JsonResponse({'success': False, 'message': 'Account not found'}, status=404)
+                except Exception as firebase_error:
+                    print(f'Firebase Error: {firebase_error}')
+                    return JsonResponse({'success': False, 'message': 'Failed to update password'}, status=500)
             else:
-                return JsonResponse({'success': False, 'message': 'Invalid OTP'}, status=400)
+                return JsonResponse({'success': False, 'message': 'Invalid OTP or email'}, status=400)
 
         except json.JSONDecodeError:
             return JsonResponse({'success': False, 'message': 'Invalid JSON format'}, status=400)
@@ -671,7 +801,7 @@ def get_user_data(request):
             return JsonResponse({"error": str(e)}, status=500)
     return JsonResponse({"error": "Invalid request."}, status=400)
 
-import bcrypt
+
 @csrf_exempt
 
 def admin_login_view(request):
@@ -719,3 +849,317 @@ def admin_login_view(request):
             return JsonResponse({'success': False, 'message': 'An error occurred. Please try again.'}, status=500)
     
     return JsonResponse({'success': False, 'message': 'Invalid request method'}, status=405)
+@csrf_exempt
+def verify_password(request):
+    if request.method == 'POST':
+        try:
+            data = json.loads(request.body)
+            email = data.get('email')
+            password = data.get('password')
+
+            if not email or not password:
+                return JsonResponse({'success': False, 'message': 'Email and password are required'}, status=400)
+
+            # Query Firebase for the account
+            ref = db.reference('accounts')
+            accounts = ref.order_by_child('email').equal_to(email).get()
+
+            if not accounts:
+                return JsonResponse({'success': False, 'message': 'Account not found'}, status=404)
+
+            # Check if password matches
+            for account in accounts.values():
+                if account.get('password') == password:
+                    return JsonResponse({'success': True})
+                break
+
+            return JsonResponse({'success': False, 'message': 'Invalid password'}, status=401)
+
+        except json.JSONDecodeError:
+            return JsonResponse({'success': False, 'message': 'Invalid JSON format'}, status=400)
+        except Exception as e:
+            print(f'Error verifying password: {e}')
+            return JsonResponse({'success': False, 'message': 'An error occurred'}, status=500)
+
+    return JsonResponse({'success': False, 'message': 'Invalid request method'}, status=405)
+
+@csrf_exempt
+def send_email_to_officials(request):
+    if request.method == 'POST':
+        try:
+            # Parse request data
+            data = json.loads(request.body)
+            notice_id = data.get('notice_id')
+
+            if not notice_id:
+                return JsonResponse({'success': False, 'message': 'Notice ID is required'}, status=400)
+
+            # Retrieve officials from Firebase
+            try:
+                ref = db.reference('officials')
+                officials = ref.get()
+            except Exception as e:
+                print(f"Firebase error getting officials: {str(e)}")  # Debug logging
+                return JsonResponse({'success': False, 'message': f'Error accessing Firebase: {str(e)}'}, status=500)
+
+            if not officials:
+                return JsonResponse({'success': False, 'message': 'No officials found.'}, status=404)
+
+            # Get notice data from Firebase first
+            try:
+                notice_ref = db.reference(f'notices/{notice_id}')
+                notice = notice_ref.get()
+                
+                if not notice:
+                    return JsonResponse({'success': False, 'message': f'Notice with ID {notice_id} not found'}, status=404)
+            except Exception as e:
+                print(f"Firebase error getting notice: {str(e)}")  # Debug logging
+                return JsonResponse({'success': False, 'message': f'Error retrieving notice: {str(e)}'}, status=500)
+
+            
+
+            # Send email to each official
+            email_errors = []
+            successful_emails = []
+            for official_id, official_data in officials.items():
+                email = official_data.get('email')
+                if not email:
+                    continue  # Skip officials without an email
+
+                try:
+                    # Prepare subsection HTML with error handling
+                    adoptionMinutesHtml = ''
+                    if notice.get('adoptionMinutesSubsections'):
+                        for i, content in enumerate(notice['adoptionMinutesSubsections']):
+                            if content:  # Only add if content exists
+                                adoptionMinutesHtml += f'<div>6.{i+1} {content}</div>'
+
+                    communicationsHtml = ''
+                    if notice.get('communicationsSubsections'):
+                        for i, content in enumerate(notice['communicationsSubsections']):
+                            if content:
+                                communicationsHtml += f'<div>7.{i+1} {content}</div>'
+
+                    committeeReportHtml = ''
+                    if notice.get('committeeReportSubsections'):
+                        for i, content in enumerate(notice['committeeReportSubsections']):
+                            if content:
+                                committeeReportHtml += f'<div>8.{i+1} {content}</div>'
+
+                    firstReadingHtml = ''
+                    if notice.get('firstReadingSubsections'):
+                        for i, content in enumerate(notice['firstReadingSubsections']):
+                            if content:
+                                firstReadingHtml += f'<div>9.{i+1} {content}</div>'
+
+                    # Prepare email content using Django template
+                    context = {
+                        'notice': notice,
+                        
+                        'adoptionMinutesHtml': adoptionMinutesHtml,
+                        'communicationsHtml': communicationsHtml, 
+                        'committeeReportHtml': committeeReportHtml,
+                        'firstReadingHtml': firstReadingHtml
+                    }
+                    
+                    try:
+                        html_content = render_to_string('emailnotice1_template.html', context)
+                    except Exception as template_error:
+                        print(f"Template rendering error: {str(template_error)}")  # Debug logging
+                        raise Exception(f"Failed to render email template: {str(template_error)}")
+
+                    subject = f"Important Notice: Session Minutes #{notice.get('minutesNo', '')}"
+                    
+                    try:
+                        email_message = EmailMultiAlternatives(
+                            subject=subject,
+                            body="This is a plain text fallback for the email.",
+                            from_email="stevendelosreyes123@gmail.com",
+                            to=[email],
+                        )
+                        email_message.attach_alternative(html_content, "text/html")
+                        email_message.send()
+                        successful_emails.append(email)
+                    except Exception as email_error:
+                        print(f"Email sending error: {str(email_error)}")  # Debug logging
+                        raise Exception(f"Failed to send email: {str(email_error)}")
+                        
+                except Exception as e:
+                    print(f"Detailed email error for {email}: {str(e)}")  # Debug logging
+                    email_errors.append(f"Failed to send email to {email}: {str(e)}")
+
+            # Return response with both successes and failures
+            response = {
+                'success': len(successful_emails) > 0,
+                'message': f'Emails sent: {len(successful_emails)}, Failed: {len(email_errors)}',
+                'successful_emails': successful_emails,
+                'failed_emails': email_errors,
+                'total_sent': len(successful_emails),
+                'total_failed': len(email_errors)
+            }
+            
+            # Choose status code based on outcome
+            if len(email_errors) == 0:
+                return JsonResponse(response, status=200)
+            elif len(successful_emails) > 0:
+                return JsonResponse(response, status=207)  # Partial success
+            else:
+                return JsonResponse(response, status=500)  # Complete failure
+
+        except json.JSONDecodeError:
+            print("Invalid JSON format in request")  # Debug logging
+            return JsonResponse({'success': False, 'message': 'Invalid JSON format in request body.'}, status=400)
+        except Exception as e:
+            print(f"Unexpected error in main try block: {str(e)}")  # Debug logging
+            return JsonResponse({'success': False, 'message': f'Unexpected error: {str(e)}'}, status=500)
+    else:
+        return JsonResponse({'success': False, 'message': 'Invalid request method. Only POST is allowed.'}, status=405)
+    
+@csrf_exempt
+def send_email_to_officials_minutes(request):
+    if request.method == 'POST':
+        try:
+            # Parse request data
+            data = json.loads(request.body)
+            minutes_id = data.get('minutes_id')
+
+            if not minutes_id:
+                return JsonResponse({'success': False, 'message': 'Notice ID is required'}, status=400)
+
+            # Retrieve officials from Firebase
+            try:
+                ref = db.reference('officials')
+                officials = ref.get()
+            except Exception as e:
+                print(f"Firebase error getting officials: {str(e)}")  # Debug logging
+                return JsonResponse({'success': False, 'message': f'Error accessing Firebase: {str(e)}'}, status=500)
+
+            if not officials:
+                return JsonResponse({'success': False, 'message': 'No officials found.'}, status=404)
+
+            # Get notice data from Firebase first
+            try:
+                minutes_ref = db.reference(f'minutes/{minutes_id}')
+                minutes = minutes_ref.get()
+                
+                if not minutes:
+                    return JsonResponse({'success': False, 'message': f'Minutes with ID {minutes_id} not found'}, status=404)
+            except Exception as e:
+                print(f"Firebase error getting minutes: {str(e)}")  # Debug logging
+                return JsonResponse({'success': False, 'message': f'Error retrieving minutes: {str(e)}'}, status=500)
+
+            # Get attendance data for the session date
+            try:
+                date_parts = minutes['sessionDate'].split('-')
+                year = date_parts[0]
+                month = date_parts[1] 
+                day = date_parts[2]
+                
+                attendance_ref = db.reference(f'attendance/{month}/{day}/{year}/attendance')
+                attendance_data = attendance_ref.get() or []
+
+                # Separate present and absent officials
+                present_officials = [official for official in attendance_data if official['status'] == 'present']
+                absent_officials = [official for official in attendance_data if official['status'] == 'absent']
+            except Exception as e:
+                print(f"Error getting attendance data: {str(e)}")
+                present_officials = []
+                absent_officials = []
+
+            # Send email to each official
+            email_errors = []
+            successful_emails = []
+            for official_id, official_data in officials.items():
+                email = official_data.get('email')
+                if not email:
+                    continue  # Skip officials without an email
+
+                try:
+                    # Prepare subsection HTML with error handling
+                    adoptionMinutesHtml = ''
+                    if minutes.get('adoptionMinutesSubsections'):
+                        for i, content in enumerate(minutes['adoptionMinutesSubsections']):
+                            if content:  # Only add if content exists
+                                adoptionMinutesHtml += f'<div>6.{i+1} {content}</div>'
+
+                    communicationsHtml = ''
+                    if minutes.get('communicationsSubsections'):
+                        for i, content in enumerate(minutes['communicationsSubsections']):
+                            if content:
+                                communicationsHtml += f'<div>7.{i+1} {content}</div>'
+
+                    committeeReportHtml = ''
+                    if minutes.get('committeeReportSubsections'):
+                        for i, content in enumerate(minutes['committeeReportSubsections']):
+                            if content:
+                                committeeReportHtml += f'<div>8.{i+1} {content}</div>'
+
+                    firstReadingHtml = ''
+                    if minutes.get('firstReadingSubsections'):
+                        for i, content in enumerate(minutes['firstReadingSubsections']):
+                            if content:
+                                firstReadingHtml += f'<div>9.{i+1} {content}</div>'
+
+                    # Prepare email content using Django template
+                    context = {
+                        'minutes': minutes,
+                        'present_officials': present_officials,
+                        'absent_officials': absent_officials,
+                        'adoptionMinutesHtml': adoptionMinutesHtml,
+                        'communicationsHtml': communicationsHtml, 
+                        'committeeReportHtml': committeeReportHtml,
+                        'firstReadingHtml': firstReadingHtml
+                    }
+                    
+                    try:
+                        html_content = render_to_string('emailnotice_template.html', context)
+                    except Exception as template_error:
+                        print(f"Template rendering error: {str(template_error)}")  # Debug logging
+                        raise Exception(f"Failed to render email template: {str(template_error)}")
+
+                    subject = f"Important Minutes: Session Minutes #{minutes.get('minutesNo', '')}"
+                    
+                    try:
+                        email_message = EmailMultiAlternatives(
+                            subject=subject,
+                            body="This is a plain text fallback for the email.",
+                            from_email="stevendelosreyes123@gmail.com",
+                            to=[email],
+                        )
+                        email_message.attach_alternative(html_content, "text/html")
+                        email_message.send()
+                        successful_emails.append(email)
+                    except Exception as email_error:
+                        print(f"Email sending error: {str(email_error)}")  # Debug logging
+                        raise Exception(f"Failed to send email: {str(email_error)}")
+                        
+                except Exception as e:
+                    print(f"Detailed email error for {email}: {str(e)}")  # Debug logging
+                    email_errors.append(f"Failed to send email to {email}: {str(e)}")
+
+            # Return response with both successes and failures
+            response = {
+                'success': len(successful_emails) > 0,
+                'message': f'Emails sent: {len(successful_emails)}, Failed: {len(email_errors)}',
+                'successful_emails': successful_emails,
+                'failed_emails': email_errors,
+                'total_sent': len(successful_emails),
+                'total_failed': len(email_errors)
+            }
+            
+            # Choose status code based on outcome
+            if len(email_errors) == 0:
+                return JsonResponse(response, status=200)
+            elif len(successful_emails) > 0:
+                return JsonResponse(response, status=207)  # Partial success
+            else:
+                return JsonResponse(response, status=500)  # Complete failure
+
+        except json.JSONDecodeError:
+            print("Invalid JSON format in request")  # Debug logging
+            return JsonResponse({'success': False, 'message': 'Invalid JSON format in request body.'}, status=400)
+        except Exception as e:
+            print(f"Unexpected error in main try block: {str(e)}")  # Debug logging
+            return JsonResponse({'success': False, 'message': f'Unexpected error: {str(e)}'}, status=500)
+    else:
+        return JsonResponse({'success': False, 'message': 'Invalid request method. Only POST is allowed.'}, status=405)

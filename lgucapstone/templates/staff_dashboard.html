@@ -32,18 +32,29 @@
   font-family: "Poppins", sans-serif;
   font-size: 1rem;
   }
-    .sidebar {
-      position: fixed;
-      top: 0;
-      left: 0;
-      height: 100%;
-      width: 250px;
-      background-color: #f8f9fa;
-      padding-top: 20px;
-      border-right: 1px solid #ddd;
-      display: flex;
-      flex-direction: column;
+    .sidebar-footer {
+      margin-top: auto;
+      padding: 15px 20px;
+      border-top: 1px solid #ddd;
     }
+
+    .sidebar-footer #welcomeMessage {
+      display: block;
+      margin-bottom: 10px;
+    }
+  .sidebar {
+    position: fixed;
+    top: 0;
+    left: 0;
+    height: 100%;
+    width: 250px;
+    background-color: #f8f9fa;
+    padding-top: 20px;
+    border-right: 1px solid #ddd;
+    display: flex;
+    flex-direction: column;
+    color: black;
+  }
     
     .sidebar .logo {
       text-align: center;
@@ -116,17 +127,6 @@
     .btn.btn-success{
       margin-top: 20px;
     }
-
-    .sidebar-footer {
-      margin-top: auto;
-      padding: 15px 20px;
-      border-top: 1px solid #ddd;
-    }
-
-    .sidebar-footer #welcomeMessage {
-      display: block;
-      margin-bottom: 10px;
-    }
   </style>
 </head>
 <body>
@@ -156,6 +156,7 @@
       text-overflow: ellipsis;
     }
   </style>
+  
   <!-- Sidebar -->
   <div class="sidebar">
     <div class="logo">
@@ -163,20 +164,20 @@
     </div>
     <div class="nav-item" onclick="window.location.href='/staff_dash'">Dashboard</div>
     <div class="nav-item" onclick="window.location.href='/staff_report'">Reports</div>
-    <div class="nav-item" onclick="window.location.href='/staff_services'">Services</div>
+    <div class="nav-item" onclick="window.location.href='/staff_services'">Information Bulletin</div>
     <div class="nav-item" onclick="window.location.href='/staff_feedback'">Feedbacks</div>
     <div class="nav-item" onclick="window.location.href='/staff_session'">Session Agenda</div>
     <div class="nav-item" onclick="window.location.href='/staff_announcement'">Announcements Board</div>
     
     <div class="sidebar-footer">
-      <span id="welcomeMessage">Staff:</span>
+       <span id="welcomeMessage">Staff: <span id="userFirstName"></span></span>
       <div class="nav-item" onclick="logout()">Log Out</div>
     </div>
   </div>
 
   <!-- Main Content -->
   <div class="main-content">
-
+   
 
     <!-- Charts Section -->
     <div class="row">
@@ -200,7 +201,7 @@
 
     <!-- Add Ordinance/Resolution Button and Search Box -->
     <div class="d-flex justify-content-start align-items-center mt-4">
-      <button class="btn btn-success" onclick="window.location.href='/add_ordinance_resolution'">Add Ordinance/Resolution</button>
+      <button class="btn btn-success" onclick="window.location.href='/staff_ordi_reso'">Add Ordinance/Resolution</button>
       <div class="fixed-search-box search-container">
         <input type="text" class="form-control" placeholder="Search Ordinance/Resolution" id="search-box">
         <button class="btn btn-primary" type="button" id="search-button">Search</button>
@@ -241,14 +242,50 @@
         </div>
       </div>
     </div>
+
+    <!-- Modal for document update -->
+    <div class="modal fade" id="updateModal" tabindex="-1" aria-labelledby="updateModalLabel" aria-hidden="true">
+      <div class="modal-dialog">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title" id="updateModalLabel">Update Document</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+          </div>
+          <div class="modal-body">
+            <form id="updateForm">
+              <div class="mb-3">
+                <label for="newTitle" class="form-label">Title</label>
+                <input type="text" class="form-control" id="newTitle" required>
+              </div>
+              <div class="mb-3">
+                <label for="newAuthor" class="form-label">Author</label>
+                <input type="text" class="form-control" id="newAuthor" required>
+              </div>
+              <div class="mb-3">
+                <label for="newDate" class="form-label">Date Approved</label>
+                <input type="date" class="form-control" id="newDate" required>
+              </div>
+              <div class="mb-3">
+                <label for="newFile" class="form-label">New Document</label>
+                <input type="file" class="form-control" id="newFile" accept=".pdf,.doc,.docx">
+              </div>
+            </form>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+            <button type="button" class="btn btn-primary" id="saveUpdateBtn">Save changes</button>
+          </div>
+        </div>
+      </div>
+    </div>
   </div>
  
 
   <script type="module">
     // Import Firebase only once
     import { initializeApp } from "https://www.gstatic.com/firebasejs/9.9.1/firebase-app.js";
-    import { getDatabase, ref, get, remove, onValue } from "https://www.gstatic.com/firebasejs/9.9.1/firebase-database.js";
-    import { getStorage, ref as storageRef, getDownloadURL } from "https://www.gstatic.com/firebasejs/9.9.1/firebase-storage.js";
+    import { getDatabase, ref, get, remove, onValue, update } from "https://www.gstatic.com/firebasejs/9.9.1/firebase-database.js";
+    import { getStorage, ref as storageRef, getDownloadURL, uploadBytes } from "https://www.gstatic.com/firebasejs/9.9.1/firebase-storage.js";
 
     const firebaseConfig = {
       apiKey: "AIzaSyAMwvUHsWFkTmJyfzuh4DxzOrMYEjcXHvI",
@@ -266,10 +303,10 @@
     const db = getDatabase(app);
     const storage = getStorage(app);
     
-    // Retrieve user name from localStorage
+    // Get user name from localStorage
     const userName = localStorage.getItem('userName');
     if (userName) {
-      document.getElementById('welcomeMessage').textContent = `Staff: ${userName}`;
+      document.getElementById('userFirstName').textContent = userName;
     }
 
     // Function to parse the month from a date string (YYYY-MM-DD)
@@ -364,12 +401,12 @@
       Object.entries(data).forEach(([key, item]) => {
         const row = `
           <tr id="row-${key}">
-             <td><div class="truncate-title" title="${item.title || 'No Title'}">${item.title || 'No Title'}</div></td>
+            <td><div class="truncate-title" title="${item.title || 'No Title'}">${item.title || 'No Title'}</div></td>
             <td>${item.author || 'No Author'}</td>
             <td>${item.date_approved || 'No Date'}</td>
             <td>
               <button class="btn btn-primary btn-sm" onclick="previewDocument('${item.document_url}')">View</button>
-              <button class="btn btn-danger btn-sm" onclick="confirmDelete('${key}', '${item.file_type}')">Delete</button>
+              <button class="btn btn-warning btn-sm" onclick="updateDocument('${key}', '${item.file_type}')">Update</button>
               <button class="btn btn-info btn-sm" onclick="downloadDocument('${item.document_url}')">Open</button>
             </td>
           </tr>
@@ -378,8 +415,8 @@
       });
     }
 
-     // Preview document
-     window.previewDocument = function(url) {
+    // Preview document
+    window.previewDocument = function(url) {
       const previewFrame = document.getElementById('previewFrame');
       // Use Google Docs Viewer to preview the document
       previewFrame.src = `https://docs.google.com/viewer?url=${encodeURIComponent(url)}&embedded=true`;
@@ -387,27 +424,58 @@
       previewModal.show();
     }
 
-    // Confirm before deletion
-    window.confirmDelete = function(id, fileType) {
-      if (confirm('Are you sure you want to delete this project?')) {
-        deleteItem(id, fileType);
-      }
-    }
+    // Update document function
+    window.updateDocument = function(id, fileType) {
+      const item = window.allData[id];
+      const updateModal = new bootstrap.Modal(document.getElementById('updateModal'));
+      
+      // Set current values
+      document.getElementById('newTitle').value = item.title || '';
+      document.getElementById('newAuthor').value = item.author || '';
+      document.getElementById('newDate').value = item.date_approved || '';
 
-    // Delete item from Firebase
-    function deleteItem(id, fileType) {
-      const itemRef = ref(db, `${fileType}s/${id}`);
+      // Handle save button click
+      document.getElementById('saveUpdateBtn').onclick = async () => {
+        const newTitle = document.getElementById('newTitle').value;
+        const newAuthor = document.getElementById('newAuthor').value;
+        const newDate = document.getElementById('newDate').value;
+        const fileInput = document.getElementById('newFile');
+        const file = fileInput.files[0];
 
-      remove(itemRef)
-        .then(function() {
-          alert('Project deleted successfully!');
-          document.getElementById(`row-${id}`).remove();
+        try {
+          let newUrl = item.document_url;
+          let fileName = item.file_name;
+
+          if (file) {
+            // Upload new file
+            const fileRef = storageRef(storage, `${fileType}s/${file.name}`);
+            await uploadBytes(fileRef, file);
+            newUrl = await getDownloadURL(fileRef);
+            fileName = file.name;
+          }
+
+          // Update database
+          const updates = {
+            title: newTitle,
+            author: newAuthor,
+            date_approved: newDate,
+            document_url: newUrl,
+            file_name: fileName
+          };
+
+          await update(ref(db, `${fileType}s/${id}`), updates);
+          alert('Document updated successfully!');
+          updateModal.hide();
+          fetchData();
           fetchBarChartData();
           fetchPieChartData();
-        })
-        .catch(function(error) {
-          console.error('Error deleting project:', error);
-        });
+        } catch (error) {
+          console.error('Error updating document:', error);
+          alert('Error updating document');
+        }
+      };
+
+      updateModal.show();
     }
 
     // Download document
@@ -505,7 +573,7 @@
     // Logout function
     window.logout = function() {
       // Clear user data from localStorage
-      localStorage.removeItem('userName');
+      localStorage.removeItem('userFirstName');
       // Redirect to login page
       window.location.href = 'main_login';  // Adjust this URL as needed
     }
