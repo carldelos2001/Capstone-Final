@@ -30,12 +30,12 @@
   }
   .sidebar-footer {
       margin-top: auto;
-      padding: 15px 20px;
+     
       border-top: 1px solid #ddd;
     }
 
     .sidebar-footer #welcomeMessage {
-      display: block;
+     
       margin-bottom: 10px;
     }
   .sidebar {
@@ -177,6 +177,63 @@
       overflow: hidden;
       text-overflow: ellipsis;
     }
+
+    /* Styles for organizational chart */
+    .org-chart {
+      margin-top: 2rem;
+      padding: 1rem;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+    }
+
+    .officials-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+      gap: 1rem;
+      margin-top: 1rem;
+    }
+
+    .official-card {
+      border: 1px solid #ddd;
+      padding: 1rem;
+      border-radius: 4px;
+      text-align: center;
+    }
+
+    .official-image {
+      width: 150px;
+      height: 150px;
+      object-fit: cover;
+      border-radius: 50%;
+      margin-bottom: 0.5rem;
+    }
+
+    .upload-photo-btn {
+      margin: 5px;
+      background-color: #52AE77;
+      color: white;
+      border: none;
+      padding: 5px 10px;
+      border-radius: 4px;
+      cursor: pointer;
+    }
+
+    .upload-photo-btn:hover {
+      background-color: #4a9d6d;
+      color: white;
+    }
+
+    .no-image-placeholder {
+      width: 150px;
+      height: 150px;
+      background-color: #e9ecef;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin: 0 auto 0.5rem auto;
+      color: #6c757d;
+    }
   </style>
 
   <!-- Update Service Modal -->
@@ -209,22 +266,248 @@
     </div>
   </div>
 
+  <!-- Upload Photo Modal -->
+  <div class="modal fade" id="uploadPhotoModal" tabindex="-1">
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title">Upload Official Photo</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+        </div>
+        <div class="modal-body">
+          <form id="uploadPhotoForm">
+            <input type="hidden" id="currentOfficialKey">
+            <div class="mb-3">
+              <label for="officialPhoto" class="form-label">Select Photo</label>
+              <input type="file" class="form-control" id="officialPhoto" accept="image/*" required>
+            </div>
+          </form>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+          <button type="button" class="btn btn-primary" onclick="submitPhotoUpload()">Upload</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <style>
+    /* Add this style for the scrollbar */
+    ::-webkit-scrollbar {
+      width: 10px;
+    }
+
+    ::-webkit-scrollbar-track {
+      background: #f1f1f1;
+    }
+
+    ::-webkit-scrollbar-thumb {
+      background: #888;
+    }
+
+    ::-webkit-scrollbar-thumb:hover {
+      background: #555;
+    }
+
+    /* Add this style to limit the title content */
+    .truncate-title {
+      max-width: 200px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    /* Sidebar toggle styles */
+    .sidebar {
+      transition: 0.3s;
+      width: 250px;
+      position: fixed;
+      height: 100%;
+      z-index: 1000;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 20px 0;
+    }
+
+    .sidebar.collapsed {
+      width: 60px;
+    }
+
+    .sidebar.collapsed .nav-item span,
+    .sidebar.collapsed .sidebar-footer span {
+      display: none;
+    }
+
+    .sidebar.collapsed .logo img {
+      width: 40px;
+      height: 40px;
+    }
+
+    .burger-menu {
+      display: none;
+      position: fixed;
+      top: 15px;
+      left: 15px;
+      z-index: 1001;
+      background: none;
+      border: none;
+      cursor: pointer;
+      padding: 5px;
+    }
+
+    .burger-menu .bar {
+      width: 25px;
+      height: 3px;
+      background-color: #333;
+      margin: 4px 0;
+      transition: 0.3s;
+      display: block;
+    }
+
+    .sidebar.collapsed + .main-content {
+      margin-left: 60px;
+    }
+
+    .main-content {
+      margin-left: 250px;
+      transition: 0.3s;
+    }
+
+    /* Close button style */
+    .close-sidebar {
+      position: absolute;
+      top: 10px;
+      right: 10px;
+      background: none;
+      border: none;
+      font-size: 20px;
+      cursor: pointer;
+      color: #333;
+      display: block;
+    }
+
+    .sidebar.collapsed .close-sidebar {
+      display: none;
+    }
+
+    /* Add styles for nav-item icons */
+    .nav-item {
+      display: flex;
+      align-items: center;
+      justify-content: flex-start;
+      width: 100%;
+      padding: 10px 20px;
+      cursor: pointer;
+    }
+
+    .nav-item img {
+      margin-right: 10px;
+      width: 20px;
+      height: 20px;
+      vertical-align: middle;
+    }
+
+    .sidebar-footer {
+      
+      align-items: left;
+      justify-content: flex-start;
+      width: 100%;
+      
+    }
+
+    .sidebar-footer img {
+      margin-right: 10px;
+      width: 20px;
+      height: 20px;
+      vertical-align: middle;
+    }
+
+    @media (max-width: 768px) {
+      .burger-menu {
+        display: block;
+      }
+      
+      .sidebar {
+        transform: translateX(-250px);
+      }
+
+      .sidebar.collapsed {
+        transform: translateX(-60px);
+      }
+
+      .sidebar.active {
+        transform: translateX(0);
+      }
+
+      .main-content {
+        margin-left: 0;
+      }
+    }
+  </style>
+
+  <!-- Burger Menu Button -->
+  <button class="burger-menu" onclick="toggleSidebar()">
+    <span class="bar"></span>
+    <span class="bar"></span>
+    <span class="bar"></span>
+  </button>
+  
+  <!-- Sidebar -->
   <div class="sidebar">
+    <!-- Close Button -->
+    <button class="close-sidebar" onclick="toggleSidebar()">×</button>
+    
     <div class="logo">
       <img src="{% static 'argao_logo.jpg' %}" alt="Logo">
     </div>
-    <div class="nav-item" onclick="window.location.href='/admin_dash'">Dashboard</div>
-    <div class="nav-item" onclick="window.location.href='/admin_services'">Information Bulletin</div>
-    <div class="nav-item" onclick="window.location.href='/admin_report'">Reports</div>
-    <div class="nav-item" onclick="window.location.href='/admin_staff_account'">Staff Account Management</div>
-    <div class="nav-item" onclick="window.location.href='/admin_feedback'">Feedbacks</div>
-    <div class="nav-item" onclick="window.location.href='/admin_notice'">Session Notice</div>
-    <div class="nav-item" onclick="window.location.href='/admin_attendance'">Attendance</div>
-    <div class="nav-item" onclick="window.location.href='/admin_minutes'">Minutes Maker</div>
-    <div class="nav-item" onclick="window.location.href='/admin_board'">Announcement Board</div>
+    <div class="nav-item" onclick="window.location.href='/admin_dash'">
+      <img src="{% static 'dashboard.svg' %}" alt="Dashboard">
+      <span>Dashboard</span>
+    </div>
+    <div class="nav-item" onclick="window.location.href='/admin_services'">
+      <img src="{% static 'information.svg' %}" alt="Info">
+      <span>Information Bulletin</span>
+    </div>
+    <div class="nav-item" onclick="window.location.href='/admin_report'">
+      <img src="{% static 'report.svg' %}" alt="Report">
+      <span>Reports</span>
+    </div>
+    <div class="nav-item" onclick="window.location.href='/admin_staff_account'">
+      <img src="{% static 'account.svg' %}" alt="Staff">
+      <span style="margin-right: 70px;">Staff Account Management</span>
+    </div>
+    <div class="nav-item" onclick="window.location.href='/admin_feedback'">
+      <img src="{% static 'feedback.svg' %}" alt="Feedback">
+      <span>Feedbacks</span>
+    </div>
+    <div class="nav-item" onclick="window.location.href='/admin_notice'">
+      <img src="{% static 'notice.svg' %}" alt="Notice">
+      <span>Session Notice</span>
+    </div>
+    <div class="nav-item" onclick="window.location.href='/admin_attendance'">
+      <img src="{% static 'attendance.svg' %}" alt="Attendance">
+      <span>Attendance</span>
+    </div>
+    <div class="nav-item" onclick="window.location.href='/admin_minutes'">
+      <img src="{% static 'minutes.png' %}" alt="Minutes">
+      <span>Minutes Maker</span>
+    </div>
+    <div class="nav-item" onclick="window.location.href='/admin_board'">
+      <img src="{% static 'announcement.svg' %}" alt="Announcement">
+      <span>Announcement Board</span>
+    </div>
+
     <div class="sidebar-footer">
-      <span id="welcomeMessage">Admin:</span>
-      <div class="nav-item" onclick="logout()">Log Out</div>
+      <span id="welcomeMessage" class="nav-item">
+        
+        Admin: <span id="userFirstName"></span>
+      </span>
+      
+      <div class="nav-item" onclick="logout()">
+        <img src="{% static 'logout.svg' %}" alt="Logout">
+        <span >Log Out</span>
+      </div>
     </div>
   </div>
 
@@ -257,7 +540,7 @@
       </div>
 
       <!-- Services List -->
-      <div class="card">
+      <div class="card mb-4">
         <div class="card-body">
           <h4>Uploaded Services</h4>
           <div id="servicesList">
@@ -273,6 +556,35 @@
                 <!-- Services will be dynamically added here -->
               </tbody>
             </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- Organizational Chart -->
+      <div class="card">
+        <div class="card-body">
+          <h4>Organizational Chart</h4>
+          
+          <!-- Upload Official Form -->
+          <form id="officialForm" class="mb-4">
+            <div class="mb-3">
+              <label for="officialName" class="form-label">Official Name</label>
+              <input type="text" class="form-control" id="officialName" required>
+            </div>
+            <div class="mb-3">
+              <label for="officialPosition" class="form-label">Position</label>
+              <input type="text" class="form-control" id="officialPosition" required>
+            </div>
+            <div class="mb-3">
+              <label for="officialImage" class="form-label">Official Photo</label>
+              <input type="file" class="form-control" id="officialImage" accept="image/*" required>
+            </div>
+            <button type="submit" class="btn btn-success">Add Official</button>
+          </form>
+
+          <!-- Officials Grid -->
+          <div id="officialsGrid" class="officials-grid">
+            <!-- Officials will be dynamically added here -->
           </div>
         </div>
       </div>
@@ -309,7 +621,7 @@
       document.getElementById('welcomeMessage').textContent = `Admin: ${userName}`;
     }
 
-    // Handle form submission
+    // Handle service form submission
     document.getElementById('serviceForm').addEventListener('submit', async function(e) {
       e.preventDefault();
       
@@ -339,6 +651,37 @@
       }
     });
 
+    // Handle official form submission
+    document.getElementById('officialForm').addEventListener('submit', async function(e) {
+      e.preventDefault();
+      
+      const name = document.getElementById('officialName').value;
+      const position = document.getElementById('officialPosition').value;
+      const image = document.getElementById('officialImage').files[0];
+      
+      try {
+        // Upload image to Firebase Storage
+        const storageRef = storage.ref(`officials/${image.name}`);
+        await storageRef.put(image);
+        const imageUrl = await storageRef.getDownloadURL();
+
+        // Save official info to Realtime Database
+        await db.ref('officials').push({
+          name: name,
+          position: position,
+          imageUrl: imageUrl,
+          timestamp: Date.now()
+        });
+
+        alert('Official added successfully!');
+        this.reset();
+        loadOfficials();
+      } catch (error) {
+        console.error('Error adding official:', error);
+        alert('Error adding official. Please try again.');
+      }
+    });
+
     // Load services
     function loadServices() {
       const servicesList = document.querySelector('#servicesList tbody');
@@ -361,6 +704,90 @@
           `;
         });
       });
+    }
+
+    // Load officials
+    function loadOfficials() {
+      const officialsGrid = document.getElementById('officialsGrid');
+      officialsGrid.innerHTML = '';
+
+      db.ref('officials').orderByChild('timestamp').once('value', (snapshot) => {
+        snapshot.forEach((childSnapshot) => {
+          const official = childSnapshot.val();
+          const officialKey = childSnapshot.key;
+          
+          const officialCard = document.createElement('div');
+          officialCard.className = 'official-card';
+          
+          // Check if official has an image
+          const imageHtml = official.imageUrl ? 
+            `<img src="${official.imageUrl}" alt="${official.name}" class="official-image">` :
+            `<div class="no-image-placeholder">No Image</div>`;
+          
+          officialCard.innerHTML = `
+            ${imageHtml}
+            <h5>${official.name}</h5>
+            <p>${official.position}</p>
+            <button class="btn btn-sm upload-photo-btn" onclick="openPhotoUploadModal('${officialKey}')">
+              ${official.imageUrl ? 'Update Photo' : 'Upload Photo'}
+            </button>
+            <button class="btn btn-sm btn-danger" onclick="deleteOfficial('${officialKey}')">Remove</button>
+          `;
+          
+          officialsGrid.appendChild(officialCard);
+        });
+      });
+    }
+
+    // Open photo upload modal
+    function openPhotoUploadModal(officialKey) {
+      document.getElementById('currentOfficialKey').value = officialKey;
+      new bootstrap.Modal(document.getElementById('uploadPhotoModal')).show();
+    }
+
+    // Submit photo upload
+    async function submitPhotoUpload() {
+      const officialKey = document.getElementById('currentOfficialKey').value;
+      const photoFile = document.getElementById('officialPhoto').files[0];
+
+      if (!photoFile) {
+        alert('Please select a photo to upload');
+        return;
+      }
+
+      try {
+        // Upload new photo to Firebase Storage
+        const storageRef = storage.ref(`officials/${officialKey}_${photoFile.name}`);
+        await storageRef.put(photoFile);
+        const photoUrl = await storageRef.getDownloadURL();
+
+        // Update official's image URL in database
+        await db.ref('officials').child(officialKey).update({
+          imageUrl: photoUrl
+        });
+
+        bootstrap.Modal.getInstance(document.getElementById('uploadPhotoModal')).hide();
+        document.getElementById('uploadPhotoForm').reset();
+        alert('Photo uploaded successfully!');
+        loadOfficials();
+      } catch (error) {
+        console.error('Error uploading photo:', error);
+        alert('Error uploading photo. Please try again.');
+      }
+    }
+
+    // Delete official
+    async function deleteOfficial(officialKey) {
+      if (confirm('Are you sure you want to remove this official?')) {
+        try {
+          await db.ref('officials').child(officialKey).remove();
+          alert('Official removed successfully!');
+          loadOfficials();
+        } catch (error) {
+          console.error('Error removing official:', error);
+          alert('Error removing official. Please try again.');
+        }
+      }
     }
 
     // Open update modal
@@ -443,14 +870,50 @@
       });
     });
 
+
+    // Sidebar toggle function
+    window.toggleSidebar = function() {
+      const sidebar = document.querySelector('.sidebar');
+      const burgerMenu = document.querySelector('.burger-menu');
+      
+      sidebar.classList.toggle('collapsed');
+      
+      if (sidebar.classList.contains('collapsed')) {
+        // When collapsed, only show burger icon
+        sidebar.style.width = '60px';
+        burgerMenu.style.display = 'block';
+      } else {
+        // When expanded, show full sidebar
+        sidebar.style.width = '250px';
+        burgerMenu.style.display = 'none';
+      }
+    }
+
+    // Handle window resize
+    window.addEventListener('resize', function() {
+      const sidebar = document.querySelector('.sidebar');
+      if (window.innerWidth <= 768) {
+        sidebar.classList.remove('collapsed');
+        if (!sidebar.classList.contains('active')) {
+          sidebar.style.transform = 'translateX(-250px)';
+        }
+      } else {
+        sidebar.style.transform = '';
+      }
+    });
+
+
     // Logout function
     window.logout = function() {
       localStorage.removeItem('userName');
       window.location.href = 'main_login';
     }
 
-    // Load services when page loads
-    document.addEventListener('DOMContentLoaded', loadServices);
+    // Load services and officials when page loads
+    document.addEventListener('DOMContentLoaded', () => {
+      loadServices();
+      loadOfficials();
+    });
   </script>
 </body>
 </html>

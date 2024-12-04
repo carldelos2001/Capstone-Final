@@ -177,6 +177,63 @@
       overflow: hidden;
       text-overflow: ellipsis;
     }
+
+    /* Styles for organizational chart */
+    .org-chart {
+      margin-top: 2rem;
+      padding: 1rem;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+    }
+
+    .officials-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+      gap: 1rem;
+      margin-top: 1rem;
+    }
+
+    .official-card {
+      border: 1px solid #ddd;
+      padding: 1rem;
+      border-radius: 4px;
+      text-align: center;
+    }
+
+    .official-image {
+      width: 150px;
+      height: 150px;
+      object-fit: cover;
+      border-radius: 50%;
+      margin-bottom: 0.5rem;
+    }
+
+    .upload-photo-btn {
+      margin: 5px;
+      background-color: #52AE77;
+      color: white;
+      border: none;
+      padding: 5px 10px;
+      border-radius: 4px;
+      cursor: pointer;
+    }
+
+    .upload-photo-btn:hover {
+      background-color: #4a9d6d;
+      color: white;
+    }
+
+    .no-image-placeholder {
+      width: 150px;
+      height: 150px;
+      background-color: #e9ecef;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin: 0 auto 0.5rem auto;
+      color: #6c757d;
+    }
   </style>
 
   <!-- Update Service Modal -->
@@ -204,6 +261,31 @@
         <div class="modal-footer">
           <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
           <button type="button" class="btn btn-primary" onclick="submitUpdate()">Update</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Upload Photo Modal -->
+  <div class="modal fade" id="uploadPhotoModal" tabindex="-1">
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title">Upload Official Photo</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+        </div>
+        <div class="modal-body">
+          <form id="uploadPhotoForm">
+            <input type="hidden" id="currentOfficialKey">
+            <div class="mb-3">
+              <label for="officialPhoto" class="form-label">Select Photo</label>
+              <input type="file" class="form-control" id="officialPhoto" accept="image/*" required>
+            </div>
+          </form>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+          <button type="button" class="btn btn-primary" onclick="submitPhotoUpload()">Upload</button>
         </div>
       </div>
     </div>
@@ -273,6 +355,35 @@
           </div>
         </div>
       </div>
+
+      <!-- Organizational Chart -->
+      <div class="card mt-4">
+        <div class="card-body">
+          <h4>Organizational Chart</h4>
+          
+          <!-- Upload Official Form -->
+          <form id="officialForm" class="mb-4">
+            <div class="mb-3">
+              <label for="officialName" class="form-label">Official Name</label>
+              <input type="text" class="form-control" id="officialName" required>
+            </div>
+            <div class="mb-3">
+              <label for="officialPosition" class="form-label">Position</label>
+              <input type="text" class="form-control" id="officialPosition" required>
+            </div>
+            <div class="mb-3">
+              <label for="officialImage" class="form-label">Official Photo</label>
+              <input type="file" class="form-control" id="officialImage" accept="image/*" required>
+            </div>
+            <button type="submit" class="btn btn-success">Add Official</button>
+          </form>
+
+          <!-- Officials Grid -->
+          <div id="officialsGrid" class="officials-grid">
+            <!-- Officials will be dynamically added here -->
+          </div>
+        </div>
+      </div>
     </div>
   </div>
 
@@ -303,10 +414,10 @@
     // Display username
     const userName = localStorage.getItem('userName');
     if (userName) {
-      document.getElementById('welcomeMessage').textContent = `Admin: ${userName}`;
+      document.getElementById('welcomeMessage').textContent = `Staff: ${userName}`;
     }
 
-    // Handle form submission
+    // Handle service form submission
     document.getElementById('serviceForm').addEventListener('submit', async function(e) {
       e.preventDefault();
       
@@ -336,6 +447,37 @@
       }
     });
 
+    // Handle official form submission
+    document.getElementById('officialForm').addEventListener('submit', async function(e) {
+      e.preventDefault();
+      
+      const name = document.getElementById('officialName').value;
+      const position = document.getElementById('officialPosition').value;
+      const image = document.getElementById('officialImage').files[0];
+      
+      try {
+        // Upload image to Firebase Storage
+        const storageRef = storage.ref(`officials/${image.name}`);
+        await storageRef.put(image);
+        const imageUrl = await storageRef.getDownloadURL();
+
+        // Save official info to Realtime Database
+        await db.ref('officials').push({
+          name: name,
+          position: position,
+          imageUrl: imageUrl,
+          timestamp: Date.now()
+        });
+
+        alert('Official added successfully!');
+        this.reset();
+        loadOfficials();
+      } catch (error) {
+        console.error('Error adding official:', error);
+        alert('Error adding official. Please try again.');
+      }
+    });
+
     // Load services
     function loadServices() {
       const servicesList = document.querySelector('#servicesList tbody');
@@ -356,6 +498,33 @@
               <button class="btn btn-sm btn-danger" onclick="deleteService('${serviceKey}', '${service.fileName}')">Delete</button>
             </td>
           `;
+        });
+      });
+    }
+
+    // Load officials
+    function loadOfficials() {
+      const officialsGrid = document.getElementById('officialsGrid');
+      officialsGrid.innerHTML = '';
+
+      db.ref('officials').orderByChild('timestamp').once('value', (snapshot) => {
+        snapshot.forEach((childSnapshot) => {
+          const official = childSnapshot.val();
+          const officialKey = childSnapshot.key;
+          
+          const officialCard = document.createElement('div');
+          officialCard.className = 'official-card';
+          officialCard.innerHTML = `
+            ${official.imageUrl ? 
+              `<img src="${official.imageUrl}" alt="${official.name}" class="official-image">` :
+              `<div class="no-image-placeholder">No Image</div>`
+            }
+            <h5>${official.name}</h5>
+            <p>${official.position}</p>
+            <button class="upload-photo-btn" onclick="openPhotoUploadModal('${officialKey}')">Update Photo</button>
+            <button class="btn btn-danger btn-sm" onclick="deleteOfficial('${officialKey}')">Remove</button>
+          `;
+          officialsGrid.appendChild(officialCard);
         });
       });
     }
@@ -424,6 +593,57 @@
       }
     }
 
+    // Open photo upload modal
+    function openPhotoUploadModal(officialKey) {
+      document.getElementById('currentOfficialKey').value = officialKey;
+      new bootstrap.Modal(document.getElementById('uploadPhotoModal')).show();
+    }
+
+    // Submit photo upload
+    async function submitPhotoUpload() {
+      const officialKey = document.getElementById('currentOfficialKey').value;
+      const photoFile = document.getElementById('officialPhoto').files[0];
+
+      if (!photoFile) {
+        alert('Please select a photo to upload');
+        return;
+      }
+
+      try {
+        // Upload new photo to Firebase Storage
+        const storageRef = storage.ref(`officials/${officialKey}_${photoFile.name}`);
+        await storageRef.put(photoFile);
+        const photoUrl = await storageRef.getDownloadURL();
+
+        // Update official's image URL in database
+        await db.ref('officials').child(officialKey).update({
+          imageUrl: photoUrl
+        });
+
+        bootstrap.Modal.getInstance(document.getElementById('uploadPhotoModal')).hide();
+        document.getElementById('uploadPhotoForm').reset();
+        alert('Photo uploaded successfully!');
+        loadOfficials();
+      } catch (error) {
+        console.error('Error uploading photo:', error);
+        alert('Error uploading photo. Please try again.');
+      }
+    }
+
+    // Delete official
+    async function deleteOfficial(officialKey) {
+      if (confirm('Are you sure you want to remove this official?')) {
+        try {
+          await db.ref('officials').child(officialKey).remove();
+          alert('Official removed successfully!');
+          loadOfficials();
+        } catch (error) {
+          console.error('Error removing official:', error);
+          alert('Error removing official. Please try again.');
+        }
+      }
+    }
+
     // Search functionality
     document.getElementById('serviceSearch').addEventListener('input', function(e) {
       const searchTerm = e.target.value.toLowerCase();
@@ -446,8 +666,11 @@
       window.location.href = 'main_login';
     }
 
-    // Load services when page loads
-    document.addEventListener('DOMContentLoaded', loadServices);
+    // Load services and officials when page loads
+    document.addEventListener('DOMContentLoaded', () => {
+      loadServices();
+      loadOfficials();
+    });
   </script>
 </body>
 </html>

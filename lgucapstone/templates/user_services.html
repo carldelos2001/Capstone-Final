@@ -112,11 +112,65 @@
       border: 2px solid #ddd;
       object-fit: cover;
     }
+
+    /* Officials Section Styles */
+    .officials-section {
+      margin-top: 40px;
+      padding: 20px;
+    }
+
+    .officials-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+      gap: 1rem;
+      margin-top: 1rem;
+    }
+
+    .vice-mayor {
+      grid-column: 1 / -1;
+      text-align: center;
+      margin-bottom: 2rem;
+    }
+
+    .official-card {
+      border: 1px solid #ddd;
+      padding: 1rem;
+      border-radius: 4px;
+      text-align: center;
+    }
+
+    .official-image {
+      width: 150px;
+      height: 150px;
+      object-fit: cover;
+      border-radius: 50%;
+      margin-bottom: 0.5rem;
+    }
+
+    .no-image-placeholder {
+      width: 150px;
+      height: 150px;
+      background-color: #e9ecef;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin: 0 auto 0.5rem auto;
+      color: #6c757d;
+    }
   </style>
 
   <!-- Main Content -->
   <div class="main-content">
     <div class="container mt-4">
+      <!-- Officials Section -->
+      <div class="officials-section">
+        <h2 class="text-center mb-4">Organizational Chart</h2>
+        <div id="officialsList">
+          <!-- Officials will be dynamically added here -->
+        </div>
+      </div>
+
       <h1 class="text-center mb-4">Services Documents</h1>
       
       <!-- Search Bar -->
@@ -184,6 +238,63 @@
       });
     }
 
+    // Function to load officials
+    function loadOfficials() {
+      const officialsList = document.getElementById('officialsList');
+      officialsList.innerHTML = '';
+
+      db.ref('officials').once('value').then((snapshot) => {
+        const officials = [];
+        snapshot.forEach((childSnapshot) => {
+          officials.push({
+            key: childSnapshot.key,
+            ...childSnapshot.val()
+          });
+        });
+
+        // Sort officials - Vice Mayor first, then councilors
+        officials.sort((a, b) => {
+          if (a.position === 'Vice Mayor') return -1;
+          if (b.position === 'Vice Mayor') return 1;
+          return 0;
+        });
+
+        // Create container for Vice Mayor
+        const viceMayorContainer = document.createElement('div');
+        viceMayorContainer.className = 'vice-mayor';
+
+        // Create container for Councilors
+        const councilorsContainer = document.createElement('div');
+        councilorsContainer.className = 'officials-grid';
+
+        officials.forEach(official => {
+          const officialCard = document.createElement('div');
+          officialCard.className = 'official-card';
+          
+          const imageHtml = official.imageUrl 
+            ? `<img src="${official.imageUrl}" alt="${official.name}" class="official-image">`
+            : `<div class="no-image-placeholder">No Image</div>`;
+
+          officialCard.innerHTML = `
+            ${imageHtml}
+            <h4>${official.name}</h4>
+            <p>${official.position}</p>
+          `;
+
+          if (official.position === 'Vice Mayor') {
+            viceMayorContainer.appendChild(officialCard);
+          } else {
+            councilorsContainer.appendChild(officialCard);
+          }
+        });
+
+        officialsList.appendChild(viceMayorContainer);
+        officialsList.appendChild(councilorsContainer);
+      }).catch((error) => {
+        console.error("Error loading officials:", error);
+      });
+    }
+
     // Function to view document
     function viewDocument(fileName) {
       const storageRef = storage.ref();
@@ -212,8 +323,11 @@
       });
     });
 
-    // Load services when the page loads
-    document.addEventListener('DOMContentLoaded', loadServices);
+    // Load services and officials when the page loads
+    document.addEventListener('DOMContentLoaded', () => {
+      loadServices();
+      loadOfficials();
+    });
 
     // Get user from localStorage
     const userName = localStorage.getItem('userName');

@@ -26,12 +26,12 @@
   }
   .sidebar-footer {
       margin-top: auto;
-      padding: 15px 20px;
+   
       border-top: 1px solid #ddd;
     }
 
     .sidebar-footer #welcomeMessage {
-      display: block;
+     
       margin-bottom: 10px;
     }
   .sidebar {
@@ -124,43 +124,230 @@
             max-width: calc(100% - 250px);
             overflow-x: hidden;
         }
-        ::-webkit-scrollbar {
-      width: 10px;
-    }
-
-    ::-webkit-scrollbar-track {
-      background: #f1f1f1;
-    }
-
-    ::-webkit-scrollbar-thumb {
-      background: #888;
-    }
-
-    ::-webkit-scrollbar-thumb:hover {
-      background: #555;
-    }
+        
     
     </style>
 </head>
 <body>
-    <div class="sidebar">
+    <style>
+        /* Add this style for the scrollbar */
+        ::-webkit-scrollbar {
+          width: 10px;
+        }
+    
+        ::-webkit-scrollbar-track {
+          background: #f1f1f1;
+        }
+    
+        ::-webkit-scrollbar-thumb {
+          background: #888;
+        }
+    
+        ::-webkit-scrollbar-thumb:hover {
+          background: #555;
+        }
+    
+        /* Add this style to limit the title content */
+        .truncate-title {
+          max-width: 200px;
+          white-space: nowrap;
+          overflow: hidden;
+          text-overflow: ellipsis;
+        }
+    
+        /* Sidebar toggle styles */
+        .sidebar {
+          transition: 0.3s;
+          width: 250px;
+          position: fixed;
+          height: 100%;
+          z-index: 1000;
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          padding: 20px 0;
+        }
+    
+        .sidebar.collapsed {
+          width: 60px;
+        }
+    
+        .sidebar.collapsed .nav-item span,
+        .sidebar.collapsed .sidebar-footer span {
+          display: none;
+        }
+    
+        .sidebar.collapsed .logo img {
+          width: 40px;
+          height: 40px;
+        }
+    
+        .burger-menu {
+          display: none;
+          position: fixed;
+          top: 15px;
+          left: 15px;
+          z-index: 1001;
+          background: none;
+          border: none;
+          cursor: pointer;
+          padding: 5px;
+        }
+    
+        .burger-menu .bar {
+          width: 25px;
+          height: 3px;
+          background-color: #333;
+          margin: 4px 0;
+          transition: 0.3s;
+          display: block;
+        }
+    
+        .sidebar.collapsed + .main-content {
+          margin-left: 60px;
+        }
+    
+        .main-content {
+          margin-left: 250px;
+          transition: 0.3s;
+        }
+    
+        /* Close button style */
+        .close-sidebar {
+          position: absolute;
+          top: 10px;
+          right: 10px;
+          background: none;
+          border: none;
+          font-size: 20px;
+          cursor: pointer;
+          color: #333;
+          display: block;
+        }
+    
+        .sidebar.collapsed .close-sidebar {
+          display: none;
+        }
+    
+        /* Add styles for nav-item icons */
+        .nav-item {
+          display: flex;
+          align-items: center;
+          justify-content: flex-start;
+          width: 100%;
+          padding: 10px 20px;
+          cursor: pointer;
+        }
+    
+        .nav-item img {
+          margin-right: 10px;
+          width: 20px;
+          height: 20px;
+          vertical-align: middle;
+        }
+    
+        .sidebar-footer {
+          
+          align-items: left;
+          justify-content: flex-start;
+          width: 100%;
+          
+        }
+    
+        .sidebar-footer img {
+          margin-right: 10px;
+          width: 20px;
+          height: 20px;
+          vertical-align: middle;
+        }
+    
+        @media (max-width: 768px) {
+          .burger-menu {
+            display: block;
+          }
+          
+          .sidebar {
+            transform: translateX(-250px);
+          }
+    
+          .sidebar.collapsed {
+            transform: translateX(-60px);
+          }
+    
+          .sidebar.active {
+            transform: translateX(0);
+          }
+    
+          .main-content {
+            margin-left: 0;
+          }
+        }
+      </style>
+    
+      <!-- Burger Menu Button -->
+      <button class="burger-menu" onclick="toggleSidebar()">
+        <span class="bar"></span>
+        <span class="bar"></span>
+        <span class="bar"></span>
+      </button>
+      
+      <!-- Sidebar -->
+      <div class="sidebar">
+        <!-- Close Button -->
+        <button class="close-sidebar" onclick="toggleSidebar()">×</button>
+        
         <div class="logo">
-            <img src="{% static 'argao_logo.jpg' %}" alt="Logo">
+          <img src="{% static 'argao_logo.jpg' %}" alt="Logo">
         </div>
-        <div class="nav-item" onclick="window.location.href='/admin_dash'">Dashboard</div>
-        <div class="nav-item" onclick="window.location.href='/admin_services'">Information Bulletin</div>
-        <div class="nav-item" onclick="window.location.href='/admin_report'">Reports</div>
-        <div class="nav-item" onclick="window.location.href='/admin_staff_account'">Staff Account Management</div>
-        <div class="nav-item" onclick="window.location.href='/admin_feedback'">Feedbacks</div>
-        <div class="nav-item" onclick="window.location.href='/admin_notice'">Session Notice</div>
-        <div class="nav-item" onclick="window.location.href='/admin_attendance'">Attendance</div>
-        <div class="nav-item" onclick="window.location.href='/admin_minutes'">Minutes Maker</div>
-        <div class="nav-item" onclick="window.location.href='/admin_board'">Announcement Board</div>
+        <div class="nav-item" onclick="window.location.href='/admin_dash'">
+          <img src="{% static 'dashboard.svg' %}" alt="Dashboard">
+          <span>Dashboard</span>
+        </div>
+        <div class="nav-item" onclick="window.location.href='/admin_services'">
+          <img src="{% static 'information.svg' %}" alt="Info">
+          <span>Information Bulletin</span>
+        </div>
+        <div class="nav-item" onclick="window.location.href='/admin_report'">
+          <img src="{% static 'report.svg' %}" alt="Report">
+          <span>Reports</span>
+        </div>
+        <div class="nav-item" onclick="window.location.href='/admin_staff_account'">
+          <img src="{% static 'account.svg' %}" alt="Staff">
+          <span style="margin-right: 70px;">Staff Account Management</span>
+        </div>
+        <div class="nav-item" onclick="window.location.href='/admin_feedback'">
+          <img src="{% static 'feedback.svg' %}" alt="Feedback">
+          <span>Feedbacks</span>
+        </div>
+        <div class="nav-item" onclick="window.location.href='/admin_notice'">
+          <img src="{% static 'notice.svg' %}" alt="Notice">
+          <span>Session Notice</span>
+        </div>
+        <div class="nav-item" onclick="window.location.href='/admin_attendance'">
+          <img src="{% static 'attendance.svg' %}" alt="Attendance">
+          <span>Attendance</span>
+        </div>
+        <div class="nav-item" onclick="window.location.href='/admin_minutes'">
+          <img src="{% static 'minutes.png' %}" alt="Minutes">
+          <span>Minutes Maker</span>
+        </div>
+        <div class="nav-item" onclick="window.location.href='/admin_board'">
+          <img src="{% static 'announcement.svg' %}" alt="Announcement">
+          <span>Announcement Board</span>
+        </div>
+    
         <div class="sidebar-footer">
-            <span id="welcomeMessage">Admin:</span>
-            <div class="nav-item" onclick="logout()">Log Out</div>
-        </div>   
-    </div>
+          <span id="welcomeMessage" class="nav-item">
+           
+            Admin: <span id="userFirstName"></span>
+          </span>
+          
+          <div class="nav-item" onclick="logout()">
+            <img src="{% static 'logout.svg' %}" alt="Logout">
+            <span >Log Out</span>
+          </div>
+        </div>
+      </div>
 
     <main class="container-fluid" style="margin-left: 250px; padding-right: 20px;"> <!-- Adjust for sidebar width and add right padding -->
         <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
@@ -385,6 +572,39 @@
 
         // Load announcements when the page loads
         document.addEventListener('DOMContentLoaded', loadAnnouncements);
+
+
+
+        // Sidebar toggle function
+    window.toggleSidebar = function() {
+      const sidebar = document.querySelector('.sidebar');
+      const burgerMenu = document.querySelector('.burger-menu');
+      
+      sidebar.classList.toggle('collapsed');
+      
+      if (sidebar.classList.contains('collapsed')) {
+        // When collapsed, only show burger icon
+        sidebar.style.width = '60px';
+        burgerMenu.style.display = 'block';
+      } else {
+        // When expanded, show full sidebar
+        sidebar.style.width = '250px';
+        burgerMenu.style.display = 'none';
+      }
+    }
+
+    // Handle window resize
+    window.addEventListener('resize', function() {
+      const sidebar = document.querySelector('.sidebar');
+      if (window.innerWidth <= 768) {
+        sidebar.classList.remove('collapsed');
+        if (!sidebar.classList.contains('active')) {
+          sidebar.style.transform = 'translateX(-250px)';
+        }
+      } else {
+        sidebar.style.transform = '';
+      }
+    });
 
         // Logout function
         window.logout = function() {
