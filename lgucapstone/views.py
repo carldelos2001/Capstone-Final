@@ -968,7 +968,7 @@ def send_email_to_officials(request):
                         print(f"Template rendering error: {str(template_error)}")  # Debug logging
                         raise Exception(f"Failed to render email template: {str(template_error)}")
 
-                    subject = f"Important Notice: Session Minutes #{notice.get('minutesNo', '')}"
+                    subject = f"Important Notice of Session (Minutes #{notice.get('minutesNo', '')})"
                     
                     try:
                         email_message = EmailMultiAlternatives(
@@ -1024,7 +1024,7 @@ def send_email_to_officials_minutes(request):
             minutes_id = data.get('minutes_id')
 
             if not minutes_id:
-                return JsonResponse({'success': False, 'message': 'Notice ID is required'}, status=400)
+                return JsonResponse({'success': False, 'message': 'Minutes ID is required'}, status=400)
 
             # Retrieve officials from Firebase
             try:
@@ -1037,7 +1037,7 @@ def send_email_to_officials_minutes(request):
             if not officials:
                 return JsonResponse({'success': False, 'message': 'No officials found.'}, status=404)
 
-            # Get notice data from Firebase first
+            # Get minutes data from Firebase first
             try:
                 minutes_ref = db.reference(f'minutes/{minutes_id}')
                 minutes = minutes_ref.get()
@@ -1112,12 +1112,12 @@ def send_email_to_officials_minutes(request):
                     }
                     
                     try:
-                        html_content = render_to_string('emailnotice_template.html', context)
+                        html_content = render_to_string('emailminutes1_template.html', context)
                     except Exception as template_error:
                         print(f"Template rendering error: {str(template_error)}")  # Debug logging
                         raise Exception(f"Failed to render email template: {str(template_error)}")
 
-                    subject = f"Important Minutes: Session Minutes #{minutes.get('minutesNo', '')}"
+                    subject = f"Minutes of the Session: Minutes #{minutes.get('minutesNo', '')}"
                     
                     try:
                         email_message = EmailMultiAlternatives(

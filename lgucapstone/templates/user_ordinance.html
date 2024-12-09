@@ -5,7 +5,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-  <link rel="stylesheet" type="text/css" href="{% static 'user_ordinance1.css' %}"> 
+  
   
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
   <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;700&display=swap" rel="stylesheet">
@@ -24,10 +24,158 @@
   font-weight: bold;
   }
 
-  body {
+  html,body {
   font-family: "Poppins", sans-serif;
-  font-size: 1rem;
+  margin: 0;
+  padding: 0;
+  height: 100%;
   }
+
+  /* Navbar styles */
+          .container_nav {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 1rem;
+            background-color: #ffffff;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .logo img {
+            height: 50px;
+            width: auto;
+        }
+
+        .nav_bar {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-grow: 1;
+        }
+
+        .header-menu-item {
+            padding: 0.5rem 1rem;
+            color: black;
+            cursor: pointer;
+            transition: background-color 0.8s ease, color 0.8s ease;
+            text-decoration: none;
+            font-size: 18px;
+        }
+
+        .header-menu-item:hover {
+            color: #52AE77;
+            text-decoration: underline;
+           
+        }
+
+        .header-menu-item.selected {
+            color: #52AE77;
+            text-decoration: underline;
+            
+        }
+
+        .dropdown {
+            margin-left: auto;
+            display: flex;
+            align-items: center;
+        }
+
+        .dropdown-toggle {
+            display: flex;
+            align-items: center;
+            cursor: pointer;
+        }
+
+        .dropdown-toggle img {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            margin-right: 0.5rem;
+        }
+
+        #userName {
+            margin-right: 0.5rem;
+            color: #565D6D;
+        }
+
+        .dropdown-menu {
+            display: none;
+            position: absolute;
+            right: 1rem;
+            top: 60px;
+            background-color: #ffffff;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            border-radius: 4px;
+            padding: 0.5rem 0;
+        }
+
+        .dropdown-menu a {
+            display: block;
+            padding: 0.5rem 1rem;
+            color: #565D6D;
+            text-decoration: none;
+        }
+
+        .dropdown-menu a:hover {
+            background-color: #f0f0f0;
+        }
+
+        .menu-toggle {
+            display: none;
+            background: none;
+            border: none;
+            font-size: 1.5rem;
+            cursor: pointer;
+        }
+
+        /* Responsive styles */
+        @media (max-width: 768px) {
+            .nav_bar {
+                position: fixed;
+                top: 0;
+                right: -250px;
+                height: 100vh;
+                width: 250px;
+                flex-direction: column;
+                background-color: #ffffff;
+                box-shadow: -2px 0 4px rgba(0,0,0,0.1);
+                transition: right 0.3s ease;
+                justify-content: flex-start;
+                padding-top: 60px;
+            }
+
+            .nav_bar.active {
+                right: 0;
+                z-index: 1000;
+            }
+
+            .header-menu-item {
+                width: 100%;
+                text-align: left;
+                padding: 1rem;
+            }
+
+            .menu-toggle {
+                display: block;
+                position: fixed;
+                top: 1rem;
+                right: 1rem;
+                z-index: 1000;
+            }
+
+            .dropdown {
+                margin-left: 0;
+                width: 100%;
+                justify-content: flex-start;
+                padding: 1rem;
+            }
+
+            .dropdown-menu {
+                position: static;
+                box-shadow: none;
+                padding-left: 1rem;
+            }
+        }
     .search_box1 {
       display: flex;
       justify-content: center;
@@ -45,6 +193,7 @@
     .ordinances-list {
       margin-top: 20px;
     }
+  
 
     .card-title {
       font-size: 1.5rem;
@@ -52,52 +201,69 @@
     }
 
     .btn-primary {
-      background-color: #52AE77;
-      border-color: #52AE77;
+      background-color: #4a9d6d;
+      border-color: #4a9d6d;
     }
 
     .btn-primary:hover {
-      background-color: #469961;
-      border-color: #469961;
+      background-color: #368b59;
+      border-color: #368b59;
     }
-    .nav_bar{
-      font-family: "Poppins", sans-serif;
-      font-size: 1rem;
-    }
-    /* Add this to your CSS file */
-.rounded-circle {
+    .rounded-circle {
     border-radius: 50%; /* Ensures the image is rounded */
     border: 2px solid #ddd; /* Optional: Add border */
     object-fit: cover; /* Ensures the image covers the area */
 }
-  </style>
-</head>
-<body>
-  <div class="container_nav"></div>
+        .footer {
+            background-color: #333;
+            color: white;
+            text-align: center;
+            padding: 1rem;
+        }
+        .wrapper {
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh; /* Ensure the wrapper is at least the height of the viewport */
+}
+main {
+    flex: 1; /* Grow to take up the remaining space */
+    padding: 1rem;
+}
+    
+    </style>
+  </head>
+  <body>
+    <div class="wrapper">
+    <div class="container_nav">
   
-  <div class="logo">
-    <img class="img_logo" src="{% static 'argao_logo.jpg' %}" id="home1" alt="Logo">
-  </div>
-
-  <div class="nav_bar">
-    <label class="header-menu-item" id="home">Home</label>
-    <label class="header-menu-item selected" id="ordinances">Ordinances</label>
-    <label class="header-menu-item" id="resolutions">Resolutions</label>
-    <label class="header-menu-item" id="services">Services</label>
-    <label class="header-menu-item" id="announcement">Announcement</label>
-    <label class="header-menu-item" id="feedback">Feedback</label>
-
-    <!-- User Profile Dropdown -->
-    <div class="dropdown ms-auto">
-      <a href="#" class="d-flex align-items-center text-dark text-decoration-none dropdown-toggle" id="dropdownUser" data-bs-toggle="dropdown" aria-expanded="false">
-        <img src="{% static 'user_profile.png' %}" alt="User Profile" class="rounded-circle" width="32" height="32">
-        <span id="userName" class="ms-2">Guest</span>
-      </a>
-      <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="dropdownUser">
-        <li><a class="dropdown-item" href="{% url 'lgucapstone' %}">Login</a></li>
-      </ul>
+    <div class="logo">
+    <img src="{% static 'argao_logo.jpg' %}" alt="Logo">
     </div>
+
+    <button class="menu-toggle" aria-label="Toggle menu">☰</button>
+
+    <div class="nav_bar">
+    <a href="/home" class="header-menu-item">Home</a>
+    <a href="/user_ordinance" class="header-menu-item selected">Ordinances</a>
+    <a href="/user_resolution" class="header-menu-item">Resolutions</a>
+    <a href="/user_services" class="header-menu-item">Services</a>
+    <a href="/user_announcement" class="header-menu-item">Announcement</a>
+    <a href="/user_feedback" class="header-menu-item">Feedback</a>
+    </div>
+
+<!-- User Profile Dropdown -->
+  <div class="dropdown ms-auto">
+    <a href="#" class="d-flex align-items-center text-dark text-decoration-none dropdown-toggle" id="dropdownUser" data-bs-toggle="dropdown" aria-expanded="false">
+    <img src="{% static 'user_profile.png' %}" alt="User Profile" class="rounded-circle" width="32" height="32">
+    <span id="userName" class="ms-2">Guest</span>
+    </a>
+    <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="dropdownUser">
+      <li><a class="dropdown-item" href="{% url 'lgucapstone' %}" id="loginLogoutLink">Login</a></li>
+    </ul>
   </div>
+
+</div>
+
   <div class="content-middle">
   <!-- Search Box -->
   <label class="search_box1">
@@ -127,6 +293,11 @@
   </div>
 </div>
 
+<footer class="footer">
+        <p>&copy; 2024 Municipality of Argao. All rights reserved.</p>
+        <p>Contact: info@argao.gov.ph | Address: Municipal Hall, Argao, Cebu, Philippines</p>
+    </footer>
+</div>
   <script src="{% static 'user_ordinance.js' %}"></script>
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
   <script type="module">
@@ -215,33 +386,28 @@
       fetchOrdinances();
     });
 
-    document.getElementById('home1').addEventListener('click', function() {
-      window.location.href = '/home';
-    });
-    
-    document.getElementById('home').addEventListener('click', function() {
-      window.location.href = '/home';
-    });
-    
-    document.getElementById('ordinances').addEventListener('click', function() {
-      window.location.href = '/user_ordinance';
-    });
+    // Toggle mobile menu
+    const menuToggle = document.querySelector('.menu-toggle');
+        const navBar = document.querySelector('.nav_bar');
 
-    document.getElementById('resolutions').addEventListener('click', function() {
-      window.location.href = '/user_resolution';
-    });
-    
-    document.getElementById('services').addEventListener('click', function() {
-      window.location.href = '/user_services';
-    });
-    
-    document.getElementById('announcement').addEventListener('click', function() {
-      window.location.href = '/user_announcement';
-    });
+        menuToggle.addEventListener('click', () => {
+            navBar.classList.toggle('active');
+            menuToggle.textContent = navBar.classList.contains('active') ? '✕' : '☰';
+        });
 
-    document.getElementById('feedback').addEventListener('click', function() {
-      window.location.href = '/user_feedback';
-    });
+        // Toggle dropdown menu
+        const dropdownToggle = document.querySelector('.dropdown-toggle');
+        const dropdownMenu = document.querySelector('.dropdown-menu');
+
+        dropdownToggle.addEventListener('click', (e) => {
+            e.stopPropagation();
+            dropdownMenu.style.display = dropdownMenu.style.display === 'block' ? 'none' : 'block';
+        });
+
+        // Close dropdown when clicking outside
+        document.addEventListener('click', () => {
+            dropdownMenu.style.display = 'none';
+        });
 
     // Get user from localStorage
     const userName = localStorage.getItem('userName');
@@ -253,6 +419,7 @@
       } else {
         document.getElementById('userName').textContent = 'Guest';  
       }
+
     // Preview document function
     window.previewDocument = function(url) {
       const previewFrame = document.getElementById('previewFrame');

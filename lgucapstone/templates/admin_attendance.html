@@ -10,7 +10,7 @@
   <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;700&display=swap" rel="stylesheet">
   <!-- Custom CSS -->
   <link rel="stylesheet" href="{% static 'style.css' %}">
-
+  <link rel="icon" type="image/jpeg" href="{% static 'fav_argao.png'%}">
   <title>Attendance Form</title>
   <style>
     @font-face {
@@ -102,14 +102,20 @@
       color: white;
       border: none;
       cursor: pointer;
+      align-items: center;
     }
 
     .btn-delete:hover {
       background-color: #c82333;
     }
-    
+    button.btn-danger {
+    text-align: center;
+    vertical-align: middle;
+    max-width: 100%;
+}
+
     .add-person-btn {
-      background-color: #52AE77; /* Use your desired button color */
+      background-color: #4a9d6d; /* Use your desired button color */
       color: #fff;
       padding: 10px;
       border: none;
@@ -121,8 +127,20 @@
       
     }
     .add-person-btn:hover{
-      background-color: #4a9d6d;
+      background-color: #337a52;
       color: #fff;
+    }
+    .btn-primary{
+      background-color: #4a9d6d;
+      border: #4a9d6d;
+    }
+    .btn-primary:hover{
+      background-color: #337a52;
+      border: #337a52;
+    }
+    .btn-danger{
+      max-width: 70px;
+      width: 50%;
     }
 
   </style>
@@ -179,8 +197,28 @@
       .sidebar.collapsed .logo img {
         width: 40px;
         height: 40px;
+        margin-top: 40px;
       }
   
+
+      .sidebar {
+      overflow-y: auto;
+      max-height: 100vh;
+    }
+
+    .sidebar::-webkit-scrollbar {
+      width: 5px;
+    }
+
+    .sidebar::-webkit-scrollbar-thumb {
+      background-color: #888;
+      border-radius: 5px;
+    }
+
+    .sidebar::-webkit-scrollbar-thumb:hover {
+      background-color: #555;
+    }
+
       .burger-menu {
         display: none;
         position: fixed;
@@ -362,14 +400,7 @@
             <!-- Analytics summary will be loaded dynamically -->
           </div>
           <!-- Monthly Report Generation -->
-          <div class="mt-4">
-            <h4>Generate Monthly Report</h4>
-            <div class="form-group">
-              <label for="monthSelect">Select Month:</label>
-              <input type="month" id="monthSelect" class="form-control">
-            </div>
-            <button class="btn btn-primary mt-2" onclick="generateMonthlyReport()">Generate PDF Report</button>
-          </div>
+          
         </div>
       </div>
     </div>
@@ -384,7 +415,7 @@
           <thead>
             <tr>
               <th>Official Name</th>
-              <th>Position</th>
+             
               <th style="width: 27%">Committees</th>
               <th>Email</th>
               <th>Actions</th>
@@ -538,7 +569,7 @@
             const row = document.createElement('tr');
             row.innerHTML = `
               <td>${official.name}</td>
-              <td>${official.position}</td>
+             
               <td>${Array.isArray(official.committees) ? official.committees.join(', ') : official.committee}</td>
               <td>${official.email}</td>
               
@@ -850,95 +881,8 @@
       });
     }
 
-    // Monthly Report Generation
-      async function generateMonthlyReport() {
-      const selectedMonth = document.getElementById('monthSelect').value;
-      if (!selectedMonth) {
-        alert('Please select a month');
-        return;
-      }
+    
 
-      const [month, year] = selectedMonth.split('-');
-      const startDate = new Date(year, month - 1, 1);
-      const endDate = new Date(year, month, 0);
-
-      try {
-        const snapshot = await db.ref('attendance').once('value');
-        const attendanceData = snapshot.val();
-        
-        if (!attendanceData) {
-          alert('No attendance data found for the selected month');
-          return;
-        }
-
-        const officialStats = {};
-        let hasData = false;
-
-        // Process attendance data
-        Object.entries(attendanceData).forEach(([date, dateData]) => {
-          if (!dateData) return;
-
-          // Handle nested structure correctly
-          if (dateData[year] && dateData[year].attendance) {
-            const recordDate = new Date(year, month - 1, date.split('/')[1]);
-
-            if (recordDate >= startDate && recordDate <= endDate) {
-              dateData[year].attendance.forEach(record => {
-                hasData = true;
-                if (!officialStats[record.name]) {
-                  officialStats[record.name] = {
-                    position: record.position || record.committees, // Handle both position and committees
-                    present: 0,
-                    absent: 0,
-                    late: 0,
-                    excused: 0
-                  };
-                }
-                officialStats[record.name][record.status]++;
-              });
-            }
-          }
-        });
-
-        if (!hasData) {
-          alert('No attendance records found for the selected month');
-          return;
-        }
-
-        // Generate PDF
-        const { jsPDF } = window.jspdf;
-        const doc = new jsPDF();
-
-        // Add title
-        doc.setFontSize(16);
-        doc.text(`Monthly Attendance Report - ${selectedMonth}`, 14, 20);
-
-        // Prepare table data
-        const tableData = Object.entries(officialStats).map(([name, stats]) => [
-          name,
-          stats.position,
-          stats.present,
-          stats.absent,
-          stats.late,
-          stats.excused
-        ]);
-
-        // Add table
-        doc.autoTable({
-          startY: 30,
-          head: [['Name', 'Position', 'Present', 'Absent', 'Late', 'Excused']],
-          body: tableData,
-          theme: 'grid'
-        });
-
-        // Save PDF
-        doc.save(`attendance_report_${selectedMonth}.pdf`);
-
-      } catch (error) {
-        console.error('Error generating report:', error);
-        alert('Error generating report: ' + error.message);
-      }
-    }
 
     // Sidebar toggle function
     window.toggleSidebar = function() {

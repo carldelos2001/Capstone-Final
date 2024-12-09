@@ -26,7 +26,7 @@
   
   <!-- Custom CSS -->
   <link rel="stylesheet" href="{% static 'style.css' %}">
-
+  <link rel="icon" type="image/jpeg" href="{% static 'fav_argao.png'%}">
   <title>Reports</title>
 </head>
 <body>
@@ -103,8 +103,27 @@
     .sidebar.collapsed .logo img {
       width: 40px;
       height: 40px;
+      margin-top: 40px;
     }
 
+
+    .sidebar {
+      overflow-y: auto;
+      max-height: 100vh;
+    }
+
+    .sidebar::-webkit-scrollbar {
+      width: 5px;
+    }
+
+    .sidebar::-webkit-scrollbar-thumb {
+      background-color: #888;
+      border-radius: 5px;
+    }
+
+    .sidebar::-webkit-scrollbar-thumb:hover {
+      background-color: #555;
+    }
     .burger-menu {
       display: none;
       position: fixed;
@@ -204,6 +223,14 @@
       .main-content {
         margin-left: 0;
       }
+    }
+    .btn-primary{
+      background-color: #4a9d6d;
+      border: #4a9d6d;
+    }
+    .btn-primary:hover{
+      background-color: #337a52;
+      border: #337a52;
     }
   </style>
 

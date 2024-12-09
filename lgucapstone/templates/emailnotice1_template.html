@@ -9,8 +9,7 @@
 <body>
   <div class="header">
     <div style="margin: 15px 0;">
-      <img src="{% static 'argao_logo.jpg' %}" alt="Left Logo" class="logo-left">
-      <img src="{% static 'basers101.png' %}" alt="Right Logo" class="logo-right">
+      
       <p class="letterhead-text">Republic of the Philippines</p>
       <p class="letterhead-text">Province of Cebu</p>
       <p class="letterhead-text">Municipality of Argao</p>
@@ -18,31 +17,14 @@
       <p class="letterhead-text">Tel. No.: (032) 367-7623</p>
       <p class="letterhead-text">Email: sbargao@gmail.com</p>
     </div>
-    <p class="letterhead-text"> MINUTES OF THE REGULAR SESSION OF THE SANGGUNIANG BAYAN OF THE MUNICIPALITY OF ARGAO
-      ,PROVINCE OF CEBU, HELD ON {{ notice.sessionDate }} AT THE ARGAO MUNICIPAL SESSION HALL ARGAO, CEBU</p>
-    <p>Minutes No: {{ notice.minutesNo }}</p>
+    
+    <h3>Order of Business</h3>
+    <h3>Regular Session</h3>
+    <p>(Minutes No: {{ notice.minutesNo }})</p>
+    <p>Date: {{ notice.sessionDate }}</p>
    
   </div>
 
-  <div style="text-align: left; margin-left: 20px;">
-    <p style="font-weight: bold;">Present:</p>
-    {% if present_officials %}
-      {% for official in present_officials %}
-        <p>{{ official.name }}{% if official.remarks %} ({{ official.remarks }}){% endif %}</p>
-      {% endfor %}
-    {% else %}
-      <p>No officials present</p>
-    {% endif %}
-    
-    <p style="font-weight: bold;">Absent:</p>
-    {% if absent_officials %}
-      {% for official in absent_officials %}
-        <p>{{ official.name }}{% if official.remarks %} ({{ official.remarks }}){% endif %}</p>
-      {% endfor %}
-    {% else %}
-      <p>No officials absent</p>
-    {% endif %}
-  </div>
 
   <div class="content">
     <h2>1. CALL TO ORDER</h2>
@@ -113,11 +95,7 @@
       <p>{{ notice.attestedBy }}</p>
       <p>Municipal Vice Mayor & Presiding Officer</p>
     </div>
-    <div class="signature-block">
-     
-      <p>{{ notice.approvedBy }}</p>
-      <p>Municipal Mayor</p>
-    </div>
+    
   </div>
 </body>
 </html>

@@ -12,7 +12,7 @@
   
   <!-- Custom CSS -->
   <link rel="stylesheet" href="{% static 'style.css' %}">
-
+  <link rel="icon" type="image/jpeg" href="{% static 'fav_argao.png'%}">
   <title>Minutes Maker</title>
   <style>
     @font-face {
@@ -213,7 +213,27 @@
     .sidebar.collapsed .logo img {
       width: 40px;
       height: 40px;
+      margin-top: 40px;
     }
+
+    .sidebar {
+      overflow-y: auto;
+      max-height: 100vh;
+    }
+
+    .sidebar::-webkit-scrollbar {
+      width: 5px;
+    }
+
+    .sidebar::-webkit-scrollbar-thumb {
+      background-color: #888;
+      border-radius: 5px;
+    }
+
+    .sidebar::-webkit-scrollbar-thumb:hover {
+      background-color: #555;
+    }
+    
 
     .burger-menu {
       display: none;
@@ -315,6 +335,22 @@
         margin-left: 0;
       }
     }
+    .btn-primary{
+      background-color: #4a9d6d;
+      border: #4a9d6d;
+    }
+    .btn-primary:hover{
+      background-color: #337a52;
+      border: #337a52;
+    }
+    .btn-success{
+      background-color: #4a9d6d;
+      border: #4a9d6d;
+    }
+    .btn-success:hover{
+      background-color: #337a52;
+      border: #337a52;
+    }
   </style>
 
   <!-- Burger Menu Button -->
@@ -392,7 +428,7 @@
         <div class="card-body">
           <div class="mb-3">
             <label for="minutesNo" class="form-label">Minutes No.</label>
-            <input type="text" class="form-control" id="minutesNo" placeholder="Enter minutes number">
+            <input type="text" class="form-control" id="minutesNo" placeholder="Refresh Page to Auto Generate" readonly>
           </div>
           <div class="mb-3">
             <label for="sessionDate" class="form-label">Session Date</label>
@@ -638,6 +674,36 @@
     firebase.initializeApp(firebaseConfig);
     const db = firebase.database();
 
+
+    function fetchAndSetMinutesNumber() {
+  const minutesRef = db.ref('minutes');
+
+  // Query to get the last minutes number
+  minutesRef.orderByChild('minutesNo').limitToLast(1).once('value', (snapshot) => {
+    let newMinutesNo = 1;
+
+    if (snapshot.exists()) {
+      snapshot.forEach((childSnapshot) => {
+        const lastMinutesNo = childSnapshot.val().minutesNo;
+        console.log('Fetched lastMinutesNo:', lastMinutesNo);
+        
+        if (!isNaN(lastMinutesNo)) {
+          newMinutesNo = parseInt(lastMinutesNo, 10) + 1;
+        } else {
+          console.error('Invalid minutesNo:', lastMinutesNo);
+        }
+      });
+    }
+
+    document.getElementById('minutesNo').value = newMinutesNo;
+  }).catch((error) => {
+    console.error('Error fetching the last minutes number:', error);
+  });
+}
+
+
+
+
     // Function to add subsection
     function addSubsection(containerId, sectionNumber) {
       const container = document.getElementById(containerId);
@@ -716,7 +782,7 @@
       }
 
       db.ref('minutes').push({
-        minutesNo,
+        minutesNo: parseInt(minutesNo, 10),
         sessionDate,
         callToOrder,
         invocation,
@@ -1606,6 +1672,7 @@
     // Load notices when page loads 
     window.onload = function() {
       loadMinutes();
+      fetchAndSetMinutesNumber();
     };
     window.logout = function() {
       localStorage.removeItem('userName');

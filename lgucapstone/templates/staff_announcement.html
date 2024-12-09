@@ -7,6 +7,7 @@
     <title>Announcement Board</title>
     <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
     <link rel="stylesheet" href="{% static 'style.css' %}">
+    <link rel="icon" type="image/jpeg" href="{% static 'fav_argao.png'%}">
     <style>
        @font-face {
   font-family: "Poppins";
@@ -26,13 +27,17 @@
   }
   .sidebar-footer {
       margin-top: auto;
-      padding: 15px 20px;
+     
       border-top: 1px solid #ddd;
     }
 
     .sidebar-footer #welcomeMessage {
+      margin-left: 20px;
       display: block;
       margin-bottom: 10px;
+    }
+    .sidebar.collapsed .sidebar-footer #welcomeMessage {
+      display: none;
     }
   .sidebar {
     position: fixed;
@@ -55,6 +60,7 @@
     .sidebar .logo img {
       width: 100px;
       border-radius: 50%;
+      margin-top: 40px;
     }
     
     .sidebar .nav-item {
@@ -124,7 +130,8 @@
             max-width: calc(100% - 250px);
             overflow-x: hidden;
         }
-        ::-webkit-scrollbar {
+         /* Add this style for the scrollbar */
+    ::-webkit-scrollbar {
       width: 10px;
     }
 
@@ -139,26 +146,202 @@
     ::-webkit-scrollbar-thumb:hover {
       background: #555;
     }
-    
+
+    /* Add this style to limit the title content */
+    .truncate-title {
+      max-width: 200px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    /* Sidebar toggle styles */
+    .sidebar {
+      transition: 0.3s;
+      width: 250px;
+      position: fixed;
+      height: 100%;
+      z-index: 1000;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 20px 0;
+    }
+
+    .sidebar.collapsed {
+      width: 60px;
+    }
+
+    .sidebar.collapsed .nav-item span,
+    .sidebar.collapsed .sidebar-footer span {
+      display: none;
+    }
+
+    .sidebar.collapsed .logo img {
+      width: 40px;
+      height: 40px;
+      margin-top: 90px;
+    }
+
+    .burger-menu {
+      display: none;
+      position: fixed;
+      top: 15px;
+      left: 15px;
+      z-index: 1001;
+      background: none;
+      border: none;
+      cursor: pointer;
+      padding: 5px;
+    }
+
+    .burger-menu .bar {
+      width: 25px;
+      height: 3px;
+      background-color: #333;
+      margin: 4px 0;
+      transition: 0.3s;
+      display: block;
+    }
+
+    .sidebar.collapsed + .main-content {
+      margin-left: 60px;
+    }
+
+    .main-content {
+      margin-left: 250px;
+      transition: 0.3s;
+    }
+
+    /* Close button style */
+    .close-sidebar {
+      position: absolute;
+      top: 10px;
+      right: 10px;
+      background: none;
+      border: none;
+      font-size: 20px;
+      cursor: pointer;
+      color: #333;
+      display: block;
+    }
+
+    .sidebar.collapsed .close-sidebar {
+      display: none;
+    }
+
+    /* Add styles for nav-item icons */
+    .nav-item {
+      display: flex;
+      align-items: center;
+      justify-content: flex-start;
+      width: 100%;
+      padding: 10px 20px;
+      cursor: pointer;
+    }
+
+    .nav-item img {
+      margin-right: 10px;
+      width: 20px;
+      height: 20px;
+      vertical-align: middle;
+    }
+
+    .sidebar-footer {
+      
+      align-items: left;
+      justify-content: flex-start;
+      width: 100%;
+      
+    }
+
+    .sidebar-footer img {
+      margin-right: 10px;
+      width: 20px;
+      height: 20px;
+      vertical-align: middle;
+    }
+
+    @media (max-width: 768px) {
+      .burger-menu {
+        display: block;
+      }
+      
+      .sidebar {
+        transform: translateX(-250px);
+      }
+
+      .sidebar.collapsed {
+        transform: translateX(-60px);
+      }
+
+      .sidebar.active {
+        transform: translateX(0);
+      }
+
+      .main-content {
+        margin-left: 0;
+      }
+    }
+    .btn-primary{
+      background-color: #4a9d6d;
+      border: #4a9d6d;
+    }
+    .btn-primary:hover{
+      background-color: #337a52;
+      border: #337a52;
+    }
     </style>
 </head>
 <body>
-    <div class="sidebar">
-        <div class="logo">
-            <img src="{% static 'argao_logo.jpg' %}" alt="Logo">
-        </div>
-        <div class="nav-item" onclick="window.location.href='/staff_dash'">Dashboard</div>
-        <div class="nav-item" onclick="window.location.href='/staff_report'">Reports</div>
-        <div class="nav-item" onclick="window.location.href='/staff_services'">Information Bulletin</div>
-        <div class="nav-item" onclick="window.location.href='/staff_feedback'">Feedbacks</div>
-        <div class="nav-item" onclick="window.location.href='/staff_session'">Session Agenda</div>
-        <div class="nav-item" onclick="window.location.href='/staff_announcement'">Announcements Board</div>
+    <!-- Burger Menu Button -->
+   <button class="burger-menu" onclick="toggleSidebar()">
+    <span class="bar"></span>
+    <span class="bar"></span>
+    <span class="bar"></span>
+  </button>
+  <!-- Sidebar -->
+  <div class="sidebar">
 
-        <div class="sidebar-footer">
-            <span id="welcomeMessage">Staff:</span>
-            <div class="nav-item" onclick="logout()">Log Out</div>
-        </div>   
+    <!-- Close Button -->
+    <button class="close-sidebar" onclick="toggleSidebar()">×</button>
+
+    <div class="logo">
+      <img src="{% static 'argao_logo.jpg' %}" alt="Logo">
     </div>
+    <div class="nav-item" onclick="window.location.href='/staff_dash'">
+      <img src="{% static 'dashboard.svg' %}" alt="Dashboard Icon">
+      <span>Dashboard</span>
+    </div>
+    <div class="nav-item" onclick="window.location.href='/staff_report'">
+      <img src="{% static 'report.svg' %}" alt="Reports Icon">
+      <span>Reports</span>
+    </div>
+    <div class="nav-item" onclick="window.location.href='/staff_services'">
+      <img src="{% static 'information.svg' %}" alt="Information Icon">
+      <span>Information Bulletin</span>
+    </div>
+    <div class="nav-item" onclick="window.location.href='/staff_feedback'">
+      <img src="{% static 'feedback.svg' %}" alt="Feedback Icon">
+      <span>Feedbacks</span>
+    </div>
+    <div class="nav-item" onclick="window.location.href='/staff_session'">
+      <img src="{% static 'notice.svg' %}" alt="Calendar Icon">
+      <span>Session Agenda</span>
+    </div>
+    <div class="nav-item" onclick="window.location.href='/staff_announcement'">
+      <img src="{% static 'announcement.svg' %}" alt="Announcement Icon">
+      <span>Announcements Board</span>
+    </div>
+    
+    <div class="sidebar-footer">
+      <span id="welcomeMessage">Staff: <span id="userFirstName"></span></span>
+      <div class="nav-item" onclick="logout()">
+        <img src="{% static 'logout.svg' %}" alt="Logout Icon">
+        <span>Log Out</span>
+      </div>
+    </div>
+  </div>
 
     <main class="container-fluid" style="margin-left: 250px; padding-right: 20px;"> <!-- Adjust for sidebar width and add right padding -->
         <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
@@ -394,6 +577,39 @@
             // Redirect to login page
             window.location.href = 'main_login';  // Adjust this URL as needed
         }
+
+
+
+        // Sidebar toggle function
+    window.toggleSidebar = function() {
+      const sidebar = document.querySelector('.sidebar');
+      const burgerMenu = document.querySelector('.burger-menu');
+      
+      sidebar.classList.toggle('collapsed');
+      
+      if (sidebar.classList.contains('collapsed')) {
+        // When collapsed, only show burger icon
+        sidebar.style.width = '60px';
+        burgerMenu.style.display = 'block';
+      } else {
+        // When expanded, show full sidebar
+        sidebar.style.width = '250px';
+        burgerMenu.style.display = 'none';
+      }
+    }
+
+    // Handle window resize
+    window.addEventListener('resize', function() {
+      const sidebar = document.querySelector('.sidebar');
+      if (window.innerWidth <= 768) {
+        sidebar.classList.remove('collapsed');
+        if (!sidebar.classList.contains('active')) {
+          sidebar.style.transform = 'translateX(-250px)';
+        }
+      } else {
+        sidebar.style.transform = '';
+      }
+    });
     </script>
 </body>
 </html>

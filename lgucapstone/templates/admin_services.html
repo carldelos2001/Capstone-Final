@@ -10,7 +10,7 @@
   <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;700&display=swap" rel="stylesheet">
   <!-- Custom CSS -->
   <link rel="stylesheet" href="{% static 'style.css' %}">
-
+  <link rel="icon" type="image/jpeg" href="{% static 'fav_argao.png'%}">
   <title>Admin Services</title>
   <style>
     @font-face {
@@ -98,14 +98,14 @@
     }
 
     .btn-approve {
-      background-color: #28a745;
+      background-color: #4a9d6d;
       color: white;
       border: none;
       cursor: pointer;
     }
 
     .btn-approve:hover {
-      background-color: #218838;
+      background-color: #337a52;
     }
 
     .btn-disapprove {
@@ -124,14 +124,14 @@
     }
     
     .btn-submit {
-      background-color: #52AE77;
+      background-color: #4a9d6d;
       color: white;
       border: none;
       cursor: pointer;
     }
 
     .btn-submit:hover {
-      background-color: #4a9d6d;
+      background-color: #337a52;
     }
 
     .btn-primary {
@@ -148,6 +148,14 @@
     }
     .btn-danger {
       margin-top: 14px;
+    }
+    .btn-success {
+      background-color: #4a9d6d;
+      border: #4a9d6d;
+    }
+    .btn-success:hover {
+      background-color: #337a52;
+      border: #337a52;
     }
   </style>
 </head>
@@ -210,7 +218,7 @@
 
     .upload-photo-btn {
       margin: 5px;
-      background-color: #52AE77;
+      background-color: #4a9d6d;
       color: white;
       border: none;
       padding: 5px 10px;
@@ -219,7 +227,7 @@
     }
 
     .upload-photo-btn:hover {
-      background-color: #4a9d6d;
+      background-color: #337a52;
       color: white;
     }
 
@@ -342,6 +350,25 @@
     .sidebar.collapsed .logo img {
       width: 40px;
       height: 40px;
+      margin-top: 40px;
+    }
+
+    .sidebar {
+      overflow-y: auto;
+      max-height: 100vh;
+    }
+
+    .sidebar::-webkit-scrollbar {
+      width: 5px;
+    }
+
+    .sidebar::-webkit-scrollbar-thumb {
+      background-color: #888;
+      border-radius: 5px;
+    }
+
+    .sidebar::-webkit-scrollbar-thumb:hover {
+      background-color: #555;
     }
 
     .burger-menu {
@@ -697,7 +724,7 @@
             <td><div class="truncate" title="${service.title}">${service.title}</div></td>
             <td><div class="truncate" title="${service.fileName}">${service.fileName}</div></td>
             <td>
-              <button class="btn btn-sm btn-primary" onclick="window.open('${service.fileUrl}', '_blank')">Open</button>
+              <button class="btn btn-sm btn-success" onclick="window.open('${service.fileUrl}', '_blank')" style="margin-top: 15px;">Open</button>
               <button class="btn btn-sm btn-secondary" onclick="openUpdateModal('${serviceKey}', '${service.title}', '${service.fileName}')">Update</button>
               <button class="btn btn-sm btn-danger" onclick="deleteService('${serviceKey}', '${service.fileName}')">Delete</button>
             </td>

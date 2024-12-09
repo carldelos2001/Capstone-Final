@@ -24,6 +24,7 @@
     body {
       font-family: "Poppins", sans-serif;
       font-size: 1rem;
+      background-color: #f8f9fa;
     }
 
     .sidebar-footer {
@@ -71,6 +72,24 @@
       cursor: pointer;
     }
     
+    .sidebar {
+      overflow-y: auto;
+      max-height: 100vh;
+    }
+
+    .sidebar::-webkit-scrollbar {
+      width: 5px;
+    }
+
+    .sidebar::-webkit-scrollbar-thumb {
+      background-color: #888;
+      border-radius: 5px;
+    }
+
+    .sidebar::-webkit-scrollbar-thumb:hover {
+      background-color: #555;
+    }
+
     .main-content {
       margin-left: 250px;
       padding: 20px;
@@ -144,6 +163,7 @@
     .sidebar.collapsed .logo img {
       width: 40px;
       height: 40px;
+      margin-top: 40px;
     }
 
     .burger-menu {

@@ -11,27 +11,60 @@
   
   <!-- Custom CSS -->
   <link rel="stylesheet" href="{% static 'style.css' %}">
-
+  <link rel="icon" type="image/jpeg" href="{% static 'fav_argao.png'%}">
   <title>Session Agendas</title>
 </head>
 <body>
   <div class="container-fluid">
     <div class="row">
-      <div class="sidebar">
-        <div class="logo">
-          <img src="{% static 'argao_logo.jpg' %}" alt="Logo">
-        </div>
-        <div class="nav-item" onclick="window.location.href='/staff_dash'">Dashboard</div>
-        <div class="nav-item" onclick="window.location.href='/staff_report'">Reports</div>
-        <div class="nav-item" onclick="window.location.href='/staff_services'">Information Bulletin</div>
-        <div class="nav-item" onclick="window.location.href='/staff_feedback'">Feedbacks</div>
-        <div class="nav-item" onclick="window.location.href='/staff_session'">Session Agenda</div>
-        <div class="nav-item" onclick="window.location.href='/staff_announcement'">Announcements Board</div>
-        <div class="sidebar-footer">
-          <span id="welcomeMessage">Staff:</span>
-          <div class="nav-item" onclick="logout()">Log Out</div>
-        </div>
+      <!-- Burger Menu Button -->
+   <button class="burger-menu" onclick="toggleSidebar()">
+    <span class="bar"></span>
+    <span class="bar"></span>
+    <span class="bar"></span>
+  </button>
+  <!-- Sidebar -->
+  <div class="sidebar">
+
+    <!-- Close Button -->
+    <button class="close-sidebar" onclick="toggleSidebar()">×</button>
+
+    <div class="logo">
+      <img src="{% static 'argao_logo.jpg' %}" alt="Logo">
+    </div>
+    <div class="nav-item" onclick="window.location.href='/staff_dash'">
+      <img src="{% static 'dashboard.svg' %}" alt="Dashboard Icon">
+      <span>Dashboard</span>
+    </div>
+    <div class="nav-item" onclick="window.location.href='/staff_report'">
+      <img src="{% static 'report.svg' %}" alt="Reports Icon">
+      <span>Reports</span>
+    </div>
+    <div class="nav-item" onclick="window.location.href='/staff_services'">
+      <img src="{% static 'information.svg' %}" alt="Information Icon">
+      <span>Information Bulletin</span>
+    </div>
+    <div class="nav-item" onclick="window.location.href='/staff_feedback'">
+      <img src="{% static 'feedback.svg' %}" alt="Feedback Icon">
+      <span>Feedbacks</span>
+    </div>
+    <div class="nav-item" onclick="window.location.href='/staff_session'">
+      <img src="{% static 'notice.svg' %}" alt="Calendar Icon">
+      <span>Session Agenda</span>
+    </div>
+    <div class="nav-item" onclick="window.location.href='/staff_announcement'">
+      <img src="{% static 'announcement.svg' %}" alt="Announcement Icon">
+      <span>Announcements Board</span>
+    </div>
+    
+    <div class="sidebar-footer">
+      <span id="welcomeMessage">Staff: <span id="userFirstName"></span></span>
+      <div class="nav-item" onclick="logout()">
+        <img src="{% static 'logout.svg' %}" alt="Logout Icon">
+        <span>Log Out</span>
       </div>
+    </div>
+  </div>
 
       <!-- Main Content -->
       <main class="col-md-10 ms-sm-auto col-lg-10 px-4">
@@ -107,6 +140,13 @@
     firebase.initializeApp(firebaseConfig);
     const database = firebase.database();
 
+    // Retrieve user name and email from localStorage
+    const userName = localStorage.getItem('userName');
+        const userEmail = localStorage.getItem('userEmail');
+        if (userName) {
+            document.getElementById('welcomeMessage').textContent = `Staff: ${userName}`;
+        }
+
     // Load minutes data
     function loadMinutes() {
       const minutesRef = database.ref('minutes');
@@ -144,70 +184,106 @@
     }
 
     // View details function
-    function viewDetails(key) {
-      const noticesRef = database.ref('minutes/' + key);
-      noticesRef.once('value', (snapshot) => {
-        const minutes = snapshot.val();
-        if (!minutes) {
-          console.error('No data found for key:', key);
-          return;
-        }
-        
-        const modalBody = document.querySelector('#minutesModal .modal-body');
-        modalBody.innerHTML = `
-          <div class="mb-3">
-            <h6>1. Call to Order:</h6>
-            <p>${minutes.callToOrder || 'Not specified'}</p>
-          </div>
-          <div class="mb-3">
-            <h6>2. Invocation:</h6>
-            <p>${minutes.invocation || 'Not specified'}</p>
-          </div>
-          <div class="mb-3">
-            <h6>3. National Anthem:</h6>
-            <p>${minutes.nationalAnthem || 'Not specified'}</p>
-          </div>
-          <div class="mb-3">
-            <h6>4. Sugbo Hymn:</h6>
-            <p>${minutes.sugboHymn || 'Not specified'}</p>
-          </div>
-          <div class="mb-3">
-            <h6>5. Roll Call:</h6>
-            <p>${minutes.rollCall || 'Not specified'}</p>
-          </div>
-          <div class="mb-3">
-            <h6>6. Adoption of Minutes:</h6>
-            <p>${minutes.adoptionMinutesSubsections || 'Not specified'}</p>
-          </div>
-          <div class="mb-3">
-            <h6>7. Communications:</h6>
-            <p>${minutes.communicationsSubsections || 'Not specified'}</p>
-          </div>
-          <div class="mb-3">
-            <h6>8. Committee Report:</h6>
-            <p>${minutes.committeeReportSubsections || 'Not specified'}</p>
-          </div>
-          <div class="mb-3">
-            <h6>9. First Reading:</h6>
-            <p>${minutes.firstReadingSubsections || 'Not specified'}</p>
-          </div>
-          <div class="mb-3">
-            <h6>10. Other Matters :</h6>
-            <p>${minutes.otherMatters || 'Not specified'}</p>
-          </div>
-          <div class="mb-3">
-            <h6>11. Adjournment:</h6>
-            <p>${minutes.adjournment || 'Not specified'}</p>
-          </div>
-        `;
-        
-        const minutesModal = new bootstrap.Modal(document.getElementById('minutesModal'));
-        minutesModal.show();
-      });
+function viewDetails(key) {
+  const noticesRef = database.ref('minutes/' + key);
+  noticesRef.once('value', (snapshot) => {
+    const minutes = snapshot.val();
+    if (!minutes) {
+      console.error('No data found for key:', key);
+      return;
     }
+
+    const modalBody = document.querySelector('#minutesModal .modal-body');
+    modalBody.innerHTML = `
+      <div class="mb-3" style="color: black;">
+        <h6>1. Call to Order:</h6>
+        <p>${minutes.callToOrder || 'Not specified'}</p>
+      </div>
+      <div class="mb-3" style="color: black;">
+        <h6>2. Invocation:</h6>
+        <p>${minutes.invocation || 'Not specified'}</p>
+      </div>
+      <div class="mb-3" style="color: black;">
+        <h6>3. National Anthem:</h6>
+        <p>${minutes.nationalAnthem || 'Not specified'}</p>
+      </div>
+      <div class="mb-3" style="color: black;">
+        <h6>4. Sugbo Hymn:</h6>
+        <p>${minutes.sugboHymn || 'Not specified'}</p>
+      </div>
+      <div class="mb-3" style="color: black;">
+        <h6>5. Roll Call:</h6>
+        <p>${minutes.rollCall || 'Not specified'}</p>
+      </div>
+      <div class="mb-3" style="color: black;">
+        <h6>6. Adoption of Minutes:</h6>
+        <p>${minutes.adoptionMinutesSubsections || 'Not specified'}</p>
+      </div>
+      <div class="mb-3" style="color: black;">
+        <h6>7. Communications:</h6>
+        <p>${minutes.communicationsSubsections || 'Not specified'}</p>
+      </div>
+      <div class="mb-3" style="color: black;">
+        <h6>8. Committee Report:</h6>
+        <p>${minutes.committeeReportSubsections || 'Not specified'}</p>
+      </div>
+      <div class="mb-3" style="color: black;">
+        <h6>9. First Reading:</h6>
+        <p>${minutes.firstReadingSubsections || 'Not specified'}</p>
+      </div>
+      <div class="mb-3" style="color: black;">
+        <h6>10. Other Matters:</h6>
+        <p>${minutes.otherMatters || 'Not specified'}</p>
+      </div>
+      <div class="mb-3" style="color: black;">
+        <h6>11. Adjournment:</h6>
+        <p>${minutes.adjournment || 'Not specified'}</p>
+      </div>
+      
+        
+    `;
+
+    const minutesModal = new bootstrap.Modal(document.getElementById('minutesModal'));
+    minutesModal.show();
+  });
+}
+
 
     // Load minutes when page loads
     document.addEventListener('DOMContentLoaded', loadMinutes);
+
+
+    // Sidebar toggle function
+    window.toggleSidebar = function() {
+      const sidebar = document.querySelector('.sidebar');
+      const burgerMenu = document.querySelector('.burger-menu');
+      
+      sidebar.classList.toggle('collapsed');
+      
+      if (sidebar.classList.contains('collapsed')) {
+        // When collapsed, only show burger icon
+        sidebar.style.width = '60px';
+        burgerMenu.style.display = 'block';
+      } else {
+        // When expanded, show full sidebar
+        sidebar.style.width = '250px';
+        burgerMenu.style.display = 'none';
+      }
+    }
+
+    // Handle window resize
+    window.addEventListener('resize', function() {
+      const sidebar = document.querySelector('.sidebar');
+      if (window.innerWidth <= 768) {
+        sidebar.classList.remove('collapsed');
+        if (!sidebar.classList.contains('active')) {
+          sidebar.style.transform = 'translateX(-250px)';
+        }
+      } else {
+        sidebar.style.transform = '';
+      }
+    });
+
   </script>
 
 <style>
@@ -227,15 +303,19 @@ font-family: "Poppins", sans-serif;
 font-size: 1rem;
 }
 .sidebar-footer {
-    margin-top: auto;
-    padding: 15px 20px;
-    border-top: 1px solid #ddd;
-  }
+      margin-top: auto;
+     
+      border-top: 1px solid #ddd;
+    }
 
-  .sidebar-footer #welcomeMessage {
-    display: block;
-    margin-bottom: 10px;
-  }
+    .sidebar-footer #welcomeMessage {
+      margin-left: 20px;
+      display: block;
+      margin-bottom: 10px;
+    }
+    .sidebar.collapsed .sidebar-footer #welcomeMessage {
+      display: none;
+    }
 .sidebar {
   position: fixed;
   top: 0;
@@ -258,6 +338,7 @@ font-size: 1rem;
   .sidebar .logo img {
     width: 100px;
     border-radius: 50%;
+    margin-top: 40px;
   }
   
   .sidebar .nav-item {
@@ -294,16 +375,23 @@ font-size: 1rem;
   .table-container {
     overflow-x: auto;
   }
-
+  .btn-primary{
+    background-color: #4a9d6d;
+    border: #4a9d6d;
+  }
+  .btn-primary:hover{
+    background-color: #337a52;
+    border: #337a52;
+  }
   .btn-approve {
-    background-color: #28a745;
+    background-color: #4a9d6d;
     color: white;
     border: none;
     cursor: pointer;
   }
 
   .btn-approve:hover {
-    background-color: #218838;
+    background-color: #337a52;
   }
 
   .btn-disapprove {
@@ -347,6 +435,160 @@ font-size: 1rem;
   .btn-danger {
     margin-top: 14px;
   }
+
+   /* Add this style for the scrollbar */
+   ::-webkit-scrollbar {
+      width: 10px;
+    }
+
+    ::-webkit-scrollbar-track {
+      background: #f1f1f1;
+    }
+
+    ::-webkit-scrollbar-thumb {
+      background: #888;
+    }
+
+    ::-webkit-scrollbar-thumb:hover {
+      background: #555;
+    }
+
+    /* Add this style to limit the title content */
+    .truncate-title {
+      max-width: 200px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    /* Sidebar toggle styles */
+    .sidebar {
+      transition: 0.3s;
+      width: 250px;
+      position: fixed;
+      height: 100%;
+      z-index: 1000;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 20px 0;
+    }
+
+    .sidebar.collapsed {
+      width: 60px;
+    }
+
+    .sidebar.collapsed .nav-item span,
+    .sidebar.collapsed .sidebar-footer span {
+      display: none;
+    }
+
+    .sidebar.collapsed .logo img {
+      width: 40px;
+      height: 40px;
+      margin-top: 90px;
+    }
+
+    .burger-menu {
+      display: none;
+      position: fixed;
+      top: 15px;
+      left: 15px;
+      z-index: 1001;
+      background: none;
+      border: none;
+      cursor: pointer;
+      padding: 5px;
+    }
+
+    .burger-menu .bar {
+      width: 25px;
+      height: 3px;
+      background-color: #333;
+      margin: 4px 0;
+      transition: 0.3s;
+      display: block;
+    }
+
+    .sidebar.collapsed + .main-content {
+      margin-left: 60px;
+    }
+
+    .main-content {
+      margin-left: 250px;
+      transition: 0.3s;
+    }
+
+    /* Close button style */
+    .close-sidebar {
+      position: absolute;
+      top: 10px;
+      right: 10px;
+      background: none;
+      border: none;
+      font-size: 20px;
+      cursor: pointer;
+      color: #333;
+      display: block;
+    }
+
+    .sidebar.collapsed .close-sidebar {
+      display: none;
+    }
+
+    /* Add styles for nav-item icons */
+    .nav-item {
+      display: flex;
+      align-items: center;
+      justify-content: flex-start;
+      width: 100%;
+      padding: 10px 20px;
+      cursor: pointer;
+    }
+
+    .nav-item img {
+      margin-right: 10px;
+      width: 20px;
+      height: 20px;
+      vertical-align: middle;
+    }
+
+    .sidebar-footer {
+      
+      align-items: left;
+      justify-content: flex-start;
+      width: 100%;
+      
+    }
+
+    .sidebar-footer img {
+      margin-right: 10px;
+      width: 20px;
+      height: 20px;
+      vertical-align: middle;
+    }
+
+    @media (max-width: 768px) {
+      .burger-menu {
+        display: block;
+      }
+      
+      .sidebar {
+        transform: translateX(-250px);
+      }
+
+      .sidebar.collapsed {
+        transform: translateX(-60px);
+      }
+
+      .sidebar.active {
+        transform: translateX(0);
+      }
+
+      .main-content {
+        margin-left: 0;
+      }
+    }
 </style>
     <script>
       // Logout function

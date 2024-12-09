@@ -7,6 +7,7 @@
     <title>Announcement Board</title>
     <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
     <link rel="stylesheet" href="{% static 'style.css' %}">
+    <link rel="icon" type="image/jpeg" href="{% static 'fav_argao.png'%}">
     <style>
        @font-face {
   font-family: "Poppins";
@@ -67,6 +68,26 @@
       background-color: #e9ecef;
       cursor: pointer;
     }
+
+
+    .sidebar {
+      overflow-y: auto;
+      max-height: 100vh;
+    }
+
+    .sidebar::-webkit-scrollbar {
+      width: 5px;
+    }
+
+    .sidebar::-webkit-scrollbar-thumb {
+      background-color: #888;
+      border-radius: 5px;
+    }
+
+    .sidebar::-webkit-scrollbar-thumb:hover {
+      background-color: #555;
+    }
+
         .user-profile {
             position: absolute;
             top: 20px;
@@ -180,6 +201,7 @@
         .sidebar.collapsed .logo img {
           width: 40px;
           height: 40px;
+          margin-top: 40px;
         }
     
         .burger-menu {
@@ -281,6 +303,14 @@
           .main-content {
             margin-left: 0;
           }
+        }
+        .btn-primary{
+          background-color: #4a9d6d;
+          border: #4a9d6d;
+        }
+        .btn-primary:hover{
+          background-color: #337a52;
+          border: #337a52;
         }
       </style>
     
