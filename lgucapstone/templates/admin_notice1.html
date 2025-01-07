@@ -435,23 +435,23 @@
           </div>
           <div class="mb-3">
             <label class="form-label">1. CALL TO ORDER</label>
-            <textarea class="form-control" id="callToOrder" rows="2"></textarea>
+            
           </div>
           <div class="mb-3">
             <label class="form-label">2. INVOCATION</label>
-            <textarea class="form-control" id="invocation" rows="2"></textarea>
+            
           </div>
           <div class="mb-3">
             <label class="form-label">3. NATIONAL ANTHEM</label>
-            <textarea class="form-control" id="nationalAnthem" rows="2"></textarea>
+            
           </div>
           <div class="mb-3">
             <label class="form-label">4. SUGBO HYMN</label>
-            <textarea class="form-control" id="sugboHymn" rows="2"></textarea>
+            
           </div>
           <div class="mb-3">
             <label class="form-label">5. ROLL CALL</label>
-            <textarea class="form-control" id="rollCall" rows="2"></textarea>
+           
           </div>
           
           <!-- Section 6 with dynamic subsections -->
@@ -504,11 +504,11 @@
 
           <div class="mb-3">
             <label class="form-label">10. OTHER MATTERS</label>
-            <textarea class="form-control" id="otherMatters" rows="2"></textarea>
+            
           </div>
           <div class="mb-3">
             <label class="form-label">11. ADJOURNMENT</label>
-            <textarea class="form-control" id="adjournment" rows="2"></textarea>
+            
           </div>
 
           <!-- Added Prepared By and Approved By fields -->
@@ -557,23 +557,23 @@
           </div>
           <div class="mb-3">
             <label class="form-label">1. CALL TO ORDER</label>
-            <textarea class="form-control" id="editCallToOrder" rows="2"></textarea>
+           
           </div>
           <div class="mb-3">
             <label class="form-label">2. INVOCATION</label>
-            <textarea class="form-control" id="editInvocation" rows="2"></textarea>
+            
           </div>
           <div class="mb-3">
             <label class="form-label">3. NATIONAL ANTHEM</label>
-            <textarea class="form-control" id="editNationalAnthem" rows="2"></textarea>
+            
           </div>
           <div class="mb-3">
             <label class="form-label">4. SUGBO HYMN</label>
-            <textarea class="form-control" id="editSugboHymn" rows="2"></textarea>
+            
           </div>
           <div class="mb-3">
             <label class="form-label">5. ROLL CALL</label>
-            <textarea class="form-control" id="editRollCall" rows="2"></textarea>
+           
           </div>
           <div class="mb-3">
             <label class="form-label">6. ADOPTION OF MINUTES OF THE PREVIOUS SESSION</label>
@@ -605,11 +605,11 @@
           </div>
           <div class="mb-3">
             <label class="form-label">10. OTHER MATTERS</label>
-            <textarea class="form-control" id="editOtherMatters" rows="2"></textarea>
+          
           </div>
           <div class="mb-3">
             <label class="form-label">11. ADJOURNMENT</label>
-            <textarea class="form-control" id="editAdjournment" rows="2"></textarea>
+           
           </div>
           <!-- Added edit fields for Prepared By and Approved By -->
           <div class="mb-3">
@@ -670,31 +670,34 @@
     const db = firebase.database();
 
     // Function to get the last minutes number and increment it
-  function fetchAndSetMinutesNumber() {
-  const minutesRef = db.ref('notices');
+    function fetchAndSetMinutesNumber() {
+      const minutesRef = db.ref('notices');
 
-  // Query to get the last minutes number
-  minutesRef.orderByChild('minutesNo').limitToLast(1).once('value', (snapshot) => {
-    let newMinutesNo = 1;
+      // Query to get the last minutes number
+      minutesRef.orderByChild('minutesNo').limitToLast(1).once('value', (snapshot) => {
+        let newMinutesNo = 1;
 
-    if (snapshot.exists()) {
-      snapshot.forEach((childSnapshot) => {
-        const lastMinutesNo = childSnapshot.val().minutesNo;
-        console.log('Fetched lastMinutesNo:', lastMinutesNo);
-        
-        if (!isNaN(lastMinutesNo)) {
-          newMinutesNo = parseInt(lastMinutesNo, 10) + 1;
-        } else {
-          console.error('Invalid minutesNo:', lastMinutesNo);
+        if (snapshot.exists()) {
+          snapshot.forEach((childSnapshot) => {
+            const lastMinutesNo = childSnapshot.val().minutesNo;
+            console.log('Fetched lastMinutesNo:', lastMinutesNo);
+            
+            if (!isNaN(lastMinutesNo)) {
+              newMinutesNo = parseInt(lastMinutesNo, 10) + 1;
+            } else {
+              console.error('Invalid minutesNo:', lastMinutesNo);
+            }
+          });
         }
+
+        document.getElementById('minutesNo').value = newMinutesNo;
+      }).catch((error) => {
+        console.error('Error fetching the last minutes number:', error);
       });
     }
 
-    document.getElementById('minutesNo').value = newMinutesNo;
-  }).catch((error) => {
-    console.error('Error fetching the last minutes number:', error);
-  });
-}
+    // Call fetchAndSetMinutesNumber when page loads
+    document.addEventListener('DOMContentLoaded', fetchAndSetMinutesNumber);
  
 
 
@@ -751,11 +754,7 @@
     function saveNotice() {
       const minutesNo = document.getElementById('minutesNo').value;
       const sessionDate = document.getElementById('sessionDate').value;
-      const callToOrder = document.getElementById('callToOrder').value;
-      const invocation = document.getElementById('invocation').value;
-      const nationalAnthem = document.getElementById('nationalAnthem').value;
-      const sugboHymn = document.getElementById('sugboHymn').value;
-      const rollCall = document.getElementById('rollCall').value;
+     
       
       // Get subsection contents
       const adoptionMinutesSubsections = getSubsectionContents('adoptionMinutesContainer');
@@ -763,8 +762,7 @@
       const committeeReportSubsections = getSubsectionContents('committeeReportContainer');
       const firstReadingSubsections = getSubsectionContents('firstReadingContainer');
       
-      const otherMatters = document.getElementById('otherMatters').value;
-      const adjournment = document.getElementById('adjournment').value;
+      
       const preparedBy = document.getElementById('preparedBy').value;
       const approvedBy = document.getElementById('approvedBy').value;
       const timestamp = new Date().toISOString();
@@ -777,17 +775,12 @@
       db.ref('notices').push({
         minutesNo: parseInt(minutesNo, 10),
         sessionDate,
-        callToOrder,
-        invocation,
-        nationalAnthem,
-        sugboHymn,
-        rollCall,
+        
         adoptionMinutesSubsections,
         communicationsSubsections,
         committeeReportSubsections,
         firstReadingSubsections,
-        otherMatters,
-        adjournment,
+       
         preparedBy,
         approvedBy,
         timestamp
@@ -795,11 +788,7 @@
         // Clear form
         document.getElementById('minutesNo').value = '';
         document.getElementById('sessionDate').value = '';
-        document.getElementById('callToOrder').value = '';
-        document.getElementById('invocation').value = '';
-        document.getElementById('nationalAnthem').value = '';
-        document.getElementById('sugboHymn').value = '';
-        document.getElementById('rollCall').value = '';
+        
         
         // Clear subsection containers
         document.getElementById('adoptionMinutesContainer').innerHTML = `
@@ -827,8 +816,7 @@
           </div>
         `;
         
-        document.getElementById('otherMatters').value = '';
-        document.getElementById('adjournment').value = '';
+        
         document.getElementById('preparedBy').value = '';
         document.getElementById('approvedBy').value = '';
       });
@@ -846,11 +834,7 @@
       document.getElementById('editNoticeId').value = noticeId;
       document.getElementById('editMinutesNo').value = notice.minutesNo;
       document.getElementById('editSessionDate').value = notice.sessionDate;
-      document.getElementById('editCallToOrder').value = notice.callToOrder || '';
-      document.getElementById('editInvocation').value = notice.invocation || '';
-      document.getElementById('editNationalAnthem').value = notice.nationalAnthem || '';
-      document.getElementById('editSugboHymn').value = notice.sugboHymn || '';
-      document.getElementById('editRollCall').value = notice.rollCall || '';
+      
 
       // Handle subsections by splitting data and creating new fields as needed
       function populateSubsections(containerId, data, prefix) {
@@ -902,8 +886,7 @@
       populateSubsections('editCommitteeReportContainer', notice.committeeReportSubsections, '8');
       populateSubsections('editFirstReadingContainer', notice.firstReadingSubsections, '9');
 
-      document.getElementById('editOtherMatters').value = notice.otherMatters || '';
-      document.getElementById('editAdjournment').value = notice.adjournment || '';
+      
       document.getElementById('editPreparedBy').value = notice.preparedBy || '';
       document.getElementById('editApprovedBy').value = notice.approvedBy || '';
       
@@ -923,17 +906,12 @@
       const updatedNotice = {
         minutesNo: document.getElementById('editMinutesNo').value,
         sessionDate: document.getElementById('editSessionDate').value,
-        callToOrder: document.getElementById('editCallToOrder').value,
-        invocation: document.getElementById('editInvocation').value,
-        nationalAnthem: document.getElementById('editNationalAnthem').value,
-        sugboHymn: document.getElementById('editSugboHymn').value,
-        rollCall: document.getElementById('editRollCall').value,
+        
         adoptionMinutesSubsections,
         communicationsSubsections,
         committeeReportSubsections,
         firstReadingSubsections,
-        otherMatters: document.getElementById('editOtherMatters').value,
-        adjournment: document.getElementById('editAdjournment').value,
+        
         preparedBy: document.getElementById('editPreparedBy').value,
         approvedBy: document.getElementById('editApprovedBy').value
       };

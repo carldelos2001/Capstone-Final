@@ -139,32 +139,9 @@
     .error-message.show {
       display: block;
     }
-  </style>
 
-  <!-- Add error handling script -->
-  <script>
-    function handleError(error) {
-      console.error('Error:', error);
-      const errorDiv = document.getElementById('errorMessage');
-      if (errorDiv) {
-        errorDiv.textContent = 'An error occurred. Please try again later.';
-        errorDiv.classList.add('show');
-        setTimeout(() => {
-          errorDiv.classList.remove('show');
-        }, 5000);
-      }
-    }
-
-    window.onerror = function(msg, url, line) {
-      handleError(`${msg} at ${url}:${line}`);
-      return false;
-    };
-  </script>
-</head>
-<body>
-  <style>
-    /* Add this style for the scrollbar */
-    ::-webkit-scrollbar {
+     /* Add this style for the scrollbar */
+     ::-webkit-scrollbar {
       width: 10px;
     }
 
@@ -353,6 +330,30 @@
     }
   </style>
 
+  <!-- Add error handling script -->
+  <script>
+    function handleError(error) {
+      console.error('Error:', error);
+      const errorDiv = document.getElementById('errorMessage');
+      if (errorDiv) {
+        errorDiv.textContent = 'An error occurred. Please try again later.';
+        errorDiv.classList.add('show');
+        setTimeout(() => {
+          errorDiv.classList.remove('show');
+        }, 5000);
+      }
+    }
+
+    window.onerror = function(msg, url, line) {
+      handleError(`${msg} at ${url}:${line}`);
+      return false;
+    };
+  </script>
+</head>
+
+
+<body>
+  
   <!-- Burger Menu Button -->
   <button class="burger-menu" onclick="toggleSidebar()">
     <span class="bar"></span>
@@ -701,9 +702,6 @@
   });
 }
 
-
-
-
     // Function to add subsection
     function addSubsection(containerId, sectionNumber) {
       const container = document.getElementById(containerId);
@@ -958,48 +956,47 @@
 
     // Function to fetch attendance by date and format for minutes
     function fetchAttendanceByDate(date) {
-      return new Promise((resolve, reject) => {
-        db.ref('attendance')
-          .orderByChild('date')
-          .equalTo(date)
-          .once('value')
-          .then((snapshot) => {
-            const attendance = snapshot.val();
-            if (attendance) {
-              // Convert object to array and sort by name
-              const attendanceArray = Object.values(attendance).sort((a, b) => {
-                return a.name.localeCompare(b.name);
-              });
-              
-              // Format attendance for minutes display
-              let presentMembers = [];
-              let absentMembers = [];
-              
-              attendanceArray.forEach(record => {
-                if (record.status === 'present') {
-                  presentMembers.push(record.name);
-                } else if (record.status === 'absent') {
-                  absentMembers.push(record.name);
-                }
-              });
+  return new Promise((resolve, reject) => {
+    const [year, month, day] = date.split('-'); // Split the date (YYYY-MM-DD)
+    const attendancePath = `attendance/${parseInt(month, 10)}/${parseInt(day, 10)}/${year}/attendance`;
 
-              // Create formatted attendance text
-              let attendanceText = "PRESENT:\n" + presentMembers.join("\n");
-              if (absentMembers.length > 0) {
-                attendanceText += "\n\nABSENT:\n" + absentMembers.join("\n");
-              }
+    console.log("Fetching attendance from:", attendancePath);
 
-              resolve(attendanceText);
-            } else {
-              resolve("No attendance record found for this date"); 
-            }
-          })
-          .catch((error) => {
-            console.error("Error fetching attendance:", error);
-            reject(error);
-          });
+    db.ref(attendancePath)
+      .once('value')
+      .then(snapshot => {
+        const attendanceData = snapshot.val();
+        if (!attendanceData) {
+          resolve("No attendance record found for this date");
+          return;
+        }
+
+        const presentMembers = [];
+        const absentMembers = [];
+
+        // Ensure attendanceData is iterable
+        Object.values(attendanceData).forEach(record => {
+          if (record.status === 'present') {
+            presentMembers.push(`${record.name}${record.remarks ? ` (${record.remarks})` : ''}`);
+          } else if (record.status === 'absent') {
+            absentMembers.push(`${record.name}${record.remarks ? ` (${record.remarks})` : ''}`);
+          }
+        });
+
+        let attendanceText = `PRESENT:\n${presentMembers.join('\n')}`;
+        if (absentMembers.length > 0) {
+          attendanceText += `\n\nABSENT:\n${absentMembers.join('\n')}`;
+        }
+
+        resolve(attendanceText);
+      })
+      .catch(error => {
+        console.error("Error fetching attendance:", error);
+        reject(error);
       });
-    }
+  });
+}
+
 
    
     // Load and display notices
@@ -1062,21 +1059,29 @@
 
       // Get the minutes data from Firebase
       db.ref(`minutes/${minutesId}`).once('value')
-        .then(snapshot => {
-          const minutesData = snapshot.val();
+        .then(minutesSnapshot => {
+          const minutesData = minutesSnapshot.val();
+
           if (!minutesData) {
             throw new Error('Minutes data not found.');
           }
 
-          // Send the AJAX request with minutes data
-          return fetch('/send_email_to_officials_minutes/', {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-              'X-CSRFToken': getCookie('csrftoken')
-            },
-            body: JSON.stringify({ minutes_id: minutesId })
-          });
+          // Fetch attendance using the fetchAttendanceByDate function
+          return fetchAttendanceByDate(minutesData.sessionDate)
+            .then(attendanceText => {
+              // Send the AJAX request with both minutes and attendance data
+              return fetch('/send_email_to_officials_minutes/', {
+                method: 'POST',
+                headers: {
+                  'Content-Type': 'application/json',
+                  'X-CSRFToken': getCookie('csrftoken')
+                },
+                body: JSON.stringify({
+                  minutes_id: minutesId,
+                  attendance: attendanceText
+                })
+              });
+            });
         })
         .then(response => {
           if (!response.ok) {
@@ -1118,218 +1123,176 @@
       db.ref('minutes/' + minutesId).once('value').then((snapshot) => {
         const minutes = snapshot.val();
         
-        // Get attendance data for the session date
-        const dateParts = minutes.sessionDate.split('-');
-        const year = dateParts[0];
-        const month = dateParts[1];
-        const day = dateParts[2];
-        
-        // First get the attendance data
-        db.ref(`attendance/${month}/${day}/${year}/attendance`).once('value').then((attendanceSnapshot) => {
-          const attendanceData = attendanceSnapshot.val() || [];
-          
-          // Ensure attendanceData is an array
-          const attendanceArray = Array.isArray(attendanceData) ? attendanceData : Object.values(attendanceData);
-          
-          // Separate officials into present and absent
-          const presentOfficials = attendanceArray.filter(official => official.status === 'present');
-          const absentOfficials = attendanceArray.filter(official => official.status === 'absent');
-          
-          let attendanceHtml = '<div style="text-align: left; margin-left: 20px;">';
-          
-          // Present officials
-          attendanceHtml += '<h2>Present:</h2>';
-          if (presentOfficials.length > 0) {
-            presentOfficials.forEach(official => {
-              attendanceHtml += `<p>${official.name}`;
-              if (official.remarks) {
-                attendanceHtml += ` (${official.remarks})`;
-              }
-              attendanceHtml += '</p>';
-            });
-          } else {
-            attendanceHtml += '<p>No officials present</p>';
-          }
+        // Get attendance data using the fetchAttendanceByDate function
+        fetchAttendanceByDate(minutes.sessionDate)
+          .then(attendanceText => {
+            const printWindow = window.open('', '', 'width=800,height=600');
+            
+            let adoptionMinutesHtml = '';
+            if (minutes.adoptionMinutesSubsections) {
+              minutes.adoptionMinutesSubsections.forEach((content, index) => {
+                adoptionMinutesHtml += `<div>6.${index + 1} ${content}</div>`;
+              });
+            }
 
-          // Absent officials 
-          attendanceHtml += '<h2>Absent:</h2>';
-          if (absentOfficials.length > 0) {
-            absentOfficials.forEach(official => {
-              attendanceHtml += `<p>${official.name}`;
-              if (official.remarks) {
-                attendanceHtml += ` (${official.remarks})`;
-              }
-              attendanceHtml += '</p>';
-            });
-          } else {
-            attendanceHtml += '<p>No officials absent</p>';
-          }
-          
-          attendanceHtml += '</div>';
+            let communicationsHtml = '';
+            if (minutes.communicationsSubsections) {
+              minutes.communicationsSubsections.forEach((content, index) => {
+                communicationsHtml += `<div>7.${index + 1} ${content}</div>`;
+              });
+            }
 
-          const printWindow = window.open('', '', 'width=800,height=600');
-          
-          let adoptionMinutesHtml = '';
-          if (minutes.adoptionMinutesSubsections) {
-            minutes.adoptionMinutesSubsections.forEach((content, index) => {
-              adoptionMinutesHtml += `<div>6.${index + 1} ${content}</div>`;
-            });
-          }
+            let committeeReportHtml = '';
+            if (minutes.committeeReportSubsections) {
+              minutes.committeeReportSubsections.forEach((content, index) => {
+                committeeReportHtml += `<div>8.${index + 1} ${content}</div>`;
+              });
+            }
 
-          let communicationsHtml = '';
-          if (minutes.communicationsSubsections) {
-            minutes.communicationsSubsections.forEach((content, index) => {
-              communicationsHtml += `<div>7.${index + 1} ${content}</div>`;
-            });
-          }
+            let firstReadingHtml = '';
+            if (minutes.firstReadingSubsections) {
+              minutes.firstReadingSubsections.forEach((content, index) => {
+                firstReadingHtml += `<div>9.${index + 1} ${content}</div>`;
+              });
+            }
 
-          let committeeReportHtml = '';
-          if (minutes.committeeReportSubsections) {
-            minutes.committeeReportSubsections.forEach((content, index) => {
-              committeeReportHtml += `<div>8.${index + 1} ${content}</div>`;
-            });
-          }
+            printWindow.document.write(`
+              <html>
+                <head>
+                  <title>Session Minutes</title>
+                  <style>
+                    body { 
+                      font-family: Times New Roman, sans-serif;
+                      padding: 20px;
+                      max-width: 800px;
+                      margin: 0 auto;
+                      margin-bottom: 10px;
+                    }
+                    .header {
+                      text-align: center;
+                      margin-bottom: 40px;
+                      position: relative;
+                    }
+                    .logo-left {
+                      position: absolute;
+                      left: 0;
+                      top: 0;
+                      width: 100px;
+                    }
+                    .logo-right {
+                      position: absolute;
+                      right: 0;
+                      top: 0;
+                      width: 100px;
+                    }
+                    .letterhead-text {
+                      font-size: 12px;
+                      line-height: 1.5;
+                      margin: 0;
+                      font-weight: bold;
+                    }
+                    .title {
+                      text-align: center;
+                      font-size: 16px;
+                      font-weight: bold;
+                      text-transform: uppercase;
+                    }
+                    .content {
+                      font-size: 14px;
+                      line-height: 1.6;
+                      text-align: justify;
+                      margin-top: 30px;
+                    }
+                    .session-info {
+                      text-align: center;
+                      margin: 20px 0;
+                      font-size: 14px;
+                    }
+                    .agenda-item {
+                      margin: 15px 0;
+                    }
+                    .agenda-label {
+                      font-weight: bold;
+                    }
+                    .signatures {
+                      margin-top: 50px;
+                      display: flex;
+                      justify-content: flex-end;
+                      gap: 20px;
+                    }
+                    .signature-block {
+                      text-align: center;
+                      width: 45%;
+                    }
+                    .signature-line {
+                      margin: 10px 0;
+                    }
+                    .signature-title {
+                      font-size: 12px;
+                      font-style: italic;
+                    }
+                    .attendance {
+                      text-align: left;
+                      margin: 20px;
+                      white-space: pre-line;
+                    }
+                  </style>
+                </head>
+                <body>
+                  <div class="header">
+                    <div style="margin: 15px 0;">
+                      <img src="{% static 'argao_logo.jpg' %}" alt="Left Logo" class="logo-left">
+                      <img src="{% static 'basers101.png' %}" alt="Right Logo" class="logo-right">
+                      <p class="letterhead-text">Republic of the Philippines</p>
+                      <p class="letterhead-text">Province of Cebu</p>
+                      <p class="letterhead-text">Municipality of Argao</p>
+                      <p class="letterhead-text">OFFICE OF THE SANGGUNIANG BAYAN</p>
+                      <p class="letterhead-text">Tel. No.: (032) 367-7623</p>
+                      <p class="letterhead-text">Email: sbargao@gmail.com</p>
+                    </div>
+                    <p class="letterhead-text">MINUTES OF THE REGULAR SESSION OF THE SANGGUNIANG BAYAN OF THE MUNICIPALITY OF ARGAO
+                    ,PROVINCE OF CEBU, HELD ON ${minutes.sessionDate} AT THE ARGAO MUNICIPAL SESSION HALL ARGAO, CEBU</p>
+                    <p>Minutes No: ${minutes.minutesNo}</p>
+                    <div class="attendance">${attendanceText}</div>
+                  </div>
+                  <div class="content">
+                    <h2>1. CALL TO ORDER</h2>
+                    <p>${minutes.callToOrder || ''}</p>
 
-          let firstReadingHtml = '';
-          if (minutes.firstReadingSubsections) {
-            minutes.firstReadingSubsections.forEach((content, index) => {
-              firstReadingHtml += `<div>9.${index + 1} ${content}</div>`;
-            });
-          }
+                    <h2>2. INVOCATION</h2>
+                    <p>${minutes.invocation || ''}</p>
 
-          printWindow.document.write(`
-            <html>
-              <head>
-                <title>Session Minutes</title>
-                <style>
-                  body { 
-                    font-family: Times New Roman, sans-serif;
-                    padding: 20px;
-                    max-width: 800px;
-                    margin: 0 auto;
-                    margin-bottom: 10px;
-                  }
-                  .header {
-                    text-align: center;
-                    margin-bottom: 40px;
-                    position: relative;
-                  }
-                  .logo-left {
-                    position: absolute;
-                    left: 0;
-                    top: 0;
-                    width: 100px;
-                  }
-                  .logo-right {
-                    position: absolute;
-                    right: 0;
-                    top: 0;
-                    width: 100px;
-                  }
-                  .letterhead-text {
-                    font-size: 12px;
-                    line-height: 1.5;
-                    margin: 0;
-                    
-                    font-weight: bold;
-                  }
-                  .title {
-                    text-align: center;
-                    font-size: 16px;
-                    font-weight: bold;
-                    text-transform: uppercase;
-                  }
-                  .content {
-                    font-size: 14px;
-                    line-height: 1.6;
-                    text-align: justify;
-                    margin-top: 30px;
-                  }
-                  .session-info {
-                    text-align: center;
-                    margin: 20px 0;
-                    font-size: 14px;
-                  }
-                  .agenda-item {
-                    margin: 15px 0;
-                  }
-                  .agenda-label {
-                    font-weight: bold;
-                  }
-                  .signatures {
-                    margin-top: 50px;
-                    display: flex;
-                    justify-content: flex-end;
-                    gap: 20px;
-                  }
-                  .signature-block {
-                    text-align: center;
-                    width: 45%;
-                  }
-                  .signature-line {
-                    margin: 10px 0;
-                  }
-                  .signature-title {
-                    font-size: 12px;
-                    font-style: italic;
-                  }
-                </style>
-              </head>
-              <body>
-                <div class="header">
-                <div style="margin: 15px 0;">
-                  <img src="{% static 'argao_logo.jpg' %}" alt="Left Logo" class="logo-left">
-                  <img src="{% static 'basers101.png' %}" alt="Right Logo" class="logo-right">
-                  <p class="letterhead-text">Republic of the Philippines</p>
-                  <p class="letterhead-text">Province of Cebu</p>
-                  <p class="letterhead-text">Municipality of Argao</p>
-                  <p class="letterhead-text">OFFICE OF THE SANGGUNIANG BAYAN</p>
-                  <p class="letterhead-text">Tel. No.: (032) 367-7623</p>
-                  <p class="letterhead-text">Email: sbargao@gmail.com</p>
-                </div>
-                  <p class="letterhead-text"> MINUTES OF THE REGULAR SESSION OF THE SANGGUNIANG BAYAN OF THE MUNICIPALITY OF ARGAO
-                  ,PROVINCE OF CEBU, HELD ON ${minutes.sessionDate} AT THE ARGAO MUNICIPAL SESSION HALL ARGAO, CEBU</p>
-                <p>Minutes No: ${minutes.minutesNo}</p>
-                  ${attendanceHtml}
-                </div>
-                <div class="content">
-                  <h2>1. CALL TO ORDER</h2>
-                  <p>${minutes.callToOrder || ''}</p>
+                    <h2>3. NATIONAL ANTHEM</h2>
+                    <p>${minutes.nationalAnthem || ''}</p>
 
-                  <h2>2. INVOCATION</h2>
-                  <p>${minutes.invocation || ''}</p>
+                    <h2>4. SUGBO HYMN</h2>
+                    <p>${minutes.sugboHymn || ''}</p>
 
-                  <h2>3. NATIONAL ANTHEM</h2>
-                  <p>${minutes.nationalAnthem || ''}</p>
+                    <h2>5. ROLL CALL</h2>
+                    <p>${minutes.rollCall || ''}</p>
 
-                  <h2>4. SUGBO HYMN</h2>
-                  <p>${minutes.sugboHymn || ''}</p>
+                    <h2>6. ADOPTION OF MINUTES OF THE PREVIOUS SESSION</h2>
+                    ${adoptionMinutesHtml}
 
-                  <h2>5. ROLL CALL</h2>
-                  <p>${minutes.rollCall || ''}</p>
+                    <h2>7. COMMUNICATIONS RECEIVED</h2>
+                    ${communicationsHtml}
 
-                  <h2>6. ADOPTION OF MINUTES OF THE PREVIOUS SESSION</h2>
-                  ${adoptionMinutesHtml}
+                    <h2>8. COMMITTEE REPORT</h2>
+                    ${committeeReportHtml}
 
-                  <h2>7. COMMUNICATIONS RECEIVED</h2>
-                  ${communicationsHtml}
+                    <h2>9. FIRST READING</h2>
+                    ${firstReadingHtml}
 
-                  <h2>8. COMMITTEE REPORT</h2>
-                  ${committeeReportHtml}
+                    <h2>10. OTHER MATTERS</h2>
+                    <p>${minutes.otherMatters || ''}</p>
 
-                  <h2>9. FIRST READING</h2>
-                  ${firstReadingHtml}
-
-                  <h2>10. OTHER MATTERS</h2>
-                  <p>${minutes.otherMatters || ''}</p>
-
-                  <h2>11. ADJOURNMENT</h2>
-                  <p>${minutes.adjournment || ''}</p>
-                </div>
-                
+                    <h2>11. ADJOURNMENT</h2>
+                    <p>${minutes.adjournment || ''}</p>
+                  </div>
+                  
                   <div class="signature-block" style="margin-left: 350px;">
                     <p>${minutes.preparedBy || ''}</p>
-                    <p style="font-weight: bold;"> Sangguniang Bayan Secretary </p>
+                    <p style="font-weight: bold;">Sangguniang Bayan Secretary</p>
                   </div>
 
                   <div class="signature-block">
@@ -1343,58 +1306,61 @@
                     <p>${minutes.approvedBy || ''}</p>
                     <p style="font-weight: bold;">Municipal Mayor</p>
                   </div>
-                
-              </body>
-            </html>
-          `);
-          printWindow.document.close();
-          printWindow.print();
-        }).catch(error => {
-          console.error('Error getting attendance data:', error);
-          alert('Error getting attendance data. Please try again.');
-        });
+                </body>
+              </html>
+            `);
+            printWindow.document.close();
+            printWindow.print();
+          })
+          .catch(error => {
+            console.error('Error getting attendance data:', error);
+            alert('Error getting attendance data. Please try again.');
+          });
       }).catch(error => {
-        console.error('Error getting notice data:', error);
-        alert('Error getting notice data. Please try again.');
+        console.error('Error getting minutes data:', error);
+        alert('Error getting minutes data. Please try again.');
       });
     }
 
     // Download PDF function
     function downloadPDF(minutesId) {
+      // First get the minutes data
       db.ref('minutes/' + minutesId).once('value').then((snapshot) => {
         const minutes = snapshot.val();
-
         if (!minutes) {
           console.error('No data found for the given minutesId:', minutesId);
           alert('Error: No data found for this minutes.');
           return;
-          }
+        }
+
+        // Get attendance using the fetchAttendanceByDate function
+        fetchAttendanceByDate(minutes.sessionDate).then((attendanceText) => {
           // Generate HTML content for subsections
           let adoptionMinutesHtml = '';
           if (Array.isArray(minutes.adoptionMinutesSubsections)) {
             minutes.adoptionMinutesSubsections.forEach((content, index) => {
-              adoptionMinutesHtml += `<div>6.${index + 1} ${content}</div>`;
+              adoptionMinutesHtml += `<div>${content}</div>`;
             });
           }
 
           let communicationsHtml = '';
           if (Array.isArray(minutes.communicationsSubsections)) {
             minutes.communicationsSubsections.forEach((content, index) => {
-              communicationsHtml += `<div>7.${index + 1} ${content}</div>`;
+              communicationsHtml += `<div>${content}</div>`;
             });
           }
 
           let committeeReportHtml = '';
           if (Array.isArray(minutes.committeeReportSubsections)) {
             minutes.committeeReportSubsections.forEach((content, index) => {
-              committeeReportHtml += `<div>8.${index + 1} ${content}</div>`;
+              committeeReportHtml += `<div>${content}</div>`;
             });
           }
 
           let firstReadingHtml = '';
           if (Array.isArray(minutes.firstReadingSubsections)) {
             minutes.firstReadingSubsections.forEach((content, index) => {
-              firstReadingHtml += `<div>9.${index + 1} ${content}</div>`;
+              firstReadingHtml += `<div>${content}</div>`;
             });
           }
 
@@ -1404,9 +1370,9 @@
           // Create temporary element
           const element = document.createElement('div');
           element.style.position = 'relative';
-          element.style.margin = '10px 10px 50px 10px'; // Added larger bottom margin
+          element.style.margin = '10px 10px 50px 10px';
           element.style.maxWidth = '8.5in';
-          element.style.minHeight = '11in'; // Changed to minHeight to allow content to flow
+          element.style.minHeight = '11in';
           element.style.backgroundColor = 'white';
           element.style.boxShadow = '0 0 10px rgba(0,0,0,0.1)';
           element.style.width = '8.5in';
@@ -1419,7 +1385,7 @@
                 padding: 20px;
                 max-width: 800px;
                 margin: 0 auto;
-                font-size: 14px; /* Increased base font size */
+                font-size: 12px;
                 margin-bottom: 10px;
               }
               .header {
@@ -1431,29 +1397,28 @@
                 position: absolute;
                 left: 0;
                 top: 0;
-                width: 100px; /* Increased logo size */
+                width: 80px;
               }
               .logo-right {
                 position: absolute;
                 right: 0;
                 top: 0;
-                width: 100px; /* Increased logo size */
+                width: 80px;
               }
               .letterhead-text {
-                font-size: 14px; /* Increased font size */
+                font-size: 12px;
                 line-height: 1.2;
                 margin: 0;
-              
                 font-weight: bold;
               }
               .title {
                 text-align: center;
-                font-size: 16px; /* Increased font size */
+                font-size: 14px;
                 font-weight: bold;
                 text-transform: uppercase;
               }
               .content {
-                font-size: 14px; /* Increased font size */
+                font-size: 12px;
                 line-height: 1.4;
                 text-align: justify;
                 margin-top: 15px;
@@ -1461,7 +1426,7 @@
               .session-info {
                 text-align: center;
                 margin: 10px 0;
-                font-size: 14px; /* Increased font size */
+                font-size: 12px;
               }
               .agenda-item {
                 margin: 8px 0;
@@ -1483,15 +1448,29 @@
                 margin: 5px 0;
               }
               .signature-title {
-                font-size: 14px; /* Increased font size */
+                font-size: 12px;
                 font-style: italic;
               }
               p {
                 margin: 5px 0;
-                font-size: 14px; /* Increased font size */
+                font-size: 12px;
               }
               div {
                 margin-bottom: 10px;
+              }
+              .attendance-table {
+                width: 100%;
+                margin: 10px 0;
+                border-collapse: collapse;
+                text-align: left;
+              }
+              .attendance-table td {
+                padding: 5px;
+                font-size: 12px;
+                text-align: left;
+              }
+              .attendance-info {
+                text-align: left;
               }
             </style>
             <div style="font-family: Times New Roman, sans-serif;">
@@ -1506,12 +1485,19 @@
                   <p class="letterhead-text">Tel. No.: (032) 367-7623</p>
                   <p class="letterhead-text">Email: sbargao@gmail.com</p>
                 </div>
-                <p class="letterhead-text"> MINUTES OF THE REGULAR SESSION OF THE SANGGUNIANG BAYAN OF THE MUNICIPALITY OF ARGAO
-                  ,PROVINCE OF CEBU, HELD ON ${minutes.sessionDate} AT THE ARGAO MUNICIPAL SESSION HALL ARGAO, CEBU</p>
+                <p class="letterhead-text">MINUTES OF THE REGULAR SESSION OF THE SANGGUNIANG BAYAN OF THE MUNICIPALITY OF ARGAO, PROVINCE OF CEBU, HELD ON ${minutes.sessionDate} AT THE ARGAO MUNICIPAL SESSION HALL ARGAO, CEBU</p>
                 <p>Minutes No: ${minutes.minutesNo}</p>
+                
+                <div class="attendance-info" style="text-align: left;">
+                  <table class="attendance-table">
+                    <tbody>
+                      ${attendanceText.split('\n').map(line => 
+                        line.trim() && `<tr><td>${line}</td></tr>`
+                      ).join('')}
+                    </tbody>
+                  </table>
+                </div>
               </div>
-              
-             
               
               <div style="margin-bottom: 10px;">
                 <p style="font-weight: bold;">1. CALL TO ORDER</p>
@@ -1535,7 +1521,6 @@
 
               <div style="margin-bottom: 10px;">
                 <p style="font-weight: bold;">5. ROLL CALL</p>
-              
                 <p>${safeText(minutes.rollCall)}</p>
               </div>
 
@@ -1569,24 +1554,22 @@
                 <p>${safeText(minutes.adjournment)}</p>
               </div>
 
-             
-                <div style="text-align: center; width: 45%; margin-left: 350px;">
-                  <p style="margin-bottom: 2px;">${safeText(minutes.preparedBy)}</p>
-                  <p style="margin-top: 0; font-weight: bold;">Secretary to the Sangguniang Bayan</p>
-                </div>
-                
-                <div style="text-align: center; width: 45%; margin-left: 350px;">
-                  <p style="font-weight: bold;">Attested:________________</p>
-                  <p style="margin-bottom: 2px;">${safeText(minutes.attestedBy)}</p>
-                  <p style="margin-top: 0; font-weight: bold;">Municipal Vice Mayor & Presiding Officer</p>
-                </div>
-                
-                <div style="text-align: center; width: 45%; margin-left: 350px;">
-                  <p style="font-weight: bold;">Approved:________________</p>
-                  <p style="margin-bottom: 2px;">${safeText(minutes.approvedBy)}</p>
-                  <p style="margin-top: 0; font-weight: bold;">Municipal Mayor </p>
-                </div>
-             
+              <div style="text-align: center; width: 45%; margin-left: 350px;">
+                <p style="margin-bottom: 2px;">${safeText(minutes.preparedBy)}</p>
+                <p style="margin-top: 0; font-weight: bold;">Secretary to the Sangguniang Bayan</p>
+              </div>
+              
+              <div style="text-align: center; width: 45%; margin-left: 350px;">
+                <p style="font-weight: bold;">Attested:________________</p>
+                <p style="margin-bottom: 2px;">${safeText(minutes.attestedBy)}</p>
+                <p style="margin-top: 0; font-weight: bold;">Municipal Vice Mayor & Presiding Officer</p>
+              </div>
+              
+              <div style="text-align: center; width: 45%; margin-left: 350px;">
+                <p style="font-weight: bold;">Approved:________________</p>
+                <p style="margin-bottom: 2px;">${safeText(minutes.approvedBy)}</p>
+                <p style="margin-top: 0; font-weight: bold;">Municipal Mayor</p>
+              </div>
             </div>
           `;
 
@@ -1601,36 +1584,38 @@
             height: element.offsetHeight,
             windowHeight: element.offsetHeight,
           }).then((canvas) => {
-            const pdf = new jsPDF('p', 'pt', 'letter'); // Use 'pt' for more precise dimensions
+            const pdf = new jsPDF('p', 'pt', 'letter');
             const imgData = canvas.toDataURL('image/png');
 
-            const imgWidth = 612; // PDF width in points for a letter-sized page
-            const pageHeight = 792; // PDF height in points for a letter-sized page
-            const imgHeight = (canvas.height * imgWidth) / canvas.width; // Calculate image height maintaining aspect ratio
-            let heightLeft = imgHeight; // Track how much of the image is left to render
+            const imgWidth = 612;
+            const pageHeight = 792;
+            const imgHeight = (canvas.height * imgWidth) / canvas.width;
+            let heightLeft = imgHeight;
 
-            let position = 0; // Y-coordinate to start rendering on the page
+            let position = 0;
 
-            // Add the first page
             pdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight);
             heightLeft -= pageHeight;
 
-            // Add additional pages if content overflows
             while (heightLeft > 0) {
-              position = heightLeft - imgHeight; // Calculate new position
-                pdf.addPage(); // Add a new page
+              position = heightLeft - imgHeight;
+              pdf.addPage();
               pdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight);
               heightLeft -= pageHeight;
             }
 
             pdf.save(`minutes_${minutes.minutesNo || 'default'}.pdf`);
-              document.body.removeChild(element);
+            document.body.removeChild(element);
             console.log('Multi-page PDF generated successfully');
           }).catch((error) => {
-              console.error('Error generating PDF:', error);
+            console.error('Error generating PDF:', error);
             document.body.removeChild(element);
           });
 
+        }).catch(error => {
+          console.error('Error getting attendance data:', error);
+          alert('Error getting attendance data. Please try again.');
+        });
         
       }).catch(error => {
         console.error('Error retrieving notice data:', error);

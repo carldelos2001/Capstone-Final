@@ -1022,6 +1022,7 @@ def send_email_to_officials_minutes(request):
             # Parse request data
             data = json.loads(request.body)
             minutes_id = data.get('minutes_id')
+            attendance = data.get('attendance')
 
             if not minutes_id:
                 return JsonResponse({'success': False, 'message': 'Minutes ID is required'}, status=400)
@@ -1047,24 +1048,6 @@ def send_email_to_officials_minutes(request):
             except Exception as e:
                 print(f"Firebase error getting minutes: {str(e)}")  # Debug logging
                 return JsonResponse({'success': False, 'message': f'Error retrieving minutes: {str(e)}'}, status=500)
-
-            # Get attendance data for the session date
-            try:
-                date_parts = minutes['sessionDate'].split('-')
-                year = date_parts[0]
-                month = date_parts[1] 
-                day = date_parts[2]
-                
-                attendance_ref = db.reference(f'attendance/{month}/{day}/{year}/attendance')
-                attendance_data = attendance_ref.get() or []
-
-                # Separate present and absent officials
-                present_officials = [official for official in attendance_data if official['status'] == 'present']
-                absent_officials = [official for official in attendance_data if official['status'] == 'absent']
-            except Exception as e:
-                print(f"Error getting attendance data: {str(e)}")
-                present_officials = []
-                absent_officials = []
 
             # Send email to each official
             email_errors = []
@@ -1103,8 +1086,7 @@ def send_email_to_officials_minutes(request):
                     # Prepare email content using Django template
                     context = {
                         'minutes': minutes,
-                        'present_officials': present_officials,
-                        'absent_officials': absent_officials,
+                        'attendance': attendance,
                         'adoptionMinutesHtml': adoptionMinutesHtml,
                         'communicationsHtml': communicationsHtml, 
                         'committeeReportHtml': committeeReportHtml,

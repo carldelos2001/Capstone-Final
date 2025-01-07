@@ -22,24 +22,8 @@
    
   </div>
 
-  <div style="text-align: left; margin-left: 20px;"></div>
-    <p style="font-weight: bold;">Present:</p>
-    {% if present_officials %}
-      {% for official in present_officials %}
-        <p>{{ official.name }}{% if official.remarks %} ({{ official.remarks }}){% endif %}</p>
-      {% endfor %}
-    {% else %}
-      <p>No officials present</p>
-    {% endif %}
-    
-    <p style="font-weight: bold;">Absent:</p>
-    {% if absent_officials %}
-      {% for official in absent_officials %}
-        <p>{{ official.name }}{% if official.remarks %} ({{ official.remarks }}){% endif %}</p>
-      {% endfor %}
-    {% else %}
-      <p>No officials absent</p>
-    {% endif %}
+  <div style="text-align: left; margin-left: 20px;">
+    <div style="white-space: pre-line">{{ attendance|safe }}</div>
   </div>
 
   <div class="content">
@@ -108,12 +92,13 @@
     </div>
   
     <div class="signature-block">
-     
+      <p>Attested:________________</p>
       <p>{{ minutes.attestedBy }}</p>
       <p>Municipal Vice Mayor & Presiding Officer</p>
     </div>
-    <div class="signature-block"></div>
-     
+    
+    <div class="signature-block">
+      <p>Approved:________________</p>
       <p>{{ minutes.approvedBy }}</p>
       <p>Municipal Mayor</p>
     </div>
