@@ -94,9 +94,9 @@
   <div class="main-content">
     <h1>Reports</h1>
 
-    <!-- Year Selection -->
+    <!-- Year Selection Dropdown -->
     <div class="year-selector mb-4">
-      <label for="yearSelect">Select Year:</label>
+      
       <select id="yearSelect" class="form-select" style="width: 200px;" onchange="updateCharts()">
         <!-- Years will be populated dynamically -->
       </select>
@@ -897,12 +897,13 @@ margin-left: 15rem;
     gap: 10px;
   }
 
-  .year-selector label {
-    font-weight: bold;
+  .year-selector {
+    margin-bottom: 20px;
   }
 
   .year-selector select {
-    padding: 5px 10px;
+    padding: 8px;
+    font-size: 16px;
     border-radius: 4px;
     border: 1px solid #ddd;
   }

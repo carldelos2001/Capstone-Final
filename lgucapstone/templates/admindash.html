@@ -917,22 +917,15 @@
     window.toggleSidebar = function() {
       const sidebar = document.querySelector('.sidebar');
       const burgerMenu = document.querySelector('.burger-menu');
-      const mainContent = document.querySelector('.main-content');
       
-      sidebar.classList.toggle('active');
+      sidebar.classList.toggle('collapsed');
       
-      if (sidebar.classList.contains('active')) {
-        sidebar.style.transform = 'translateX(0)';
-        burgerMenu.style.display = 'none';
-        if (window.innerWidth <= 768) {
-          mainContent.style.marginLeft = '0';
-        } else {
-          mainContent.style.marginLeft = '250px';
-        }
-      } else {
-        sidebar.style.transform = 'translateX(-250px)';
+      if (sidebar.classList.contains('collapsed')) {
+        sidebar.style.width = '60px';
         burgerMenu.style.display = 'block';
-        mainContent.style.marginLeft = '0';
+      } else {
+        sidebar.style.width = '250px';
+        burgerMenu.style.display = 'none';
       }
     }
 
