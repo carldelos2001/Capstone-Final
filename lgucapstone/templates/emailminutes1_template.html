@@ -6,101 +6,128 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Document</title>
 </head>
-<body>
-  <div class="header">
+<body style="font-family: 'Times New Roman', Times, serif; max-width: 800px; margin: 0 auto; padding: 40px 20px; line-height: 1.6;">
+  <div class="header" style="text-align: center; border-bottom: 2px solid #000; padding-bottom: 20px; margin-bottom: 30px;">
     <div style="margin: 15px 0;">
-      <p class="letterhead-text">Republic of the Philippines</p>
-      <p class="letterhead-text">Province of Cebu</p>
-      <p class="letterhead-text">Municipality of Argao</p>
-      <p class="letterhead-text">OFFICE OF THE SANGGUNIANG BAYAN</p>
-      <p class="letterhead-text">Tel. No.: (032) 367-7623</p>
-      <p class="letterhead-text">Email: sbargao@gmail.com</p>
+      <!-- For email templates, we need to use absolute URLs for images -->
+      
+      <p style="font-size: 14px; margin: 5px 0; text-transform: uppercase;">Republic of the Philippines</p>
+      <p style="font-size: 14px; margin: 5px 0; text-transform: uppercase;">Province of Cebu</p>
+      <p style="font-size: 14px; margin: 5px 0; text-transform: uppercase;">Municipality of Argao</p>
+      <p style="font-size: 16px; font-weight: bold; margin: 10px 0; text-transform: uppercase;">Office of the Sangguniang Bayan</p>
+      <p style="font-size: 12px; margin: 5px 0;">Tel. No.: (032) 367-7623</p>
+      <p style="font-size: 12px; margin: 5px 0;">Email: sbargao@gmail.com</p>
     </div>
-    <p class="letterhead-text"> MINUTES OF THE REGULAR SESSION OF THE SANGGUNIANG BAYAN OF THE MUNICIPALITY OF ARGAO
-      ,PROVINCE OF CEBU, HELD ON {{ minutes.sessionDate }} AT THE ARGAO MUNICIPAL SESSION HALL ARGAO, CEBU</p>
-    <p>Minutes No: {{ minutes.minutesNo }}</p>
-   
+    <p style="font-size: 16px; font-weight: bold; margin: 20px 0; text-align: center; text-transform: uppercase;">
+      Minutes of the Regular Session of the Sangguniang Bayan<br>
+      Municipality of Argao, Province of Cebu<br>
+      Held on {{ minutes.sessionDate }}<br>
+      At the Argao Municipal Session Hall, Argao, Cebu
+    </p>
+    <p style="font-size: 14px; margin: 10px 0;">Minutes No: {{ minutes.minutesNo }}</p>
   </div>
 
-  <div style="text-align: left; margin-left: 20px;">
-    <div style="white-space: pre-line">{{ attendance|safe }}</div>
+  <div style="margin: 20px 0 30px 40px;">
+    <div style="white-space: pre-line; font-size: 14px;">{{ attendance|safe }}</div>
   </div>
 
-  <div class="content">
-    <h2>1. CALL TO ORDER</h2>
-    <p>{{ minutes.callToOrder }}</p>
+  <div class="content" style="margin: 0 20px;">
+    <div class="section" style="margin-bottom: 25px;">
+      <h2 style="font-size: 16px; font-weight: bold; margin-bottom: 10px;">1. CALL TO ORDER</h2>
+      <p style="margin-left: 20px; font-size: 14px;">{{ minutes.callToOrder }}</p>
+    </div>
 
-    <h2>2. INVOCATION</h2>
-    <p>{{ minutes.invocation }}</p>
+    <div class="section" style="margin-bottom: 25px;">
+      <h2 style="font-size: 16px; font-weight: bold; margin-bottom: 10px;">2. INVOCATION</h2>
+      <p style="margin-left: 20px; font-size: 14px;">{{ minutes.invocation }}</p>
+    </div>
 
-    <h2>3. NATIONAL ANTHEM</h2>
-    <p>{{ minutes.nationalAnthem }}</p>
+    <div class="section" style="margin-bottom: 25px;">
+      <h2 style="font-size: 16px; font-weight: bold; margin-bottom: 10px;">3. NATIONAL ANTHEM</h2>
+      <p style="margin-left: 20px; font-size: 14px;">{{ minutes.nationalAnthem }}</p>
+    </div>
 
-    <h2>4. SUGBO HYMN</h2>
-    <p>{{ minutes.sugboHymn }}</p>
+    <div class="section" style="margin-bottom: 25px;">
+      <h2 style="font-size: 16px; font-weight: bold; margin-bottom: 10px;">4. SUGBO HYMN</h2>
+      <p style="margin-left: 20px; font-size: 14px;">{{ minutes.sugboHymn }}</p>
+    </div>
 
-    <h2>5. ROLL CALL</h2>
-    <p>{{ minutes.rollCall }}</p>
+    <div class="section" style="margin-bottom: 25px;">
+      <h2 style="font-size: 16px; font-weight: bold; margin-bottom: 10px;">5. ROLL CALL</h2>
+      <p style="margin-left: 20px; font-size: 14px;">{{ minutes.rollCall }}</p>
+    </div>
 
-    <h2>6. ADOPTION OF MINUTES OF THE PREVIOUS SESSION</h2>
-    {% if minutes.adoptionMinutesSubsections %}
-      {% for content in minutes.adoptionMinutesSubsections %}
-        {% if content %}
-          <div>6.{{ forloop.counter }} {{ content }}</div>
-        {% endif %}
-      {% endfor %}
-    {% endif %}
+    <div class="section" style="margin-bottom: 25px;">
+      <h2 style="font-size: 16px; font-weight: bold; margin-bottom: 10px;">6. ADOPTION OF MINUTES OF THE PREVIOUS SESSION</h2>
+      {% if minutes.adoptionMinutesSubsections %}
+        {% for content in minutes.adoptionMinutesSubsections %}
+          {% if content %}
+            <div style="margin-left: 20px; font-size: 14px;">6.{{ forloop.counter }} {{ content }}</div>
+          {% endif %}
+        {% endfor %}
+      {% endif %}
+    </div>
 
-    <h2>7. COMMUNICATIONS RECEIVED</h2>
-    {% if minutes.communicationsSubsections %}
-      {% for content in minutes.communicationsSubsections %}
-        {% if content %}
-          <div>7.{{ forloop.counter }} {{ content }}</div>
-        {% endif %}
-      {% endfor %}
-    {% endif %}
+    <div class="section" style="margin-bottom: 25px;">
+      <h2 style="font-size: 16px; font-weight: bold; margin-bottom: 10px;">7. COMMUNICATIONS RECEIVED</h2>
+      {% if minutes.communicationsSubsections %}
+        {% for content in minutes.communicationsSubsections %}
+          {% if content %}
+            <div style="margin-left: 20px; font-size: 14px;">7.{{ forloop.counter }} {{ content }}</div>
+          {% endif %}
+        {% endfor %}
+      {% endif %}
+    </div>
 
-    <h2>8. COMMITTEE REPORT</h2>
-    {% if minutes.committeeReportSubsections %}
-      {% for content in minutes.committeeReportSubsections %}
-        {% if content %}
-          <div>8.{{ forloop.counter }} {{ content }}</div>
-        {% endif %}
-      {% endfor %}
-    {% endif %}
+    <div class="section" style="margin-bottom: 25px;">
+      <h2 style="font-size: 16px; font-weight: bold; margin-bottom: 10px;">8. COMMITTEE REPORT</h2>
+      {% if minutes.committeeReportSubsections %}
+        {% for content in minutes.committeeReportSubsections %}
+          {% if content %}
+            <div style="margin-left: 20px; font-size: 14px;">8.{{ forloop.counter }} {{ content }}</div>
+          {% endif %}
+        {% endfor %}
+      {% endif %}
+    </div>
 
-    <h2>9. FIRST READING</h2>
-    {% if minutes.firstReadingSubsections %}
-      {% for content in minutes.firstReadingSubsections %}
-        {% if content %}
-          <div>9.{{ forloop.counter }} {{ content }}</div>
-        {% endif %}
-      {% endfor %}
-    {% endif %}
+    <div class="section" style="margin-bottom: 25px;">
+      <h2 style="font-size: 16px; font-weight: bold; margin-bottom: 10px;">9. FIRST READING</h2>
+      {% if minutes.firstReadingSubsections %}
+        {% for content in minutes.firstReadingSubsections %}
+          {% if content %}
+            <div style="margin-left: 20px; font-size: 14px;">9.{{ forloop.counter }} {{ content }}</div>
+          {% endif %}
+        {% endfor %}
+      {% endif %}
+    </div>
 
-    <h2>10. OTHER MATTERS</h2>
-    <p>{{ minutes.otherMatters }}</p>
+    <div class="section" style="margin-bottom: 25px;">
+      <h2 style="font-size: 16px; font-weight: bold; margin-bottom: 10px;">10. OTHER MATTERS</h2>
+      <p style="margin-left: 20px; font-size: 14px;">{{ minutes.otherMatters }}</p>
+    </div>
 
-    <h2>11. ADJOURNMENT</h2>
-    <p>{{ minutes.adjournment }}</p>
+    <div class="section" style="margin-bottom: 25px;">
+      <h2 style="font-size: 16px; font-weight: bold; margin-bottom: 10px;">11. ADJOURNMENT</h2>
+      <p style="margin-left: 20px; font-size: 14px;">{{ minutes.adjournment }}</p>
+    </div>
   </div>
   
-  <div class="signatures">
-    <div class="signature-block">
-      <p>{{ minutes.preparedBy }}</p>
-      <p>Secretary to the Sangguniang Bayan</p>
+  <div class="signatures" style="margin-top: 50px; display: flex; justify-content: space-between; padding: 0 40px;">
+    <div class="signature-block" style="text-align: center; flex: 1;">
+      <p style="margin-bottom: 40px; font-size: 14px;">{{ minutes.preparedBy }}</p>
+      <p style="font-size: 14px; font-weight: bold;">Secretary to the Sangguniang Bayan</p>
     </div>
   
-    <div class="signature-block">
-      <p>Attested:________________</p>
-      <p>{{ minutes.attestedBy }}</p>
-      <p>Municipal Vice Mayor & Presiding Officer</p>
+    <div class="signature-block" style="text-align: center; flex: 1;">
+      <p style="margin-bottom: 40px; font-size: 14px;">Attested:________________</p>
+      <p style="font-size: 14px;">{{ minutes.attestedBy }}</p>
+      <p style="font-size: 14px; font-weight: bold;">Municipal Vice Mayor & Presiding Officer</p>
     </div>
     
-    <div class="signature-block">
-      <p>Approved:________________</p>
-      <p>{{ minutes.approvedBy }}</p>
-      <p>Municipal Mayor</p>
+    <div class="signature-block" style="text-align: center; flex: 1;">
+      <p style="margin-bottom: 40px; font-size: 14px;">Approved:________________</p>
+      <p style="font-size: 14px;">{{ minutes.approvedBy }}</p>
+      <p style="font-size: 14px; font-weight: bold;">Municipal Mayor</p>
     </div>
   </div>
 </body>

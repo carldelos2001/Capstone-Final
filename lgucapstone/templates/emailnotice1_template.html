@@ -6,96 +6,94 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Document</title>
 </head>
-<body>
-  <div class="header">
+<body style="font-family: 'Times New Roman', Times, serif; max-width: 800px; margin: 0 auto; padding: 40px 20px; line-height: 1.6;">
+  <div class="header" style="text-align: center; border-bottom: 2px solid #000; padding-bottom: 20px; margin-bottom: 30px;">
     <div style="margin: 15px 0;">
       
-      <p class="letterhead-text">Republic of the Philippines</p>
-      <p class="letterhead-text">Province of Cebu</p>
-      <p class="letterhead-text">Municipality of Argao</p>
-      <p class="letterhead-text">OFFICE OF THE SANGGUNIANG BAYAN</p>
-      <p class="letterhead-text">Tel. No.: (032) 367-7623</p>
-      <p class="letterhead-text">Email: sbargao@gmail.com</p>
+      <p style="font-size: 14px; margin: 5px 0; text-transform: uppercase;">Republic of the Philippines</p>
+      <p style="font-size: 14px; margin: 5px 0; text-transform: uppercase;">Province of Cebu</p>
+      <p style="font-size: 14px; margin: 5px 0; text-transform: uppercase;">Municipality of Argao</p>
+      <p style="font-size: 16px; font-weight: bold; margin: 10px 0; text-transform: uppercase;">Office of the Sangguniang Bayan</p>
+      <p style="font-size: 12px; margin: 5px 0;">Tel. No.: (032) 367-7623</p>
+      <p style="font-size: 12px; margin: 5px 0;">Email: sbargao@gmail.com</p>
     </div>
     
-    <h3>Order of Business</h3>
-    <h3>Regular Session</h3>
-    <p>(Minutes No: {{ notice.minutesNo }})</p>
-    <p>Date: {{ notice.sessionDate }}</p>
-   
+    <h3 style="font-size: 16px; font-weight: bold; margin: 10px 0;">Order of Business</h3>
+    <h3 style="font-size: 16px; font-weight: bold; margin: 10px 0;">Regular Session</h3>
+    <p style="font-size: 14px; margin: 10px 0;">Minutes No: {{ notice.minutesNo }}</p>
+    <p style="font-size: 14px; margin: 10px 0;">Date: {{ notice.sessionDate }}</p>
   </div>
 
+  <div class="content" style="margin: 0 20px;">
+    <div class="section" style="margin-bottom: 25px;">
+      <h2 style="font-size: 16px; font-weight: bold; margin-bottom: 10px;">1. CALL TO ORDER</h2>
+      <p style="margin-left: 20px; font-size: 14px;">{{ notice.callToOrder }}</p>
 
-  <div class="content">
-    <h2>1. CALL TO ORDER</h2>
-    <p>{{ notice.callToOrder }}</p>
+      <h2 style="font-size: 16px; font-weight: bold; margin-bottom: 10px;">2. INVOCATION</h2>
+      <p style="margin-left: 20px; font-size: 14px;">{{ notice.invocation }}</p>
 
-    <h2>2. INVOCATION</h2>
-    <p>{{ notice.invocation }}</p>
+      <h2 style="font-size: 16px; font-weight: bold; margin-bottom: 10px;">3. NATIONAL ANTHEM</h2>
+      <p style="margin-left: 20px; font-size: 14px;">{{ notice.nationalAnthem }}</p>
 
-    <h2>3. NATIONAL ANTHEM</h2>
-    <p>{{ notice.nationalAnthem }}</p>
+      <h2 style="font-size: 16px; font-weight: bold; margin-bottom: 10px;">4. SUGBO HYMN</h2>
+      <p style="margin-left: 20px; font-size: 14px;">{{ notice.sugboHymn }}</p>
 
-    <h2>4. SUGBO HYMN</h2>
-    <p>{{ notice.sugboHymn }}</p>
+      <h2 style="font-size: 16px; font-weight: bold; margin-bottom: 10px;">5. ROLL CALL</h2>
+      <p style="margin-left: 20px; font-size: 14px;">{{ notice.rollCall }}</p>
 
-    <h2>5. ROLL CALL</h2>
-    <p>{{ notice.rollCall }}</p>
+      <h2 style="font-size: 16px; font-weight: bold; margin-bottom: 10px;">6. ADOPTION OF MINUTES OF THE PREVIOUS SESSION</h2>
+      {% if notice.adoptionMinutesSubsections %}
+        {% for content in notice.adoptionMinutesSubsections %}
+          {% if content %}
+            <div style="margin-left: 20px; font-size: 14px;">6.{{ forloop.counter }} {{ content }}</div>
+          {% endif %}
+        {% endfor %}
+      {% endif %}
 
-    <h2>6. ADOPTION OF MINUTES OF THE PREVIOUS SESSION</h2>
-    {% if notice.adoptionMinutesSubsections %}
-      {% for content in notice.adoptionMinutesSubsections %}
-        {% if content %}
-          <div>6.{{ forloop.counter }} {{ content }}</div>
-        {% endif %}
-      {% endfor %}
-    {% endif %}
+      <h2 style="font-size: 16px; font-weight: bold; margin-bottom: 10px;">7. COMMUNICATIONS RECEIVED</h2>
+      {% if notice.communicationsSubsections %}
+        {% for content in notice.communicationsSubsections %}
+          {% if content %}
+            <div style="margin-left: 20px; font-size: 14px;">7.{{ forloop.counter }} {{ content }}</div>
+          {% endif %}
+        {% endfor %}
+      {% endif %}
 
-    <h2>7. COMMUNICATIONS RECEIVED</h2>
-    {% if notice.communicationsSubsections %}
-      {% for content in notice.communicationsSubsections %}
-        {% if content %}
-          <div>7.{{ forloop.counter }} {{ content }}</div>
-        {% endif %}
-      {% endfor %}
-    {% endif %}
+      <h2 style="font-size: 16px; font-weight: bold; margin-bottom: 10px;">8. COMMITTEE REPORT</h2>
+      {% if notice.committeeReportSubsections %}
+        {% for content in notice.committeeReportSubsections %}
+          {% if content %}
+            <div style="margin-left: 20px; font-size: 14px;">8.{{ forloop.counter }} {{ content }}</div>
+          {% endif %}
+        {% endfor %}
+      {% endif %}
 
-    <h2>8. COMMITTEE REPORT</h2>
-    {% if notice.committeeReportSubsections %}
-      {% for content in notice.committeeReportSubsections %}
-        {% if content %}
-          <div>8.{{ forloop.counter }} {{ content }}</div>
-        {% endif %}
-      {% endfor %}
-    {% endif %}
+      <h2 style="font-size: 16px; font-weight: bold; margin-bottom: 10px;">9. FIRST READING</h2>
+      {% if notice.firstReadingSubsections %}
+        {% for content in notice.firstReadingSubsections %}
+          {% if content %}
+            <div style="margin-left: 20px; font-size: 14px;">9.{{ forloop.counter }} {{ content }}</div>
+          {% endif %}
+        {% endfor %}
+      {% endif %}
 
-    <h2>9. FIRST READING</h2>
-    {% if notice.firstReadingSubsections %}
-      {% for content in notice.firstReadingSubsections %}
-        {% if content %}
-          <div>9.{{ forloop.counter }} {{ content }}</div>
-        {% endif %}
-      {% endfor %}
-    {% endif %}
+      <h2 style="font-size: 16px; font-weight: bold; margin-bottom: 10px;">10. OTHER MATTERS</h2>
+      <p style="margin-left: 20px; font-size: 14px;">{{ notice.otherMatters }}</p>
 
-    <h2>10. OTHER MATTERS</h2>
-    <p>{{ notice.otherMatters }}</p>
-
-    <h2>11. ADJOURNMENT</h2>
-    <p>{{ notice.adjournment }}</p>
+      <h2 style="font-size: 16px; font-weight: bold; margin-bottom: 10px;">11. ADJOURNMENT</h2>
+      <p style="margin-left: 20px; font-size: 14px;">{{ notice.adjournment }}</p>
+    </div>
   </div>
   
-  <div class="signatures">
-    <div class="signature-block">
-      <p>{{ notice.preparedBy }}</p>
-      <p>Secretary to the Sangguniang Bayan</p>
+  <div class="signatures" style="margin-top: 40px; display: flex; justify-content: space-between;">
+    <div class="signature-block" style="text-align: center; flex: 1;">
+      <p style="font-size: 14px; margin: 5px 0;">{{ notice.preparedBy }}</p>
+      <p style="font-size: 14px; margin: 5px 0;">Secretary to the Sangguniang Bayan</p>
     </div>
-    <div class="signature-block">
-      
-      <p>{{ notice.attestedBy }}</p>
-      <p>Municipal Vice Mayor & Presiding Officer</p>
+    <div class="signature-block" style="text-align: center; flex: 1;">
+      <p style="font-size: 14px; margin: 5px 0;">{{ notice.attestedBy }}</p>
+      <p style="font-size: 14px; margin: 5px 0;">Municipal Vice Mayor & Presiding Officer</p>
     </div>
-    
   </div>
 </body>
 </html>

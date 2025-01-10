@@ -58,14 +58,15 @@
       <img src="{% static 'dashboard.svg' %}" alt="Dashboard Icon">
       <span>Dashboard</span>
     </div>
-    <div class="nav-item" onclick="window.location.href='/staff_report'">
-      <img src="{% static 'report.svg' %}" alt="Reports Icon">
-      <span>Reports</span>
-    </div>
     <div class="nav-item" onclick="window.location.href='/staff_services'">
       <img src="{% static 'information.svg' %}" alt="Information Icon">
       <span>Information Bulletin</span>
     </div>
+    <div class="nav-item" onclick="window.location.href='/staff_report'">
+      <img src="{% static 'report.svg' %}" alt="Reports Icon">
+      <span>Reports</span>
+    </div>
+   
     <div class="nav-item" onclick="window.location.href='/staff_feedback'">
       <img src="{% static 'feedback.svg' %}" alt="Feedback Icon">
       <span>Feedbacks</span>
@@ -92,6 +93,15 @@
   <!-- Main Content -->
   <div class="main-content">
     <h1>Reports</h1>
+
+    <!-- Year Selection -->
+    <div class="year-selector mb-4">
+      <label for="yearSelect">Select Year:</label>
+      <select id="yearSelect" class="form-select" style="width: 200px;" onchange="updateCharts()">
+        <!-- Years will be populated dynamically -->
+      </select>
+    </div>
+
     <!-- Charts Section -->
     <div class="row">
       <div class="col-md-6">
@@ -154,9 +164,21 @@
     if (userName) {
       document.getElementById('welcomeMessage').textContent = `Staff: ${userName}`;
     }
+
+    // Populate year selector
+    const yearSelect = document.getElementById('yearSelect');
+    const currentYear = new Date().getFullYear();
+    for (let year = currentYear; year >= 2020; year--) {
+      const option = document.createElement('option');
+      option.value = year;
+      option.textContent = year;
+      yearSelect.appendChild(option);
+    }
+
     // Fetch and Update Chart Data
-    async function fetchChartData() {
+    window.updateCharts = async function() {
       try {
+        const selectedYear = document.getElementById('yearSelect').value;
         const ordinancesRef = ref(db, 'ordinances');
         const resolutionsRef = ref(db, 'resolutions');
 
@@ -171,24 +193,35 @@
         const ordinanceCounts = new Array(12).fill(0);
         const resolutionCounts = new Array(12).fill(0);
 
+        let yearOrdinanceCount = 0;
+        let yearResolutionCount = 0;
+
         Object.values(ordinancesData).forEach(ordinance => {
-          const monthIndex = new Date(ordinance.date_approved).getMonth();
-          ordinanceCounts[monthIndex]++;
+          const date = new Date(ordinance.date_approved);
+          if (date.getFullYear() == selectedYear) {
+            const monthIndex = date.getMonth();
+            ordinanceCounts[monthIndex]++;
+            yearOrdinanceCount++;
+          }
         });
 
         Object.values(resolutionsData).forEach(resolution => {
-          const monthIndex = new Date(resolution.date_approved).getMonth();
-          resolutionCounts[monthIndex]++;
+          const date = new Date(resolution.date_approved);
+          if (date.getFullYear() == selectedYear) {
+            const monthIndex = date.getMonth();
+            resolutionCounts[monthIndex]++;
+            yearResolutionCount++;
+          }
         });
 
         barChart.data.datasets[0].data = ordinanceCounts;
         barChart.data.datasets[1].data = resolutionCounts;
         barChart.update();
 
-        pieChartOrdinance.data.datasets[0].data = [Object.keys(ordinancesData).length];
+        pieChartOrdinance.data.datasets[0].data = [yearOrdinanceCount];
         pieChartOrdinance.update();
 
-        pieChartResolution.data.datasets[0].data = [Object.keys(resolutionsData).length];
+        pieChartResolution.data.datasets[0].data = [yearResolutionCount];
         pieChartResolution.update();
 
       } catch (error) {
@@ -196,7 +229,9 @@
       }
     }
 
-    document.addEventListener('DOMContentLoaded', fetchChartData);
+    document.addEventListener('DOMContentLoaded', () => {
+      updateCharts();
+    });
   </script>
   <script>
     // Sidebar toggle function
@@ -316,6 +351,7 @@
     });
 
     function generateReport() {
+      const selectedYear = document.getElementById('yearSelect').value;
       // Create temporary element
       const element = document.createElement('div');
       element.style.position = 'relative';
@@ -384,7 +420,7 @@
               <p class="letterhead-text">Tel. No.: (032) 367-7623</p>
               <p class="letterhead-text">Email: sbargao@gmail.com</p>
             </div>
-            <h3>Ordinance and Resolution Statistics Report</h3>
+            <h3>Ordinance and Resolution Statistics Report - ${selectedYear}</h3>
             <p>Generated on: ${new Date().toLocaleDateString()}</p>
           </div>
 
@@ -443,7 +479,7 @@
           heightLeft -= pageHeight;
         }
 
-        pdf.save('ordinance_resolution_report.pdf');
+        pdf.save(`ordinance_resolution_report_${selectedYear}.pdf`);
         document.body.removeChild(element);
         console.log('PDF generated successfully');
       }).catch((error) => {
@@ -453,6 +489,7 @@
     }
 
     function printReport() {
+      const selectedYear = document.getElementById('yearSelect').value;
       // Create a new window for printing
       const printWindow = window.open('', '_blank');
       
@@ -460,7 +497,7 @@
       const reportContent = `
     <html>
       <head>
-        <title>Ordinance and Resolution Report</title>
+        <title>Ordinance and Resolution Report - ${selectedYear}</title>
         <style>
           body { 
             font-family: "Times New Roman", serif;
@@ -508,7 +545,7 @@
         
         <p>Generated on: ${new Date().toLocaleDateString()}</p>
         
-        <h2>Ordinance and Resolution Statistics</h2>
+        <h2>Ordinance and Resolution Statistics - ${selectedYear}</h2>
         <table>
           <thead>
             <tr>
@@ -851,6 +888,23 @@ margin-left: 15rem;
   .btn-primary:hover{
     background-color: #337a52;
     border: #337a52;
+  }
+
+  /* Year selector styles */
+  .year-selector {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .year-selector label {
+    font-weight: bold;
+  }
+
+  .year-selector select {
+    padding: 5px 10px;
+    border-radius: 4px;
+    border: 1px solid #ddd;
   }
 </style>
 </body>

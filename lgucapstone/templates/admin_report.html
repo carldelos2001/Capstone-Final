@@ -28,8 +28,6 @@
   <link rel="stylesheet" href="{% static 'style.css' %}">
   <link rel="icon" type="image/jpeg" href="{% static 'fav_argao.png'%}">
   <title>Reports</title>
-</head>
-<body>
   <style>
     .btn-print-report{
       background-color: #888;
@@ -51,8 +49,6 @@
       background-color: #555;
       border: #555;
     }
-  </style>
-  <style>
     /* Add this style for the scrollbar */
     ::-webkit-scrollbar {
       width: 10px;
@@ -233,7 +229,8 @@
       border: #337a52;
     }
   </style>
-
+</head>
+<body>
   <!-- Burger Menu Button -->
   <button class="burger-menu" onclick="toggleSidebar()">
     <span class="bar"></span>
@@ -288,29 +285,35 @@
 
     <div class="sidebar-footer">
       <span id="welcomeMessage" class="nav-item">
-        
         Admin: <span id="userFirstName"></span>
       </span>
       
       <div class="nav-item" onclick="logout()">
         <img src="{% static 'logout.svg' %}" alt="Logout">
-        <span >Log Out</span>
+        <span>Log Out</span>
       </div>
     </div>
   </div>
 
-  
-
   <!-- Main Content -->
   <div class="main-content">
     <h1>Reports</h1>
+
+    <!-- Year Selection Dropdown -->
+    <div class="year-selector mb-4">
+      <label for="yearSelect">Select Year:</label>
+      <select id="yearSelect" class="form-select" style="width: 200px;" onchange="updateCharts()">
+        <!-- Years will be populated dynamically -->
+      </select>
+    </div>
+
     <!-- Charts Section -->
     <div class="row">
       <div class="col-md-6">
         <div class="card">
           <div class="card-body">
             <h5>Ordinances</h5>
-            <canvas id="pieChartOrdinance"></canvas> <!-- Smaller pie chart -->
+            <canvas id="pieChartOrdinance"></canvas>
           </div>
         </div>
       </div>
@@ -318,7 +321,7 @@
         <div class="card">
           <div class="card-body">
             <h5>Resolutions</h5>
-            <canvas id="pieChartResolution"></canvas> <!-- Smaller pie chart -->
+            <canvas id="pieChartResolution"></canvas>
           </div>
         </div>
       </div>
@@ -329,7 +332,7 @@
         <div class="card">
           <div class="card-body">
             <h5>Ordinance and Resolution</h5>
-            <canvas id="barChart"></canvas> <!-- Smaller bar chart -->
+            <canvas id="barChart"></canvas>
           </div>
         </div>
       </div>
@@ -348,7 +351,7 @@
 
     const firebaseConfig = {
       apiKey: "AIzaSyAMwvUHsWFkTmJyfzuh4DxzOrMYEjcXHvI",
-      authDomain: "lgucapstoneproject-b94fe.firebaseapp.com",
+      authDomain: "lgucapstoneproject-b94fe.firebaseapp.com", 
       databaseURL: "https://lgucapstoneproject-b94fe-default-rtdb.firebaseio.com",
       projectId: "lgucapstoneproject-b94fe",
       storageBucket: "lgucapstoneproject-b94fe.appspot.com",
@@ -361,13 +364,24 @@
     const app = initializeApp(firebaseConfig);
     const db = getDatabase(app);
 
+    // Populate year selector
+    const yearSelect = document.getElementById('yearSelect');
+    const currentYear = new Date().getFullYear();
+    for (let year = currentYear; year >= 2020; year--) {
+      const option = document.createElement('option');
+      option.value = year;
+      option.textContent = year;
+      yearSelect.appendChild(option);
+    }
+
     // Retrieve user name from localStorage
     const userName = localStorage.getItem('userName');
     if (userName) {
       document.getElementById('welcomeMessage').textContent = `Admin: ${userName}`;
     }
+
     // Fetch and Update Chart Data
-    async function fetchChartData() {
+    async function fetchChartData(selectedYear) {
       try {
         const ordinancesRef = ref(db, 'ordinances');
         const resolutionsRef = ref(db, 'resolutions');
@@ -384,23 +398,30 @@
         const resolutionCounts = new Array(12).fill(0);
 
         Object.values(ordinancesData).forEach(ordinance => {
-          const monthIndex = new Date(ordinance.date_approved).getMonth();
-          ordinanceCounts[monthIndex]++;
+          const date = new Date(ordinance.date_approved);
+          if (date.getFullYear() === parseInt(selectedYear)) {
+            ordinanceCounts[date.getMonth()]++;
+          }
         });
 
         Object.values(resolutionsData).forEach(resolution => {
-          const monthIndex = new Date(resolution.date_approved).getMonth();
-          resolutionCounts[monthIndex]++;
+          const date = new Date(resolution.date_approved);
+          if (date.getFullYear() === parseInt(selectedYear)) {
+            resolutionCounts[date.getMonth()]++;
+          }
         });
 
         barChart.data.datasets[0].data = ordinanceCounts;
         barChart.data.datasets[1].data = resolutionCounts;
         barChart.update();
 
-        pieChartOrdinance.data.datasets[0].data = [Object.keys(ordinancesData).length];
+        const totalOrdinances = ordinanceCounts.reduce((a, b) => a + b, 0);
+        const totalResolutions = resolutionCounts.reduce((a, b) => a + b, 0);
+
+        pieChartOrdinance.data.datasets[0].data = [totalOrdinances];
         pieChartOrdinance.update();
 
-        pieChartResolution.data.datasets[0].data = [Object.keys(resolutionsData).length];
+        pieChartResolution.data.datasets[0].data = [totalResolutions];
         pieChartResolution.update();
 
       } catch (error) {
@@ -408,7 +429,15 @@
       }
     }
 
-    document.addEventListener('DOMContentLoaded', fetchChartData);
+    // Make fetchChartData available globally
+    window.fetchChartData = fetchChartData;
+
+    // Initial load
+    document.addEventListener('DOMContentLoaded', () => {
+      const currentYear = new Date().getFullYear();
+      document.getElementById('yearSelect').value = currentYear;
+      fetchChartData(currentYear);
+    });
   </script>
 
   <!-- Chart.js Script -->
@@ -496,7 +525,13 @@
       }
     });
 
+    function updateCharts() {
+      const selectedYear = document.getElementById('yearSelect').value;
+      fetchChartData(parseInt(selectedYear));
+    }
+
     function generateReport() {
+      const selectedYear = document.getElementById('yearSelect').value;
       // Create temporary element
       const element = document.createElement('div');
       element.style.position = 'relative';
@@ -507,7 +542,7 @@
       element.style.boxShadow = '0 0 10px rgba(0,0,0,0.1)';
       element.style.width = '8.5in';
       element.style.padding = '0.5in';
-      element.style.color = '#000000'; // Add black font color
+      element.style.color = '#000000';
       
       element.innerHTML = `
       <style>
@@ -570,7 +605,7 @@
               <p class="letterhead-text">Tel. No.: (032) 367-7623</p>
               <p class="letterhead-text">Email: sbargao@gmail.com</p>
             </div>
-            <h3>Ordinance and Resolution Statistics Report</h3>
+            <h3>Ordinance and Resolution Statistics Report - ${selectedYear}</h3>
             <p>Generated on: ${new Date().toLocaleDateString()}</p>
           </div>
 
@@ -597,10 +632,8 @@
         </div>
       `;
 
-      // Add element to document body
       document.body.appendChild(element);
 
-      // Use html2canvas to capture the element
       html2canvas(element, {
         scale: 2,
         useCORS: true,
@@ -611,17 +644,15 @@
         const pdf = new jsPDF('p', 'pt', 'letter');
         const imgData = canvas.toDataURL('image/png');
 
-        const imgWidth = 612; // PDF width in points for letter size
-        const pageHeight = 792; // PDF height in points for letter size
+        const imgWidth = 612;
+        const pageHeight = 792;
         const imgHeight = (canvas.height * imgWidth) / canvas.width;
         let heightLeft = imgHeight;
         let position = 0;
 
-        // Add first page
         pdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight);
         heightLeft -= pageHeight;
 
-        // Add additional pages if content overflows
         while (heightLeft > 0) {
           position = heightLeft - imgHeight;
           pdf.addPage();
@@ -629,7 +660,7 @@
           heightLeft -= pageHeight;
         }
 
-        pdf.save('ordinance_resolution_report.pdf');
+        pdf.save(`ordinance_resolution_report_${selectedYear}.pdf`);
         document.body.removeChild(element);
         console.log('PDF generated successfully');
       }).catch((error) => {
@@ -638,99 +669,93 @@
       });
     }
 
-function printReport() {
-  // Create a new window for printing
-  const printWindow = window.open('', '_blank');
-  
-  // Generate the report content
-  const reportContent = `
-    <html>
-      <head>
-        <title>Ordinance and Resolution Report</title>
-        <style>
-          body { 
-          font-family: Arial, sans-serif; }
-          table { 
-          width: 100%; border-collapse: collapse; }
-          th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
-          th { background-color: #f2f2f2; }
-          body { font-family: Times New Roman, sans-serif; }
-          table { width: 100%; border-collapse: collapse; }
-          th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
-          th { background-color: #f2f2f2; }
+    function printReport() {
+      const selectedYear = document.getElementById('yearSelect').value;
+      const printWindow = window.open('', '_blank');
+      
+      const reportContent = `
+        <html>
+          <head>
+            <title>Ordinance and Resolution Report - ${selectedYear}</title>
+            <style>
+              body { 
+              font-family: Arial, sans-serif; }
+              table { 
+              width: 100%; border-collapse: collapse; }
+              th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
+              th { background-color: #f2f2f2; }
+              body { font-family: Times New Roman, sans-serif; }
+              table { width: 100%; border-collapse: collapse; }
+              th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
+              th { background-color: #f2f2f2; }
 
-          .logo-left {
-          position: absolute;
-          left: 0;
-          top: 0;
-          width: 100px;
-          }
-          .logo-right {
-          position: absolute;
-          right: 0;
-          top: 0;
-          width: 100px;
-          }
-        </style>
-      </head>
-      <body>
-        <div class="report-header" style="text-align: center; margin-bottom: 20px;">
-          <img src="{% static 'argao_logo.jpg' %}" alt="Left Logo" class="logo-left">
-                  <img src="{% static 'basers101.png' %}" alt="Right Logo" class="logo-right">
-                  <p class="letterhead-text">Republic of the Philippines</p>
-                  <p class="letterhead-text">Province of Cebu</p>
-                  <p class="letterhead-text">Municipality of Argao</p>
-                  <p class="letterhead-text">OFFICE OF THE SANGGUNIANG BAYAN</p>
-                  <p class="letterhead-text">Tel. No.: (032) 367-7623</p>
-                  <p class="letterhead-text">Email: sbargao@gmail.com</p>
-        </div>
-        
-        <p>Generated on: ${new Date().toLocaleDateString()}</p>
-        
-        <h2>Ordinance and Resolution Statistics</h2>
-        <table>
-          <thead>
-            <tr>
-              <th>Month</th>
-              <th>Ordinances</th>
-              <th>Resolutions</th>
-            </tr>
-          </thead>
-          <tbody>
-            ${['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'].map((month, index) => `
-              <tr>
-                <td>${month}</td>
-                <td>${barChart.data.datasets[0].data[index]}</td>
-                <td>${barChart.data.datasets[1].data[index]}</td>
-              </tr>
-            `).join('')}
-          </tbody>
-        </table>
-      </body>
-    </html>
-  `;
-  
-  // Write the content to the new window
-  printWindow.document.write(reportContent);
-  printWindow.document.close();
-  
-  // Print the window
-  printWindow.print();
-}
+              .logo-left {
+              position: absolute;
+              left: 0;
+              top: 0;
+              width: 100px;
+              }
+              .logo-right {
+              position: absolute;
+              right: 0;
+              top: 0;
+              width: 100px;
+              }
+            </style>
+          </head>
+          <body>
+            <div class="report-header" style="text-align: center; margin-bottom: 20px;">
+              <img src="{% static 'argao_logo.jpg' %}" alt="Left Logo" class="logo-left">
+              <img src="{% static 'basers101.png' %}" alt="Right Logo" class="logo-right">
+              <p class="letterhead-text">Republic of the Philippines</p>
+              <p class="letterhead-text">Province of Cebu</p>
+              <p class="letterhead-text">Municipality of Argao</p>
+              <p class="letterhead-text">OFFICE OF THE SANGGUNIANG BAYAN</p>
+              <p class="letterhead-text">Tel. No.: (032) 367-7623</p>
+              <p class="letterhead-text">Email: sbargao@gmail.com</p>
+            </div>
+            
+            <h2>Ordinance and Resolution Statistics - ${selectedYear}</h2>
+            <p>Generated on: ${new Date().toLocaleDateString()}</p>
+            
+            <table>
+              <thead>
+                <tr>
+                  <th>Month</th>
+                  <th>Ordinances</th>
+                  <th>Resolutions</th>
+                </tr>
+              </thead>
+              <tbody>
+                ${['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'].map((month, index) => `
+                  <tr>
+                    <td>${month}</td>
+                    <td>${barChart.data.datasets[0].data[index]}</td>
+                    <td>${barChart.data.datasets[1].data[index]}</td>
+                  </tr>
+                `).join('')}
+              </tbody>
+            </table>
+          </body>
+        </html>
+      `;
+      
+      printWindow.document.write(reportContent);
+      printWindow.document.close();
+      printWindow.print();
+    }
 
-  // Sidebar toggle function
-  window.toggleSidebar = function() {
+    // Sidebar toggle function
+    window.toggleSidebar = function() {
       const sidebar = document.querySelector('.sidebar');
       const burgerMenu = document.querySelector('.burger-menu');
       
       sidebar.classList.toggle('collapsed');
       
       if (sidebar.classList.contains('collapsed')) {
-        // When collapsed, only show burger icon
         sidebar.style.width = '60px';
         burgerMenu.style.display = 'block';
       } else {
-        // When expanded, show full sidebar
         sidebar.style.width = '250px';
         burgerMenu.style.display = 'none';
       }
@@ -748,14 +773,12 @@ function printReport() {
         sidebar.style.transform = '';
       }
     });
-  // Logout function
-window.logout = function() {
-      // Clear user data from localStorage
-      localStorage.removeItem('userName');
-      // Redirect to login page
-      window.location.href = 'main_login';  // Adjust this URL as needed
-    }
 
+    // Logout function
+    window.logout = function() {
+      localStorage.removeItem('userName');
+      window.location.href = 'main_login';
+    }
   </script>
 
 <style>
@@ -776,12 +799,10 @@ window.logout = function() {
   }
   .sidebar-footer {
       margin-top: auto;
-      
       border-top: 1px solid #ddd;
     }
 
     .sidebar-footer #welcomeMessage {
-      
       margin-bottom: 10px;
     }
   .sidebar {
@@ -830,7 +851,7 @@ window.logout = function() {
     right: 20px;
     display: flex;
     align-items: center;
-    z-index: 10; /* Ensure it's on top */
+    z-index: 10;
   }
 
   .user-profile img {
@@ -849,7 +870,7 @@ window.logout = function() {
 
   #pieChartOrdinance,
   #pieChartResolution {
-    max-width: 400px; /* Adjust size here */
+    max-width: 400px;
     height: auto;
   }
 
@@ -860,25 +881,37 @@ window.logout = function() {
   }
   
   #pieChartOrdinance,
-#pieChartResolution {
-max-width: 300px; /* Smaller size */
-max-height: 300px;
-margin-left: 7rem;
-}
+  #pieChartResolution {
+    max-width: 300px;
+    max-height: 300px;
+    margin-left: 7rem;
+  }
 
-#barChart {
-max-width: 700px; /* Smaller size */
-max-height: 400px;
-max-width: 100%;
-}
+  #barChart {
+    max-width: 700px;
+    max-height: 400px;
+    max-width: 100%;
+  }
 
-.card {
-text-align: center; /* Center the charts within their cards */
-}
-.col-md-12{
-max-width: 70%;
-margin-left: 15rem;
-}
+  .card {
+    text-align: center;
+  }
+  
+  .col-md-12 {
+    max-width: 70%;
+    margin-left: 15rem;
+  }
+
+  .year-selector {
+    margin-bottom: 20px;
+  }
+
+  .year-selector select {
+    padding: 8px;
+    font-size: 16px;
+    border-radius: 4px;
+    border: 1px solid #ddd;
+  }
 </style>
 </body>
 </html>

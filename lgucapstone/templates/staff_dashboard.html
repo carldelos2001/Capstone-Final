@@ -132,12 +132,8 @@
     .btn.btn-success{
       margin-top: 20px;
     }
-  </style>
-</head>
-<body>
-  <style>
-    /* Add this style for the scrollbar */
-    ::-webkit-scrollbar {
+     /* Add this style for the scrollbar */
+     ::-webkit-scrollbar {
       width: 10px;
     }
 
@@ -332,7 +328,8 @@
       border: #337a52;
     }
   </style>
-  
+</head>
+<body>
    <!-- Burger Menu Button -->
    <button class="burger-menu" onclick="toggleSidebar()">
     <span class="bar"></span>
@@ -352,14 +349,16 @@
       <img src="{% static 'dashboard.svg' %}" alt="Dashboard Icon">
       <span>Dashboard</span>
     </div>
-    <div class="nav-item" onclick="window.location.href='/staff_report'">
-      <img src="{% static 'report.svg' %}" alt="Reports Icon">
-      <span>Reports</span>
-    </div>
+
     <div class="nav-item" onclick="window.location.href='/staff_services'">
       <img src="{% static 'information.svg' %}" alt="Information Icon">
       <span>Information Bulletin</span>
     </div>
+    <div class="nav-item" onclick="window.location.href='/staff_report'">
+      <img src="{% static 'report.svg' %}" alt="Reports Icon">
+      <span>Reports</span>
+    </div>
+    
     <div class="nav-item" onclick="window.location.href='/staff_feedback'">
       <img src="{% static 'feedback.svg' %}" alt="Feedback Icon">
       <span>Feedbacks</span>
@@ -389,7 +388,12 @@
       <div class="col-md-6">
         <div class="card">
           <div class="card-body">
-            <h5>Ordinance and Resolution Dashboard</h5>
+            <div class="d-flex justify-content-between align-items-center mb-3">
+              <h5>Ordinance and Resolution Dashboard</h5>
+              <select id="yearSelect" class="form-select" style="width: auto;">
+                <!-- Years will be populated dynamically -->
+              </select>
+            </div>
             <canvas id="barChart"></canvas>
           </div>
         </div>
@@ -399,6 +403,10 @@
           <div class="card-body">
             <canvas id="pieChart" width="250" height="250"></canvas>
             <h5>Current Ordinances and Resolutions</h5>
+            <div id="pieChartLegend" class="text-center mt-3">
+              <p>Ordinances: <span id="ordinanceCount">0</span></p>
+              <p>Resolutions: <span id="resolutionCount">0</span></p>
+            </div>
           </div>
         </div>
       </div>
@@ -514,14 +522,28 @@
       document.getElementById('userFirstName').textContent = userName;
     }
 
-    // Function to parse the month from a date string (YYYY-MM-DD)
-    function getMonthFromDate(dateStr) {
-      const date = new Date(dateStr);
-      return date.getMonth(); // Returns 0 for January, 1 for February, etc.
+    // Populate year select dropdown
+    const yearSelect = document.getElementById('yearSelect');
+    const currentYear = new Date().getFullYear();
+    for (let year = currentYear; year >= currentYear - 10; year--) {
+      const option = document.createElement('option');
+      option.value = year;
+      option.textContent = year;
+      yearSelect.appendChild(option);
     }
 
-    // Modify fetchBarChartData function
+    // Function to parse the month and year from a date string (YYYY-MM-DD)
+    function getMonthAndYearFromDate(dateStr) {
+      const date = new Date(dateStr);
+      return {
+        month: date.getMonth(),
+        year: date.getFullYear()
+      };
+    }
+
+    // Modify fetchBarChartData function to include year filtering
     function fetchBarChartData() {
+      const selectedYear = parseInt(yearSelect.value);
       const ordinancesRef = ref(db, 'ordinances');
       const resolutionsRef = ref(db, 'resolutions');
 
@@ -534,13 +556,17 @@
           const resolutionCounts = new Array(12).fill(0);
 
           Object.values(ordinancesData).forEach(ordinance => {
-            const monthIndex = getMonthFromDate(ordinance.date_approved);
-            ordinanceCounts[monthIndex]++;
+            const { month, year } = getMonthAndYearFromDate(ordinance.date_approved);
+            if (year === selectedYear) {
+              ordinanceCounts[month]++;
+            }
           });
 
           Object.values(resolutionsData).forEach(resolution => {
-            const monthIndex = getMonthFromDate(resolution.date_approved);
-            resolutionCounts[monthIndex]++;
+            const { month, year } = getMonthAndYearFromDate(resolution.date_approved);
+            if (year === selectedYear) {
+              resolutionCounts[month]++;
+            }
           });
 
           barChart.data.datasets[0].data = ordinanceCounts;
@@ -552,8 +578,12 @@
         });
     }
 
+    // Add event listener for year select
+    yearSelect.addEventListener('change', fetchBarChartData);
+
     // Modify fetchPieChartData function
     function fetchPieChartData() {
+      const selectedYear = parseInt(yearSelect.value);
       const ordinancesRef = ref(db, 'ordinances');
       const resolutionsRef = ref(db, 'resolutions');
 
@@ -562,16 +592,39 @@
           const ordinancesData = ordinancesSnapshot.val() || {};
           const resolutionsData = resolutionsSnapshot.val() || {};
 
-          const ordinanceCount = Object.keys(ordinancesData).length;
-          const resolutionCount = Object.keys(resolutionsData).length;
+          let ordinanceCount = 0;
+          let resolutionCount = 0;
+
+          Object.values(ordinancesData).forEach(ordinance => {
+            const { year } = getMonthAndYearFromDate(ordinance.date_approved);
+            if (year === selectedYear) {
+              ordinanceCount++;
+            }
+          });
+
+          Object.values(resolutionsData).forEach(resolution => {
+            const { year } = getMonthAndYearFromDate(resolution.date_approved);
+            if (year === selectedYear) {
+              resolutionCount++;
+            }
+          });
 
           pieChart.data.datasets[0].data = [ordinanceCount, resolutionCount];
           pieChart.update();
+
+          // Update the counts display
+          document.getElementById('ordinanceCount').textContent = ordinanceCount;
+          document.getElementById('resolutionCount').textContent = resolutionCount;
         })
         .catch(error => {
           console.error('Error fetching pie chart data: ', error);
         });
     }
+
+    // Add event listener for year select to update pie chart
+    yearSelect.addEventListener('change', () => {
+      fetchPieChartData();
+    });
 
     // Call these functions when the DOM is loaded
     document.addEventListener('DOMContentLoaded', () => {
@@ -612,7 +665,7 @@
             <td>
               <button class="btn btn-primary btn-sm" onclick="previewDocument('${item.document_url}')">View</button>
               <button class="btn btn-warning btn-sm" onclick="updateDocument('${key}', '${item.file_type}')">Update</button>
-              <button class="btn btn-info btn-sm" onclick="downloadDocument('${item.document_url}')">Open</button>
+              <button class="btn btn-info btn-sm" onclick="downloadDocument('${item.document_url}')">Download</button>
             </td>
           </tr>
         `;

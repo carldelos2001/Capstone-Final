@@ -15,6 +15,7 @@ from firebase_admin import auth, db
 from firebase_admin import db
 from django.core.mail import EmailMultiAlternatives
 from django.template.loader import render_to_string
+from django.contrib.auth. decorators import login_required
 
 import bcrypt
 import random
@@ -42,6 +43,7 @@ config = {
 firebase=pyrebase.initialize_app(config) 
 authe = firebase.auth()
 database = firebase.database()
+
 
 def home(request):
     first_name = request.session.get('first_name', 'Guest')
@@ -138,6 +140,7 @@ def login(request):
 
     return render(request, 'login.html')
 
+
 @csrf_exempt
 def get_user_info(request):
     if request.method == 'GET':
@@ -184,12 +187,16 @@ def update_user_info(request):
 
 def user_ordinance(request):
     return render(request,'user_ordinance.html')
+
 def user_resolution(request):
     return render(request, 'user_resolution.html')
+
 def user_services(request):
     return render(request, 'user_services.html')
+
 def user_announcement(request):
     return render(request, 'user_announcement.html')
+
 def admin_report(request):
     return render(request, 'admin_report.html')
 
@@ -198,28 +205,40 @@ def admin_minutes(request):
 
 def admin_attendance(request):
     return render(request, 'admin_attendance.html')
+
 def user_forgotpass(request):
     return render(request, 'user_forgotpass.html')
+
 def admin_promanage(request):
     return render(request, 'admin_projectmanagement.html')
+
 def admin_services(request):
     return render(request, 'admin_services.html')
+
 def admin_staff_account(request):
     return render(request, 'admin_staff_account_create.html')
+
 def admin_notice(request):
     return render(request, 'admin_notice1.html')
+
 def staff_announcement(request):
     return render(request, 'staff_announcement.html')
+
 def main_login(request):
     return render(request, 'mainlogin.html')
+
 def staff_dash(request):
     return render(request, 'staff_dashboard.html')
+
 def staff_report(request):
     return render(request, 'staff_report.html')
+
 def staff_services(request):
     return render(request, 'staff_services.html')
+
 def staff_feedback(request):
     return render(request, 'staff_feedback.html')
+
 def staff_session(request):
     return render(request, 'staff_session.html')
 
@@ -227,10 +246,13 @@ def staff_session(request):
 
 def admin_serve(request):
     return render(request, 'admin_serve.html')
+
 def user_feedback(request):
     return render(request, 'user_feedback.html')
+
 def admin_feedback(request):
     return render(request, 'admin_feedback.html')
+
 def admin_board(request):
     return render(request, 'admin_board.html')
 
@@ -295,7 +317,9 @@ def account_settings(request):
             messages.error(request, "User not logged in.")
             return redirect('login')
 
-# >>>> ADMIN DASHBOARD       
+# >>>> ADMIN DASHBOARD    
+# 
+
 def dashboard(request):
     # Fetch ordinances from Firebase Realtime Database
     ordinances_ref = firebase_db.child('ordinances_resolutions').get()
@@ -326,6 +350,8 @@ def dashboard(request):
 
 
 # >>>>>>> ADDING ORDINANCE AND RESOLUTIONNN
+
+
 def add_ordinance_resolution(request):
     if request.method == 'POST':
         form = OrdinanceResolutionForm(request.POST, request.FILES)
@@ -371,6 +397,8 @@ def add_ordinance_resolution(request):
     return render(request, 'admin_ordi_reso.html', {'form': form})
 
 # >>>>>>> ADDING ORDINANCE AND RESOLUTIONNN
+
+
 def staff_ordi_reso(request):
     if request.method == 'POST':
         form = StaffOrdinanceResolutionForm(request.POST, request.FILES)

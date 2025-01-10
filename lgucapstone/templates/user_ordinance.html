@@ -13,6 +13,22 @@
   <link rel="icon" type="image/jpeg" href="{% static 'argao_logo.jpg'%}">
 
   <style>
+    /* Add this style for the scrollbar */
+    ::-webkit-scrollbar {
+      width: 10px;
+    }
+
+    ::-webkit-scrollbar-track {
+      background: #f1f1f1;
+    }
+
+    ::-webkit-scrollbar-thumb {
+      background: #888;
+    }
+
+    ::-webkit-scrollbar-thumb:hover {
+      background: #555;
+    }
   @font-face {
   font-family: "Poppins";
   src: url("{% static 'fonts/Poppins-Regular.ttf' %}") format("truetype");
@@ -229,9 +245,39 @@ main {
     flex: 1; /* Grow to take up the remaining space */
     padding: 1rem;
 }
-    
+.notification-badge {
+            background-color: rgb(241, 38, 38);
+            color: white;
+            font-size: 12px;
+            padding: 2px 6px;
+            border-radius: 50%;
+            margin-left: 5px;
+            position: relative;
+            top: -8px;
+        }
+        .notification-badge2 {
+            background-color: rgb(241, 38, 38);
+            color: white;
+            font-size: 12px;
+            padding: 2px 6px;
+            border-radius: 50%;
+            margin-left: 5px;
+            position: relative;
+            top: -8px;
+        }
+        .notification-badge3 {
+            background-color: rgb(241, 38, 38);
+            color: white;
+            font-size: 12px;
+            padding: 2px 6px;
+            border-radius: 50%;
+            margin-left: 5px;
+            position: relative;
+            top: -8px;
+        }
     </style>
   </head>
+  
   <body>
     <div class="wrapper">
     <div class="container_nav">
@@ -244,10 +290,19 @@ main {
 
     <div class="nav_bar">
     <a href="/home" class="header-menu-item">Home</a>
-    <a href="/user_ordinance" class="header-menu-item selected">Ordinances</a>
-    <a href="/user_resolution" class="header-menu-item">Resolutions</a>
+    <a href="/user_ordinance" class="header-menu-item selected">
+      Ordinances
+      <span class="notification-badge" id="ordinancesBadge" style="display:none">0</span>
+    </a>
+    <a href="/user_resolution" class="header-menu-item">
+      Resolutions
+      <span class="notification-badge2" id="resolutionsBadge" style="display:none">0</span>
+    </a>
     <a href="/user_services" class="header-menu-item">Services</a>
-    <a href="/user_announcement" class="header-menu-item">Announcement</a>
+    <a href="/user_announcement" class="header-menu-item">
+      Announcement
+      <span class="notification-badge3" id="announcementsBadge" style="display:none">0</span>
+    </a>
     <a href="/user_feedback" class="header-menu-item">Feedback</a>
     </div>
 
@@ -311,7 +366,8 @@ main {
       projectId: "lgucapstoneproject-b94fe",
       storageBucket: "lgucapstoneproject-b94fe.appspot.com",
       messagingSenderId: "984934888272",
-      appId: "1:984934888272:web:e835b8e02ae708629a7255"
+      appId: "1:984934888272:web:e835b8e02ae708629a7255",
+      measurementId: "G-F84YQS756S"
     };
 
     const app = initializeApp(firebaseConfig);
@@ -384,6 +440,7 @@ main {
     // Fetch ordinances on page load
     document.addEventListener('DOMContentLoaded', function() {
       fetchOrdinances();
+      checkForNewItems(); // Add this line to check for new items when page loads
     });
 
     // Toggle mobile menu
@@ -426,6 +483,69 @@ main {
       previewFrame.src = `https://docs.google.com/viewer?url=${encodeURIComponent(url)}&embedded=true`;
       const previewModal = new bootstrap.Modal(document.getElementById('previewModal'));
       previewModal.show();
+    }
+
+    // Check for new items
+    function checkForNewItems() {
+      const lastCheckTimeOrdinances = localStorage.getItem('lastCheckTimeOrdinances') || 0;
+      const lastCheckTimeResolutions = localStorage.getItem('lastCheckTimeResolutions') || 0;
+      const lastCheckTimeAnnouncements = localStorage.getItem('lastCheckTimeAnnouncements') || 0;
+      const currentTime = Date.now();
+      const currentPath = window.location.pathname;
+
+      // Check ordinances
+      const ordinancesRef = ref(db, 'ordinances');
+      get(ordinancesRef).then((snapshot) => {
+        if (snapshot.exists() && currentPath !== '/user_ordinance') {
+          const newOrdinances = Object.values(snapshot.val()).filter(
+            ordinance => ordinance.createdAt > parseInt(lastCheckTimeOrdinances)
+          );
+          const badge = document.getElementById('ordinancesBadge');
+          if (newOrdinances.length > 0) {
+            badge.textContent = newOrdinances.length;
+            badge.style.display = 'inline';
+          }
+        }
+      });
+
+      // Check resolutions
+      const resolutionsRef = ref(db, 'resolutions');
+      get(resolutionsRef).then((snapshot) => {
+        if (snapshot.exists() && currentPath !== '/user_resolution') {
+          const newResolutions = Object.values(snapshot.val()).filter(
+            resolution => resolution.createdAt > parseInt(lastCheckTimeResolutions)
+          );
+          const badge = document.getElementById('resolutionsBadge');
+          if (newResolutions.length > 0) {
+            badge.textContent = newResolutions.length;
+            badge.style.display = 'inline';
+          }
+        }
+      });
+
+      // Check announcements
+      const announcementsRef = ref(db, 'announcements');
+      get(announcementsRef).then((snapshot) => {
+        if (snapshot.exists() && currentPath !== '/user_announcement') {
+          const newAnnouncements = Object.values(snapshot.val()).filter(
+            announcement => announcement.createdAt > parseInt(lastCheckTimeAnnouncements)
+          );
+          const badge = document.getElementById('announcementsBadge');
+          if (newAnnouncements.length > 0) {
+            badge.textContent = newAnnouncements.length;
+            badge.style.display = 'inline';
+          }
+        }
+      });
+
+      // Update last check times only when visiting respective pages
+      if (currentPath === '/user_ordinance') {
+        localStorage.setItem('lastCheckTimeOrdinances', currentTime.toString());
+      } else if (currentPath === '/user_resolution') {
+        localStorage.setItem('lastCheckTimeResolutions', currentTime.toString());
+      } else if (currentPath === '/user_announcement') {
+        localStorage.setItem('lastCheckTimeAnnouncements', currentTime.toString());
+      }
     }
   </script>
 </body>

@@ -13,6 +13,310 @@
   <link rel="stylesheet" href="{% static 'style.css' %}">
   <link rel="icon" type="image/jpeg" href="{% static 'fav_argao.png'%}">
   <title>Session Agendas</title>
+  <style>
+    @font-face {
+  font-family: "Poppins";
+  src: url("{% static 'fonts/Poppins-Regular.ttf' %}") format("truetype");
+  }
+  
+  @font-face {
+  font-family: "Poppins";
+  src: url("{% static 'fonts/Poppins-Bold.ttf' %}") format("truetype");
+  font-weight: bold;
+  }
+  
+  body {
+  font-family: "Poppins", sans-serif;
+  font-size: 1rem;
+  }
+  .sidebar-footer {
+        margin-top: auto;
+       
+        border-top: 1px solid #ddd;
+      }
+  
+      .sidebar-footer #welcomeMessage {
+        margin-left: 20px;
+        display: block;
+        margin-bottom: 10px;
+      }
+      .sidebar.collapsed .sidebar-footer #welcomeMessage {
+        display: none;
+      }
+  .sidebar {
+    position: fixed;
+    top: 0;
+    left: 0;
+    height: 100%;
+    width: 250px;
+    background-color: #f8f9fa;
+    padding-top: 20px;
+    border-right: 1px solid #ddd;
+    display: flex;
+    flex-direction: column;
+    color: black;
+  }
+    
+    .sidebar .logo {
+      text-align: center;
+      margin-bottom: 20px;
+    }
+    
+    .sidebar .logo img {
+      width: 100px;
+      border-radius: 50%;
+      margin-top: 40px;
+    }
+    
+    .sidebar .nav-item {
+      padding: 15px 20px;
+      text-align: center;
+      border-bottom: 1px solid #ddd;
+    }
+    
+    .sidebar .nav-item:hover {
+      background-color: #e9ecef;
+      cursor: pointer;
+    }
+    
+    .main-content {
+      
+      padding: 30px;
+    }
+    
+    .user-profile {
+      position: fixed;
+      top: 20px;
+      right: 20px;
+      display: flex;
+      align-items: center;
+      z-index: 10;
+    }
+    
+    .user-profile img {
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+    }
+  
+    .table-container {
+      overflow-x: auto;
+    }
+    .btn-primary{
+      background-color: #4a9d6d;
+      border: #4a9d6d;
+    }
+    .btn-primary:hover{
+      background-color: #337a52;
+      border: #337a52;
+    }
+    .btn-approve {
+      background-color: #4a9d6d;
+      color: white;
+      border: none;
+      cursor: pointer;
+    }
+  
+    .btn-approve:hover {
+      background-color: #337a52;
+    }
+  
+    .btn-disapprove {
+      background-color: #dc3545;
+      color: white;
+      border: none;
+      cursor: pointer;
+    }
+  
+    .btn-disapprove:hover {
+      background-color: #c82333;
+    }
+  
+    .add-comment {
+      margin-top: 10px;
+    }
+    
+    .btn-submit {
+      background-color: #52AE77;
+      color: white;
+      border: none;
+      cursor: pointer;
+    }
+  
+    .btn-submit:hover {
+      background-color: #4a9d6d;
+    }
+  
+    .btn-primary {
+      margin-top: 14px;
+    }
+    .btn-secondary {
+      margin-top: 14px;
+      background-color: #888;
+      border: #888;
+    }
+    .btn-secondary:hover {
+      background-color: #555;
+      border: #555;
+    }
+    .btn-danger {
+      margin-top: 14px;
+    }
+  
+     /* Add this style for the scrollbar */
+     ::-webkit-scrollbar {
+        width: 10px;
+      }
+  
+      ::-webkit-scrollbar-track {
+        background: #f1f1f1;
+      }
+  
+      ::-webkit-scrollbar-thumb {
+        background: #888;
+      }
+  
+      ::-webkit-scrollbar-thumb:hover {
+        background: #555;
+      }
+  
+      /* Add this style to limit the title content */
+      .truncate-title {
+        max-width: 200px;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
+  
+      /* Sidebar toggle styles */
+      .sidebar {
+        transition: 0.3s;
+        width: 250px;
+        position: fixed;
+        height: 100%;
+        z-index: 1000;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        padding: 20px 0;
+      }
+  
+      .sidebar.collapsed {
+        width: 60px;
+      }
+  
+      .sidebar.collapsed .nav-item span,
+      .sidebar.collapsed .sidebar-footer span {
+        display: none;
+      }
+  
+      .sidebar.collapsed .logo img {
+        width: 40px;
+        height: 40px;
+        margin-top: 90px;
+      }
+  
+      .burger-menu {
+        display: none;
+        position: fixed;
+        top: 15px;
+        left: 15px;
+        z-index: 1001;
+        background: none;
+        border: none;
+        cursor: pointer;
+        padding: 5px;
+      }
+  
+      .burger-menu .bar {
+        width: 25px;
+        height: 3px;
+        background-color: #333;
+        margin: 4px 0;
+        transition: 0.3s;
+        display: block;
+      }
+  
+      .sidebar.collapsed + .main-content {
+        margin-left: 60px;
+      }
+  
+      .main-content {
+        margin-left: 250px;
+        transition: 0.3s;
+      }
+  
+      /* Close button style */
+      .close-sidebar {
+        position: absolute;
+        top: 10px;
+        right: 10px;
+        background: none;
+        border: none;
+        font-size: 20px;
+        cursor: pointer;
+        color: #333;
+        display: block;
+      }
+  
+      .sidebar.collapsed .close-sidebar {
+        display: none;
+      }
+  
+      /* Add styles for nav-item icons */
+      .nav-item {
+        display: flex;
+        align-items: center;
+        justify-content: flex-start;
+        width: 100%;
+        padding: 10px 20px;
+        cursor: pointer;
+      }
+  
+      .nav-item img {
+        margin-right: 10px;
+        width: 20px;
+        height: 20px;
+        vertical-align: middle;
+      }
+  
+      .sidebar-footer {
+        
+        align-items: left;
+        justify-content: flex-start;
+        width: 100%;
+        
+      }
+  
+      .sidebar-footer img {
+        margin-right: 10px;
+        width: 20px;
+        height: 20px;
+        vertical-align: middle;
+      }
+  
+      @media (max-width: 768px) {
+        .burger-menu {
+          display: block;
+        }
+        
+        .sidebar {
+          transform: translateX(-250px);
+        }
+  
+        .sidebar.collapsed {
+          transform: translateX(-60px);
+        }
+  
+        .sidebar.active {
+          transform: translateX(0);
+        }
+  
+        .main-content {
+          margin-left: 0;
+        }
+      }
+  </style>
 </head>
 <body>
   <div class="container-fluid">
@@ -36,14 +340,15 @@
       <img src="{% static 'dashboard.svg' %}" alt="Dashboard Icon">
       <span>Dashboard</span>
     </div>
-    <div class="nav-item" onclick="window.location.href='/staff_report'">
-      <img src="{% static 'report.svg' %}" alt="Reports Icon">
-      <span>Reports</span>
-    </div>
     <div class="nav-item" onclick="window.location.href='/staff_services'">
       <img src="{% static 'information.svg' %}" alt="Information Icon">
       <span>Information Bulletin</span>
     </div>
+    <div class="nav-item" onclick="window.location.href='/staff_report'">
+      <img src="{% static 'report.svg' %}" alt="Reports Icon">
+      <span>Reports</span>
+    </div>
+    
     <div class="nav-item" onclick="window.location.href='/staff_feedback'">
       <img src="{% static 'feedback.svg' %}" alt="Feedback Icon">
       <span>Feedbacks</span>
@@ -128,7 +433,7 @@
     // Initialize Firebase
     const firebaseConfig = {
       apiKey: "AIzaSyAMwvUHsWFkTmJyfzuh4DxzOrMYEjcXHvI",
-      authDomain: "lgucapstoneproject-b94fe.firebaseapp.com",
+      authDomain: "lgucapstoneproject-b94fe.firebaseapp.com", 
       databaseURL: "https://lgucapstoneproject-b94fe-default-rtdb.firebaseio.com",
       projectId: "lgucapstoneproject-b94fe",
       storageBucket: "lgucapstoneproject-b94fe.appspot.com",
@@ -185,66 +490,196 @@
 
     // View details function
 function viewDetails(key) {
-  const noticesRef = database.ref('minutes/' + key);
-  noticesRef.once('value', (snapshot) => {
+  const minutesRef = database.ref('minutes/' + key);
+  minutesRef.once('value', (snapshot) => {
     const minutes = snapshot.val();
     if (!minutes) {
       console.error('No data found for key:', key);
       return;
     }
 
-    const modalBody = document.querySelector('#minutesModal .modal-body');
-    modalBody.innerHTML = `
-      <div class="mb-3" style="color: black;">
-        <h6>1. Call to Order:</h6>
-        <p>${minutes.callToOrder || 'Not specified'}</p>
-      </div>
-      <div class="mb-3" style="color: black;">
-        <h6>2. Invocation:</h6>
-        <p>${minutes.invocation || 'Not specified'}</p>
-      </div>
-      <div class="mb-3" style="color: black;">
-        <h6>3. National Anthem:</h6>
-        <p>${minutes.nationalAnthem || 'Not specified'}</p>
-      </div>
-      <div class="mb-3" style="color: black;">
-        <h6>4. Sugbo Hymn:</h6>
-        <p>${minutes.sugboHymn || 'Not specified'}</p>
-      </div>
-      <div class="mb-3" style="color: black;">
-        <h6>5. Roll Call:</h6>
-        <p>${minutes.rollCall || 'Not specified'}</p>
-      </div>
-      <div class="mb-3" style="color: black;">
-        <h6>6. Adoption of Minutes:</h6>
-        <p>${minutes.adoptionMinutesSubsections || 'Not specified'}</p>
-      </div>
-      <div class="mb-3" style="color: black;">
-        <h6>7. Communications:</h6>
-        <p>${minutes.communicationsSubsections || 'Not specified'}</p>
-      </div>
-      <div class="mb-3" style="color: black;">
-        <h6>8. Committee Report:</h6>
-        <p>${minutes.committeeReportSubsections || 'Not specified'}</p>
-      </div>
-      <div class="mb-3" style="color: black;">
-        <h6>9. First Reading:</h6>
-        <p>${minutes.firstReadingSubsections || 'Not specified'}</p>
-      </div>
-      <div class="mb-3" style="color: black;">
-        <h6>10. Other Matters:</h6>
-        <p>${minutes.otherMatters || 'Not specified'}</p>
-      </div>
-      <div class="mb-3" style="color: black;">
-        <h6>11. Adjournment:</h6>
-        <p>${minutes.adjournment || 'Not specified'}</p>
-      </div>
-      
-        
-    `;
+    // Fetch attendance data based on minutes date
+    const [year, month, day] = minutes.sessionDate.split('-');
+    const attendancePath = `attendance/${parseInt(month)}/${parseInt(day)}/${year}/attendance`;
 
-    const minutesModal = new bootstrap.Modal(document.getElementById('minutesModal'));
-    minutesModal.show();
+    database.ref(attendancePath).once('value', (attendanceSnapshot) => {
+      const attendanceData = attendanceSnapshot.val() || {};
+      
+      // Process attendance data
+      const presentMembers = [];
+      const absentMembers = [];
+
+      Object.values(attendanceData).forEach(record => {
+        const memberInfo = `Hon. ${record.name} - ${record.position}${record.remarks ? ` (${record.remarks})` : ''}`;
+        if (record.status === 'present') {
+          presentMembers.push(memberInfo);
+        } else if (record.status === 'absent') {
+          absentMembers.push(memberInfo);
+        }
+      });
+
+      const modalBody = document.querySelector('#minutesModal .modal-body');
+      
+      // Function to format subsections
+      function formatSubsections(subsections) {
+        if (!subsections) return '<p class="ms-3">Not specified</p>';
+        if (typeof subsections === 'string') return `<p class="ms-3">${subsections}</p>`;
+        
+        return subsections.map((content, index) => {
+          if (content) {
+            return `<p class="ms-3">${index + 1}. ${content}</p>`;
+          }
+          return '';
+        }).join('');
+      }
+
+      modalBody.innerHTML = `
+        <div class="minutes-content">
+          <div class="header-section text-center mb-4">
+            <img src="{% static 'argao_logo.jpg' %}" alt="Logo" class="header-logo">
+            <h4 class="mt-2">Republic of the Philippines</h4>
+            <h4>Province of Cebu</h4>
+            <h4>Municipality of Argao</h4>
+            <h3 class="mt-3">MINUTES OF THE REGULAR SESSION</h3>
+            <p>Date: ${minutes.sessionDate ? minutes.sessionDate : 'Undefined'}</p>
+          </div>
+
+          <div class="attendance-section mb-4">
+            <h5 class="section-title">ATTENDANCE</h5>
+            <div class="ms-3">
+              <p><strong>Present:</strong></p>
+              ${presentMembers.length ? presentMembers.map(name => `<p class="ms-4">${name}</p>`).join('') : '<p class="ms-4">No members present</p>'}
+              
+              <p><strong>Absent:</strong></p>
+              ${absentMembers.length ? absentMembers.map(name => `<p class="ms-4">${name}</p>`).join('') : '<p class="ms-4">No members absent</p>'}
+            </div>
+          </div>
+
+          <div class="section mb-4">
+            <h5 class="section-title">1. CALL TO ORDER</h5>
+            <p class="ms-3">${minutes.callToOrder || 'Not specified'}</p>
+          </div>
+
+          <div class="section mb-4">
+            <h5 class="section-title">2. INVOCATION</h5>
+            <p class="ms-3">${minutes.invocation || 'Not specified'}</p>
+          </div>
+
+          <div class="section mb-4">
+            <h5 class="section-title">3. NATIONAL ANTHEM</h5>
+            <p class="ms-3">${minutes.nationalAnthem || 'Not specified'}</p>
+          </div>
+
+          <div class="section mb-4">
+            <h5 class="section-title">4. SUGBO HYMN</h5>
+            <p class="ms-3">${minutes.sugboHymn || 'Not specified'}</p>
+          </div>
+
+          <div class="section mb-4">
+            <h5 class="section-title">5. ROLL CALL</h5>
+            <p class="ms-3">${minutes.rollCall || 'Not specified'}</p>
+          </div>
+
+          <div class="section mb-4">
+            <h5 class="section-title">6. ADOPTION OF MINUTES</h5>
+            ${formatSubsections(minutes.adoptionMinutesSubsections)}
+          </div>
+
+          <div class="section mb-4">
+            <h5 class="section-title">7. COMMUNICATIONS</h5>
+            ${formatSubsections(minutes.communicationsSubsections)}
+          </div>
+
+          <div class="section mb-4">
+            <h5 class="section-title">8. COMMITTEE REPORT</h5>
+            ${formatSubsections(minutes.committeeReportSubsections)}
+          </div>
+
+          <div class="section mb-4">
+            <h5 class="section-title">9. FIRST READING</h5>
+            ${formatSubsections(minutes.firstReadingSubsections)}
+          </div>
+
+          <div class="section mb-4">
+            <h5 class="section-title">10. OTHER MATTERS</h5>
+            <p class="ms-3">${minutes.otherMatters || 'Not specified'}</p>
+          </div>
+
+          <div class="section mb-4">
+            <h5 class="section-title">11. ADJOURNMENT</h5>
+            <p class="ms-3">${minutes.adjournment || 'Not specified'}</p>
+          </div>
+
+          <div class="signatures-section mt-5">
+            <div class="row">
+              <div class="col-6">
+                <p><strong>Prepared by:</strong></p>
+                <p class="mt-4">${minutes.preparedBy || 'Not specified'}</p>
+              </div>
+              <div class="col-6">
+                <p><strong>Approved by:</strong></p>
+                <p class="mt-4">${minutes.approvedBy || 'Not specified'}</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      `;
+
+      // Add styles for the minutes content
+      const style = document.createElement('style');
+      style.textContent = `
+        .minutes-content {
+          font-family: "Times New Roman", Times, serif;
+          line-height: 1.6;
+          padding: 40px;
+          background-color: #fff;
+          box-shadow: 0 0 10px rgba(0,0,0,0.1);
+          border: 1px solid #ddd;
+          max-width: 800px;
+          margin: 0 auto;
+        }
+        .header-logo {
+          width: 100px;
+          height: 100px;
+          margin-bottom: 20px;
+        }
+        .section-title {
+          font-weight: bold;
+          color: #2c3e50;
+          border-bottom: 1px solid #eee;
+          padding-bottom: 5px;
+          margin-bottom: 10px;
+        }
+        .section p {
+          margin-bottom: 5px;
+          color: #34495e;
+        }
+        .modal-dialog {
+          max-width: 900px;
+        }
+        .modal-content {
+          background-color: #f8f9fa;
+        }
+        .signatures-section {
+          border-top: 1px solid #eee;
+          padding-top: 20px;
+        }
+        @media print {
+          .modal-dialog {
+            max-width: 100%;
+            margin: 0;
+          }
+          .minutes-content {
+            box-shadow: none;
+            border: none;
+          }
+        }
+      `;
+      modalBody.appendChild(style);
+
+      const minutesModal = new bootstrap.Modal(document.getElementById('minutesModal'));
+      minutesModal.show();
+    });
   });
 }
 
@@ -283,313 +718,7 @@ function viewDetails(key) {
         sidebar.style.transform = '';
       }
     });
-
   </script>
-
-<style>
-  @font-face {
-font-family: "Poppins";
-src: url("{% static 'fonts/Poppins-Regular.ttf' %}") format("truetype");
-}
-
-@font-face {
-font-family: "Poppins";
-src: url("{% static 'fonts/Poppins-Bold.ttf' %}") format("truetype");
-font-weight: bold;
-}
-
-body {
-font-family: "Poppins", sans-serif;
-font-size: 1rem;
-}
-.sidebar-footer {
-      margin-top: auto;
-     
-      border-top: 1px solid #ddd;
-    }
-
-    .sidebar-footer #welcomeMessage {
-      margin-left: 20px;
-      display: block;
-      margin-bottom: 10px;
-    }
-    .sidebar.collapsed .sidebar-footer #welcomeMessage {
-      display: none;
-    }
-.sidebar {
-  position: fixed;
-  top: 0;
-  left: 0;
-  height: 100%;
-  width: 250px;
-  background-color: #f8f9fa;
-  padding-top: 20px;
-  border-right: 1px solid #ddd;
-  display: flex;
-  flex-direction: column;
-  color: black;
-}
-  
-  .sidebar .logo {
-    text-align: center;
-    margin-bottom: 20px;
-  }
-  
-  .sidebar .logo img {
-    width: 100px;
-    border-radius: 50%;
-    margin-top: 40px;
-  }
-  
-  .sidebar .nav-item {
-    padding: 15px 20px;
-    text-align: center;
-    border-bottom: 1px solid #ddd;
-  }
-  
-  .sidebar .nav-item:hover {
-    background-color: #e9ecef;
-    cursor: pointer;
-  }
-  
-  .main-content {
-    
-    padding: 30px;
-  }
-  
-  .user-profile {
-    position: fixed;
-    top: 20px;
-    right: 20px;
-    display: flex;
-    align-items: center;
-    z-index: 10;
-  }
-  
-  .user-profile img {
-    width: 40px;
-    height: 40px;
-    border-radius: 50%;
-  }
-
-  .table-container {
-    overflow-x: auto;
-  }
-  .btn-primary{
-    background-color: #4a9d6d;
-    border: #4a9d6d;
-  }
-  .btn-primary:hover{
-    background-color: #337a52;
-    border: #337a52;
-  }
-  .btn-approve {
-    background-color: #4a9d6d;
-    color: white;
-    border: none;
-    cursor: pointer;
-  }
-
-  .btn-approve:hover {
-    background-color: #337a52;
-  }
-
-  .btn-disapprove {
-    background-color: #dc3545;
-    color: white;
-    border: none;
-    cursor: pointer;
-  }
-
-  .btn-disapprove:hover {
-    background-color: #c82333;
-  }
-
-  .add-comment {
-    margin-top: 10px;
-  }
-  
-  .btn-submit {
-    background-color: #52AE77;
-    color: white;
-    border: none;
-    cursor: pointer;
-  }
-
-  .btn-submit:hover {
-    background-color: #4a9d6d;
-  }
-
-  .btn-primary {
-    margin-top: 14px;
-  }
-  .btn-secondary {
-    margin-top: 14px;
-    background-color: #888;
-    border: #888;
-  }
-  .btn-secondary:hover {
-    background-color: #555;
-    border: #555;
-  }
-  .btn-danger {
-    margin-top: 14px;
-  }
-
-   /* Add this style for the scrollbar */
-   ::-webkit-scrollbar {
-      width: 10px;
-    }
-
-    ::-webkit-scrollbar-track {
-      background: #f1f1f1;
-    }
-
-    ::-webkit-scrollbar-thumb {
-      background: #888;
-    }
-
-    ::-webkit-scrollbar-thumb:hover {
-      background: #555;
-    }
-
-    /* Add this style to limit the title content */
-    .truncate-title {
-      max-width: 200px;
-      white-space: nowrap;
-      overflow: hidden;
-      text-overflow: ellipsis;
-    }
-
-    /* Sidebar toggle styles */
-    .sidebar {
-      transition: 0.3s;
-      width: 250px;
-      position: fixed;
-      height: 100%;
-      z-index: 1000;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      padding: 20px 0;
-    }
-
-    .sidebar.collapsed {
-      width: 60px;
-    }
-
-    .sidebar.collapsed .nav-item span,
-    .sidebar.collapsed .sidebar-footer span {
-      display: none;
-    }
-
-    .sidebar.collapsed .logo img {
-      width: 40px;
-      height: 40px;
-      margin-top: 90px;
-    }
-
-    .burger-menu {
-      display: none;
-      position: fixed;
-      top: 15px;
-      left: 15px;
-      z-index: 1001;
-      background: none;
-      border: none;
-      cursor: pointer;
-      padding: 5px;
-    }
-
-    .burger-menu .bar {
-      width: 25px;
-      height: 3px;
-      background-color: #333;
-      margin: 4px 0;
-      transition: 0.3s;
-      display: block;
-    }
-
-    .sidebar.collapsed + .main-content {
-      margin-left: 60px;
-    }
-
-    .main-content {
-      margin-left: 250px;
-      transition: 0.3s;
-    }
-
-    /* Close button style */
-    .close-sidebar {
-      position: absolute;
-      top: 10px;
-      right: 10px;
-      background: none;
-      border: none;
-      font-size: 20px;
-      cursor: pointer;
-      color: #333;
-      display: block;
-    }
-
-    .sidebar.collapsed .close-sidebar {
-      display: none;
-    }
-
-    /* Add styles for nav-item icons */
-    .nav-item {
-      display: flex;
-      align-items: center;
-      justify-content: flex-start;
-      width: 100%;
-      padding: 10px 20px;
-      cursor: pointer;
-    }
-
-    .nav-item img {
-      margin-right: 10px;
-      width: 20px;
-      height: 20px;
-      vertical-align: middle;
-    }
-
-    .sidebar-footer {
-      
-      align-items: left;
-      justify-content: flex-start;
-      width: 100%;
-      
-    }
-
-    .sidebar-footer img {
-      margin-right: 10px;
-      width: 20px;
-      height: 20px;
-      vertical-align: middle;
-    }
-
-    @media (max-width: 768px) {
-      .burger-menu {
-        display: block;
-      }
-      
-      .sidebar {
-        transform: translateX(-250px);
-      }
-
-      .sidebar.collapsed {
-        transform: translateX(-60px);
-      }
-
-      .sidebar.active {
-        transform: translateX(0);
-      }
-
-      .main-content {
-        margin-left: 0;
-      }
-    }
-</style>
     <script>
       // Logout function
       window.logout = function() {
@@ -597,6 +726,5 @@ font-size: 1rem;
         window.location.href = 'main_login';
       }
     </script> 
-  
 </body>
 </html>
