@@ -294,15 +294,15 @@ h2{
             <a href="/user_feedback" class="header-menu-item">Feedback</a>
         </div>
 
-        <div class="dropdown">
-            <div class="dropdown-toggle">
-                <img src="{% static 'user_profile.png' %}" alt="User Profile">
-                <span id="userName">Guest</span>
-            </div>
-            <div class="dropdown-menu">
-                <a href="{% url 'main_login' %}" id="loginLogoutLink">Logout</a>
-            </div>
-        </div>
+        <div class="dropdown ms-auto">
+            <a href="#" class="d-flex align-items-center text-dark text-decoration-none dropdown-toggle" id="dropdownUser" data-bs-toggle="dropdown" aria-expanded="false">
+            <img src="{% static 'user_profile.png' %}" alt="User Profile" class="rounded-circle" width="32" height="32">
+            <span id="userName" class="ms-2">Guest</span>
+            </a>
+            <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="dropdownUser">
+              <li><a class="dropdown-item" href="{% url 'lgucapstone' %}" id="loginLogoutLink">Login</a></li>
+            </ul>
+          </div>
     </div>
 
     <!-- Highlight start: New sections -->
@@ -314,11 +314,13 @@ h2{
         <h2>LGU-Argao SB Management Portal</h2>
     </div>
 
+    
+
     <div class="official-section">
         <img src="{% static 'mayor_allan.jpg' %}" alt="Mayor of Argao">
         <div class="official-info">
             <h2>Mayor of Argao</h2>
-            <p>Achieved the 4th ranking with a 83.1 % rating from the latest survey of the 𝗕𝗼𝘀𝗲𝘀 𝗻𝗴 𝗕𝗮𝘆𝗮𝗻 - 𝗔𝗻𝗻𝘂𝗮𝗹 𝗥𝗲𝗽𝗼𝗿𝘁 𝟮𝟬𝟮𝟯 Job Performance Ratings for all Municipal Mayors from the Province of Cebu.</p>
+            <p>Honorable Mayor Allan Sesaldo achieved the 4th ranking with a 83.1 % rating from the latest survey of the 𝗕𝗼𝘀𝗲𝘀 𝗻𝗴 𝗕𝗮𝘆𝗮𝗻 - 𝗔𝗻𝗻𝘂𝗮𝗹 𝗥𝗲𝗽𝗼𝗿𝘁 𝟮𝟬𝟮𝟯 Job Performance Ratings for all Municipal Mayors from the Province of Cebu.</p>
         </div>
     </div>
 
@@ -329,6 +331,47 @@ h2{
         </div>
         <img src="{% static 'atty orvi.png' %}" alt="Vice Mayor of Argao">
     </div>
+
+<!-- Slideshow Section -->
+<div class="slideshow-container">
+    <div class="mySlides">
+        <img src="{% static 'slide1.jpg' %}" alt="Argao Beach">
+        <div class="text">Beautiful Beaches of Argao</div>
+    </div>
+
+    <div class="mySlides">
+        <img src="{% static 'slide2.jpg' %}" alt="San Miguel Church">
+        <div class="text">Historic Saint Michael Archangel Church</div>
+    </div>
+
+    <div class="mySlides">
+        <img src="{% static 'slide3.jpg' %}" alt="Argao Heritage">
+        <div class="text">Rich Cultural Heritage</div>
+    </div>
+
+    <div class="mySlides">
+        <img src="{% static 'slide4.jpg' %}" alt="Argao Heritage">
+        <div class="text">Rich Cultural Heritage</div>
+    </div>
+
+    <div class="mySlides">
+        <img src="{% static 'slide5.jpg' %}" alt="Argao Heritage">
+        <div class="text">Famous delicacies</div>
+    </div>
+
+    <!-- Navigation arrows -->
+    <a class="prev" onclick="plusSlides(-1)">&#10094;</a>
+    <a class="next" onclick="plusSlides(1)">&#10095;</a>
+
+    <!-- Dots/circles -->
+    <div style="text-align:center">
+        <span class="dot" onclick="currentSlide(1)"></span>
+        <span class="dot" onclick="currentSlide(2)"></span>
+        <span class="dot" onclick="currentSlide(3)"></span>
+        <span class="dot" onclick="currentSlide(4)"></span>
+        <span class="dot" onclick="currentSlide(5)"></span>
+    </div>
+</div>
 
     <div class="argao-description">
         <h2>About Argao</h2>
@@ -344,6 +387,46 @@ h2{
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
     <script>
+        // Slideshow functionality
+        let slideIndex = 1;
+        showSlides(slideIndex);
+
+        function plusSlides(n) {
+            showSlides(slideIndex += n);
+        }
+
+        function currentSlide(n) {
+            showSlides(slideIndex = n);
+        }
+
+        function showSlides(n) {
+            let i;
+            let slides = document.getElementsByClassName("mySlides");
+            let dots = document.getElementsByClassName("dot");
+            
+            if (n > slides.length) {slideIndex = 1}
+            if (n < 1) {slideIndex = slides.length}
+            
+            for (i = 0; i < slides.length; i++) {
+                slides[i].style.opacity = "0";
+                slides[i].style.display = "none";
+            }
+            for (i = 0; i < dots.length; i++) {
+                dots[i].className = dots[i].className.replace(" active", "");
+            }
+            
+            slides[slideIndex-1].style.display = "block";
+            setTimeout(() => {
+                slides[slideIndex-1].style.opacity = "1";
+            }, 10);
+            dots[slideIndex-1].className += " active";
+        }
+
+        // Auto advance slides every 5 seconds
+        setInterval(function() {
+            plusSlides(1);
+        }, 5000);
+
         // Toggle mobile menu
         const menuToggle = document.querySelector('.menu-toggle');
         const navBar = document.querySelector('.nav_bar');
@@ -379,6 +462,11 @@ h2{
             document.getElementById('welcomeUserName').textContent = 'Guest';
         }
 
+        // Logout function
+    window.logout = function() {
+      localStorage.removeItem('userName');
+      window.location.href = '/home';
+    }
         // Initialize Firebase
         const firebaseConfig = {
             apiKey: "AIzaSyAMwvUHsWFkTmJyfzuh4DxzOrMYEjcXHvI",
@@ -402,7 +490,7 @@ h2{
       const currentPath = window.location.pathname;
 
       // Check ordinances
-      const ordinancesRef = ref(db, 'ordinances');
+      const ordinancesRef = ref (db, 'ordinances');
       get(ordinancesRef).then((snapshot) => {
         if (snapshot.exists() && currentPath !== '/user_ordinance') {
           const newOrdinances = Object.values(snapshot.val()).filter(
@@ -461,6 +549,89 @@ h2{
     </script>
 
     <style>
+        /* Slideshow styles */
+        .slideshow-container {
+            max-width: 1000px;
+            position: relative;
+            margin: auto;
+            margin-bottom: 2rem;
+            background: #000;
+        }
+
+        .mySlides {
+            display: none;
+            position: relative;
+            height: 400px;
+        }
+
+        .mySlides img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            position: absolute;
+            top: 0;
+            left: 0;
+            transition: opacity 1s ease-in-out;
+        }
+
+        .prev, .next {
+            cursor: pointer;
+            position: absolute;
+            top: 50%;
+            width: auto;
+            padding: 16px;
+            margin-top: -22px;
+            color: white;
+            font-weight: bold;
+            font-size: 18px;
+            transition: 0.6s ease;
+            border-radius: 0 3px 3px 0;
+            user-select: none;
+            background-color: rgba(0,0,0,0.8);
+            z-index: 2;
+        }
+
+        .next {
+            right: 0;
+            border-radius: 3px 0 0 3px;
+        }
+
+        .prev:hover, .next:hover {
+            background-color: rgba(0,0,0,0.9);
+        }
+
+        .text {
+            color: #f2f2f2;
+            font-size: 15px;
+            padding: 8px 12px;
+            position: absolute;
+            bottom: 0;
+            width: 100%;
+            text-align: center;
+            background-color: rgba(0,0,0,0.6);
+            z-index: 2;
+        }
+
+        .dot {
+            cursor: pointer;
+            height: 15px;
+            width: 15px;
+            margin: 0 2px;
+            background-color: #bbb;
+            border-radius: 50%;
+            display: inline-block;
+            transition: background-color 0.6s ease;
+        }
+
+        .active, .dot:hover {
+            background-color: #717171;
+        }
+
+        .mySlides {
+            opacity: 0;
+            transition: opacity 1s ease-in-out;
+        }
+
         .notification-badge {
             background-color: rgb(241, 38, 38);
             color: white;

@@ -15,7 +15,10 @@ from firebase_admin import auth, db
 from firebase_admin import db
 from django.core.mail import EmailMultiAlternatives
 from django.template.loader import render_to_string
-from django.contrib.auth. decorators import login_required
+
+from django.shortcuts import redirect
+from functools import wraps
+
 
 import bcrypt
 import random
@@ -43,6 +46,36 @@ config = {
 firebase=pyrebase.initialize_app(config) 
 authe = firebase.auth()
 database = firebase.database()
+
+
+def login_required(function):
+    @wraps(function)
+    def wrapper(request, *args, **kwargs):
+        user_id = request.session.get('user_id')
+        if not user_id:
+            messages.error(request, "You must be logged in to access this page.")
+            return redirect('main_login')  # Redirect to login if no user_id in session
+        
+        try:
+            # Check if user exists in the "accounts" collection
+            accounts_ref = database.child('accounts').child(user_id).get()
+            if not accounts_ref.val():  # If user not found in "accounts"
+                # Check the "users" collection
+                users_ref = database.child('users').child(user_id).get()
+                if not users_ref.val():  # If user not found in "users"
+                    messages.error(request, "Invalid session. Please log in again.")
+                    del request.session['user_id']  # Clear invalid session
+                    return redirect('main_login')
+
+            # User exists; allow access to the requested view
+            return function(request, *args, **kwargs)
+
+        except Exception as e:
+            logger.error(f"Error checking user in Firebase: {e}")
+            messages.error(request, "An error occurred. Please try logging in again.")
+            return redirect('main_login')
+    
+    return wrapper
 
 
 def home(request):
@@ -559,6 +592,7 @@ def verify_otp(request):
         except Exception as e:
             print(f'Error: {e}')
             return JsonResponse({'success': False, 'message': str(e)}, status=500)
+        
 @csrf_exempt
 def verify_otp_only(request):
     if request.method == 'POST':
@@ -567,8 +601,8 @@ def verify_otp_only(request):
             otp = data.get('otp')
             email = data.get('email')
             password = data.get('password')
-            first_name = data.get('first_name') 
-            last_name = data.get('last_name')
+            first_name = data.get('first_name')
+            last_name = data.get('last_name') 
             role = data.get('role')
 
             # Check OTP from session
@@ -586,28 +620,23 @@ def verify_otp_only(request):
                 user = authe.create_user_with_email_and_password(email, password)
                 user_id = user['localId']
 
-                # Store user data in Firebase
-                user_data = {
-                    "firstname": first_name,
-                    "lastname": last_name, 
-                    "email": email,
-                    "role": role
-                }
-
-                database.child("accounts").child(user_id).set(user_data)
-
                 # Clear session data
                 session_keys = ['otp', 'otp_email']
                 for key in session_keys:
                     if key in request.session:
                         del request.session[key]
 
-                return JsonResponse({'success': True})
+                return JsonResponse({
+                    'success': True,
+                    'userId': user_id,
+                    'email': email,
+                    'password': password  # Return password for authentication
+                })
 
             except Exception as e:
                 print(f'Firebase Error: {str(e)}')
                 return JsonResponse({
-                    'success': False, 
+                    'success': False,
                     'message': 'Failed to create account. Please try again.'
                 }, status=400)
 
@@ -616,7 +645,7 @@ def verify_otp_only(request):
         except Exception as e:
             print(f'Error: {e}')
             return JsonResponse({
-                'success': False,
+                'success': False, 
                 'message': 'An error occurred. Please try again.'
             }, status=500)
 
@@ -831,7 +860,6 @@ def get_user_data(request):
 
 
 @csrf_exempt
-
 def admin_login_view(request):
     if request.method == 'POST':
         try:
@@ -843,6 +871,7 @@ def admin_login_view(request):
             ref = db.reference('accounts')  
             accounts = ref.order_by_child('email').equal_to(email).get()
             
+
             if not accounts:
                 return JsonResponse({'success': False, 'message': 'Invalid email or password'}, status=400)
 
@@ -877,6 +906,7 @@ def admin_login_view(request):
             return JsonResponse({'success': False, 'message': 'An error occurred. Please try again.'}, status=500)
     
     return JsonResponse({'success': False, 'message': 'Invalid request method'}, status=405)
+
 @csrf_exempt
 def verify_password(request):
     if request.method == 'POST':

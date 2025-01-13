@@ -11,6 +11,8 @@ from .views import verify_otp_only
 from .views import verify_password
 from .views import send_email_to_officials
 from .views import send_email_to_officials_minutes
+
+
 urlpatterns = [
     path('', views.lgucapstone, name='lgucapstone'),
     path('signup', views.signup, name='signup'),
@@ -32,7 +34,7 @@ urlpatterns = [
     path('admin_services', views.admin_services, name='admin_services'),
     path('admin_staff_account', views.admin_staff_account, name='admin_staff_account'),
     path('admin_notice', views.admin_notice, name='admin_notice'),
-    path('main_login', views.main_login, name='main_login'),
+    path('main_login/', views.main_login, name='main_login'),
     path('admin_serve', views.admin_serve, name='admin_serve'),
     path('admin_feedback', views.admin_feedback, name='admin_feedback'),
     path('admin_board', views.admin_board, name='admin_board'),
@@ -51,6 +53,7 @@ urlpatterns = [
     path('verify-otp/', verify_otp, name='verify_otp'),
     path('verify-otp-only/', verify_otp_only, name='verify_otp_only'),
     path('verify-password/', verify_password, name='verify_password'),
+    
 
     path('send_email_to_officials/', send_email_to_officials, name='send_email_to_officials'),
     path('send_email_to_officials_minutes/', send_email_to_officials_minutes, name='send_email_to_officials_minutes'),

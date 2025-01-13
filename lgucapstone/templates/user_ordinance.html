@@ -477,6 +477,11 @@ main {
         document.getElementById('userName').textContent = 'Guest';  
       }
 
+      // Logout function
+    window.logout = function() {
+      localStorage.removeItem('userName');
+      window.location.href = '/home';
+    }
     // Preview document function
     window.previewDocument = function(url) {
       const previewFrame = document.getElementById('previewFrame');

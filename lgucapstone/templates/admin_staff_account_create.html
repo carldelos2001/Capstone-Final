@@ -154,12 +154,8 @@
     .btn-submit:hover {
       background-color: #337a52;
     }
-  </style>
-</head>
-<body>
-  <style>
-    /* Add this style for the scrollbar */
-    ::-webkit-scrollbar {
+     /* Add this style for the scrollbar */
+     ::-webkit-scrollbar {
       width: 10px;
     }
 
@@ -320,7 +316,9 @@
       border: #337a52;
     }
   </style>
+</head>
 
+<body>
   <!-- Burger Menu Button -->
   <button class="burger-menu" onclick="toggleSidebar()">
     <span class="bar"></span>
@@ -375,7 +373,6 @@
 
     <div class="sidebar-footer">
       <span id="welcomeMessage" class="nav-item">
-       
         Admin: <span id="userFirstName"></span>
       </span>
       
@@ -518,331 +515,349 @@
     </div>
   </div>
 
-   <!-- Scripts -->
-   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
-   <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/js/all.min.js"></script>
-   <script type="module">
-     import { initializeApp } from "https://www.gstatic.com/firebasejs/9.9.1/firebase-app.js";
-     import { getDatabase, ref, push, onValue, remove, update, get } from "https://www.gstatic.com/firebasejs/9.9.1/firebase-database.js";
-     import { getStorage, ref as storageRef, uploadBytes, getDownloadURL } from "https://www.gstatic.com/firebasejs/9.9.1/firebase-storage.js";
- 
-     // Firebase configuration
-     const firebaseConfig = {
-       apiKey: "AIzaSyAMwvUHsWFkTmJyfzuh4DxzOrMYEjcXHvI",
-       authDomain: "lgucapstoneproject-b94fe.firebaseapp.com",
-       databaseURL: "https://lgucapstoneproject-b94fe-default-rtdb.firebaseio.com",
-       projectId: "lgucapstoneproject-b94fe",
-       storageBucket: "lgucapstoneproject-b94fe.appspot.com",
-       messagingSenderId: "984934888272",
-       appId: "1:984934888272:web:e835b8e02ae708629a7255",
-       measurementId: "G-F84YQS756S"
-     };
- 
-     // Initialize Firebase
-     const app = initializeApp(firebaseConfig);
-     const database = getDatabase(app);
-     const storage = getStorage(app);
-     
-     // Retrieve user name from localStorage
-     const userName = localStorage.getItem('userName');
-     if (userName) {
-       document.getElementById('welcomeMessage').textContent = `Admin: ${userName}`;
-     }
 
-     // Staff management logic
-     document.addEventListener('DOMContentLoaded', function() {
-       const accountForm = document.getElementById('accountForm');
-       const accountList = document.getElementById('accountList');
-       let editingAccountId = null;
-       let isEditing = false;
-       let tempAccountData = null;
+  <!-- Scripts -->
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/js/all.min.js"></script>
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/9.9.1/firebase-app.js";
+    import { getDatabase, ref, push, onValue, remove, update, get } from "https://www.gstatic.com/firebasejs/9.9.1/firebase-database.js";
+    import { getStorage, ref as storageRef, uploadBytes, getDownloadURL } from "https://www.gstatic.com/firebasejs/9.9.1/firebase-storage.js";
 
-       // Save or update account
-       accountForm.addEventListener('submit', async function(e) {
-         e.preventDefault();
-         
-         const formData = {
-           role: document.getElementById('role').value,
-           firstName: document.getElementById('firstName').value,
-           lastName: document.getElementById('lastName').value,
-           email: document.getElementById('email').value,
-           password: document.getElementById('password').value,
-           phone: document.getElementById('phone').value,
-           address: document.getElementById('address').value
-         };
-         
-         const photoFile = document.getElementById('photo').files[0];
+    // Firebase configuration
+    const firebaseConfig = {
+      apiKey: "AIzaSyAMwvUHsWFkTmJyfzuh4DxzOrMYEjcXHvI",
+      authDomain: "lgucapstoneproject-b94fe.firebaseapp.com",
+      databaseURL: "https://lgucapstoneproject-b94fe-default-rtdb.firebaseio.com",
+      projectId: "lgucapstoneproject-b94fe",
+      storageBucket: "lgucapstoneproject-b94fe.appspot.com",
+      messagingSenderId: "984934888272",
+      appId: "1:984934888272:web:e835b8e02ae708629a7255",
+      measurementId: "G-F84YQS756S"
+    };
 
-         if (isEditing) {
-           // Handle edit mode - direct update without OTP
-           try {
-             let updateData = { ...formData };
-             delete updateData.password; // Don't update password unless changed
+    // Initialize Firebase
+    const app = initializeApp(firebaseConfig);
+    const database = getDatabase(app);
+    const storage = getStorage(app);
+    
+    // Retrieve user name from localStorage
+    const userName = localStorage.getItem('userName');
+    if (userName) {
+      document.getElementById('welcomeMessage').textContent = `Admin: ${userName}`;
+    }
 
-             if (photoFile) {
-               const photoRef = storageRef(storage, `staff_photos/${Date.now()}_${photoFile.name}`);
-               await uploadBytes(photoRef, photoFile);
-               updateData.photoURL = await getDownloadURL(photoRef);
-             }
+    // Staff management logic
+    document.addEventListener('DOMContentLoaded', function() {
+      const accountForm = document.getElementById('accountForm');
+      const accountList = document.getElementById('accountList');
+      let editingAccountId = null;
+      let isEditing = false;
+      let tempAccountData = null;
+      let otpVerified = false;
+      let isSubmitting = false;
 
-             if (formData.password) {
-               updateData.hasPassword = true;
-             }
+      // Save or update account
+      accountForm.addEventListener('submit', async function(e) {
+        e.preventDefault();
+        
+        if (isSubmitting) return;
+        isSubmitting = true;
 
-             await update(ref(database, 'accounts/' + editingAccountId), updateData);
-             alert('Account updated successfully!');
-             bootstrap.Modal.getInstance(document.getElementById('addAccountModal')).hide();
-           } catch (error) {
-             console.error('Error updating account:', error);
-             alert('Failed to update account. Please try again.');
-           }
-         } else {
-           // Handle new account creation with OTP
-           try {
-             const emailExists = await checkEmailExists(formData.email);
-             if (emailExists) {
-               document.getElementById('emailError').textContent = 'This email is already registered.';
-               return;
-             }
+        try {
+          const formData = {
+            role: document.getElementById('role').value,
+            firstName: document.getElementById('firstName').value,
+            lastName: document.getElementById('lastName').value,
+            email: document.getElementById('email').value,
+            password: document.getElementById('password').value,
+            phone: document.getElementById('phone').value,
+            address: document.getElementById('address').value
+          };
+          
+          const photoFile = document.getElementById('photo').files[0];
 
-             let photoURL = '';
-             if (photoFile) {
-               const photoRef = storageRef(storage, `staff_photos/${Date.now()}_${photoFile.name}`);
-               await uploadBytes(photoRef, photoFile);
-               photoURL = await getDownloadURL(photoRef);
-             }
+          if (isEditing) {
+            let updateData = { ...formData };
+            delete updateData.password;
 
-             // Store data temporarily
-             tempAccountData = {
-               ...formData,
-               photoURL
-             };
+            if (photoFile) {
+              const photoRef = storageRef(storage, `staff_photos/${Date.now()}_${photoFile.name}`);
+              await uploadBytes(photoRef, photoFile);
+              updateData.photoURL = await getDownloadURL(photoRef);
+            }
 
-             // Send OTP
-             const response = await fetch('/send-otp/', {
-               method: 'POST',
-               headers: {
-                 'Content-Type': 'application/json',
-                 'X-CSRFToken': getCookie('csrftoken')
-               },
-               body: JSON.stringify({
-                 email: formData.email,
-                 password: formData.password
-               })
-             });
+            if (formData.password) {
+              updateData.hasPassword = true;
+            }
 
-             if (!response.ok) throw new Error('Failed to send OTP');
+            await update(ref(database, 'accounts/' + editingAccountId), updateData);
+            alert('Account updated successfully!');
+            bootstrap.Modal.getInstance(document.getElementById('addAccountModal')).hide();
+            accountForm.reset();
+          } else {
+            const emailExists = await checkEmailExists(formData.email);
+            if (emailExists) {
+              document.getElementById('emailError').textContent = 'This email is already registered.';
+              isSubmitting = false;
+              return;
+            }
 
-             // Show OTP verification modal
-             const otpModal = new bootstrap.Modal(document.getElementById('otpVerificationModal'));
-             otpModal.show();
+            let photoURL = '';
+            if (photoFile) {
+              const photoRef = storageRef(storage, `staff_photos/${Date.now()}_${photoFile.name}`);
+              await uploadBytes(photoRef, photoFile);
+              photoURL = await getDownloadURL(photoRef);
+            }
 
-             // Clear form and close add account modal
-             this.reset();
-             document.getElementById('emailError').textContent = '';
-             bootstrap.Modal.getInstance(document.getElementById('addAccountModal')).hide();
-           } catch (error) {
-             console.error("Error in account creation:", error);
-             alert("Failed to create account. Please try again.");
-           }
-         }
-       });
+            tempAccountData = {
+              ...formData,
+              photoURL
+            };
 
-       // Handle OTP verification for new accounts
-       document.getElementById('otpVerificationForm').addEventListener('submit', async function(e) {
-         e.preventDefault();
-         const enteredOTP = document.getElementById('otp').value;
+            const response = await fetch('/send-otp/', {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': getCookie('csrftoken')
+              },
+              body: JSON.stringify({
+                email: formData.email,
+                password: formData.password
+              })
+            });
 
-         try {
-           const response = await fetch('/verify-otp-only/', {
-             method: 'POST',
-             headers: {
-               'Content-Type': 'application/json',
-               'X-CSRFToken': getCookie('csrftoken')
-             },
-             body: JSON.stringify({
-               otp: enteredOTP,
-               email: tempAccountData.email,
-               password: tempAccountData.password,
-               first_name: tempAccountData.firstName,
-               last_name: tempAccountData.lastName,
-               role: tempAccountData.role
-             })
-           });
+            if (!response.ok) throw new Error('Failed to send OTP');
 
-           const result = await response.json();
+            const otpModal = new bootstrap.Modal(document.getElementById('otpVerificationModal'));
+            otpModal.show();
 
-           if (result.success) {
-             delete tempAccountData.password;
-             tempAccountData.hasPassword = true;
-             await push(ref(database, 'accounts'), tempAccountData);
-             alert('Account created successfully!');
-             bootstrap.Modal.getInstance(document.getElementById('otpVerificationModal')).hide();
-             tempAccountData = null;
-           } else {
-             alert('Invalid OTP. Please try again.');
-           }
-         } catch (error) {
-           console.error("Error verifying OTP:", error);
-           alert('Failed to verify OTP. Please try again.');
-         }
+            bootstrap.Modal.getInstance(document.getElementById('addAccountModal')).hide();
+            document.getElementById('emailError').textContent = '';
+          }
+        } catch (error) {
+          console.error("Error in account creation:", error);
+          alert("Failed to create account. Please try again.");
+        } finally {
+          isSubmitting = false;
+        }
+      });
 
-         this.reset();
-       });
+      // Handle OTP verification for new accounts
+      document.getElementById('otpVerificationForm').addEventListener('submit', async function(e) {
+        e.preventDefault();
+        
+        if (isSubmitting) return;
+        isSubmitting = true;
 
-       // Load and display accounts
-       onValue(ref(database, 'accounts'), (snapshot) => {
-         const accounts = snapshot.val();
-         accountList.innerHTML = '';
-         for (let id in accounts) {
-           const account = accounts[id];
-           if (account.role === 'staff' || account.role === 'admin') {
-             const row = `
-               <tr>
-                 <td><img src="${account.photoURL || 'path/to/default/image.jpg'}" alt="Staff Photo" style="width: 50px; height: 50px; object-fit: cover;"></td>
-                 <td>${account.role}</td>
-                 <td>${account.firstName}</td>
-                 <td>${account.lastName}</td>
-                 <td>${account.email}</td>
-                 <td>${account.phone}</td>
-                 <td>${account.address}</td>
-                 <td>
-                   <button class="btn btn-sm btn-primary edit-btn" data-id="${id}">Update</button>
-                   <button class="btn btn-sm btn-danger delete-btn" data-id="${id}">Delete</button>
-                 </td>
-               </tr>
-             `;
-             accountList.innerHTML += row;
-           }
-         }
+        try {
+          const enteredOTP = document.getElementById('otp').value;
 
-         // Add event listeners for edit and delete buttons
-         document.querySelectorAll('.edit-btn').forEach(btn => {
-           btn.addEventListener('click', function() {
-             editingAccountId = this.dataset.id;
-             const account = accounts[editingAccountId];
-             if (account) {
-               // Show password verification modal
-               const passwordVerificationModal = new bootstrap.Modal(document.getElementById('passwordVerificationModal'));
-               passwordVerificationModal.show();
+          const response = await fetch('/verify-otp-only/', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'X-CSRFToken': getCookie('csrftoken')
+            },
+            body: JSON.stringify({
+              otp: enteredOTP,
+              email: tempAccountData.email,
+              password: tempAccountData.password,
+              first_name: tempAccountData.firstName,
+              last_name: tempAccountData.lastName,
+              role: tempAccountData.role
+            })
+          });
 
-               // Handle password verification
-               document.getElementById('passwordVerificationForm').onsubmit = async function(e) {
-                 e.preventDefault();
-                 const enteredPassword = document.getElementById('verificationPassword').value;
-                 
-                 try {
-                   const response = await fetch('/verify-password/', {
-                     method: 'POST',
-                     headers: {
-                       'Content-Type': 'application/json',
-                       'X-CSRFToken': getCookie('csrftoken')
-                     },
-                     body: JSON.stringify({
-                       email: account.email,
-                       password: enteredPassword
-                     })
-                   });
+          const result = await response.json();
 
-                   const result = await response.json();
+          if (result.success && !otpVerified) {
+            otpVerified = true;
+            
+            // Store the account with the password returned from backend
+            const accountData = {
+              ...tempAccountData,
+              password: result.password, // Use password from backend response
+              hasPassword: true
+            };
+            
+            
+            // Create a new reference for the account
+            const newAccountRef = ref(database, 'accounts');
+            await push(newAccountRef, accountData);
+            
+            alert('Account created successfully!');
+            bootstrap.Modal.getInstance(document.getElementById('otpVerificationModal')).hide();
+            tempAccountData = null;
+            otpVerified = false;
+            accountForm.reset();
+          } else {
+            alert('Invalid OTP. Please try again.');
+          }
+        } catch (error) {
+          console.error("Error verifying OTP:", error);
+          alert('Failed to verify OTP. Please try again.');
+        } finally {
+          isSubmitting = false;
+          this.reset();
+        }
+      });
 
-                   if (result.success) {
-                     passwordVerificationModal.hide();
-                     document.getElementById('verificationPassword').value = '';
-                     
-                     // Set editing mode
-                     isEditing = true;
-                     
-                     // Populate form with account data
-                     document.getElementById('role').value = account.role || '';
-                     document.getElementById('firstName').value = account.firstName || '';
-                     document.getElementById('lastName').value = account.lastName || '';
-                     document.getElementById('email').value = account.email || '';
-                     document.getElementById('password').value = ''; 
-                     document.getElementById('phone').value = account.phone || '';
-                     document.getElementById('address').value = account.address || '';
-                     
-                     document.getElementById('addAccountModalLabel').textContent = 'Edit Account';
-                     const editModal = new bootstrap.Modal(document.getElementById('addAccountModal'));
-                     editModal.show();
-                   } else {
-                     alert('Incorrect password. Please try again.');
-                     document.getElementById('verificationPassword').value = '';
-                   }
-                 } catch (error) {
-                   console.error('Error verifying password:', error);
-                   alert('Failed to verify password. Please try again.');
-                   document.getElementById('verificationPassword').value = '';
-                 }
-               };
-             }
-           });
-         });
+      // Load and display accounts
+      const accountsRef = ref(database, 'accounts');
+      onValue(accountsRef, (snapshot) => {
+        const accounts = snapshot.val();
+        accountList.innerHTML = '';
+        
+        if (accounts) {
+          Object.entries(accounts).forEach(([id, account]) => {
+            if (account && (account.role === 'staff' || account.role === 'admin')) {
+              const row = `
+                <tr>
+                  <td><img src="${account.photoURL || 'path/to/default/image.jpg'}" alt="Staff Photo" style="width: 50px; height: 50px; object-fit: cover;"></td>
+                  <td>${account.role || ''}</td>
+                  <td>${account.firstName || ''}</td>
+                  <td>${account.lastName || ''}</td>
+                  <td>${account.email || ''}</td>
+                  <td>${account.phone || ''}</td>
+                  <td>${account.address || ''}</td>
+                  <td>
+                    <button class="btn btn-sm btn-primary edit-btn" data-id="${id}">Update</button>
+                    <button class="btn btn-sm btn-danger delete-btn" data-id="${id}">Delete</button>
+                  </td>
+                </tr>
+              `;
+              accountList.innerHTML += row;
+            }
+          });
+        }
 
-         document.querySelectorAll('.delete-btn').forEach(btn => {
-           btn.addEventListener('click', function() {
-             if (confirm('Are you sure you want to delete this account?')) {
-               remove(ref(database, 'accounts/' + this.dataset.id));
-             }
-           });
-         });
-       });
+        // Add event listeners for edit and delete buttons
+        document.querySelectorAll('.edit-btn').forEach(btn => {
+          btn.addEventListener('click', function() {
+            editingAccountId = this.dataset.id;
+            const account = accounts[editingAccountId];
+            if (account) {
+              const passwordVerificationModal = new bootstrap.Modal(document.getElementById('passwordVerificationModal'));
+              passwordVerificationModal.show();
 
-       // Search accounts
-       window.searchAccounts = function() {
-         const input = document.getElementById('searchInput');
-         const filter = input.value.toUpperCase();
-         const rows = accountList.getElementsByTagName('tr');
+              document.getElementById('passwordVerificationForm').onsubmit = async function(e) {
+                e.preventDefault();
+                
+                if (isSubmitting) return;
+                isSubmitting = true;
 
-         for (let i = 0; i < rows.length; i++) {
-           const firstNameColumn = rows[i].getElementsByTagName('td')[2];
-           const lastNameColumn = rows[i].getElementsByTagName('td')[3];
-           if (firstNameColumn && lastNameColumn) {
-             const fullName = (firstNameColumn.textContent + ' ' + lastNameColumn.textContent) || '';
-             if (fullName.toUpperCase().indexOf(filter) > -1) {
-               rows[i].style.display = '';
-             } else {
-               rows[i].style.display = 'none';
-             }
-           }
-         }
-       };
+                try {
+                  const enteredPassword = document.getElementById('verificationPassword').value;
+                  
+                  const response = await fetch('/verify-password/', {
+                    method: 'POST',
+                    headers: {
+                      'Content-Type': 'application/json',
+                      'X-CSRFToken': getCookie('csrftoken')
+                    },
+                    body: JSON.stringify({
+                      email: account.email,
+                      password: enteredPassword
+                    })
+                  });
 
-       // Reset form when modal is closed
-       document.getElementById('addAccountModal').addEventListener('hidden.bs.modal', function () {
-         if (!isEditing) {
-           accountForm.reset();
-           document.getElementById('addAccountModalLabel').textContent = 'Add Account';
-           document.getElementById('emailError').textContent = '';
-         }
-         isEditing = false;
-         editingAccountId = null;
-       });
+                  const result = await response.json();
 
-       // Function to check if email already exists
-       async function checkEmailExists(email) {
-         const snapshot = await get(ref(database, 'accounts'));
-         const accounts = snapshot.val();
-         return Object.values(accounts).some(account => account.email === email);
-       }
+                  if (result.success) {
+                    passwordVerificationModal.hide();
+                    document.getElementById('verificationPassword').value = '';
+                    
+                    isEditing = true;
+                    
+                    document.getElementById('role').value = account.role || '';
+                    document.getElementById('firstName').value = account.firstName || '';
+                    document.getElementById('lastName').value = account.lastName || '';
+                    document.getElementById('email').value = account.email || '';
+                    document.getElementById('password').value = ''; 
+                    document.getElementById('phone').value = account.phone || '';
+                    document.getElementById('address').value = account.address || '';
+                    
+                    document.getElementById('addAccountModalLabel').textContent = 'Edit Account';
+                    const editModal = new bootstrap.Modal(document.getElementById('addAccountModal'));
+                    editModal.show();
+                  } else {
+                    alert('Incorrect password. Please try again.');
+                    document.getElementById('verificationPassword').value = '';
+                  }
+                } catch (error) {
+                  console.error('Error verifying password:', error);
+                  alert('Failed to verify password. Please try again.');
+                  document.getElementById('verificationPassword').value = '';
+                } finally {
+                  isSubmitting = false;
+                }
+              };
+            }
+          });
+        });
 
-       // Function to get CSRF token
-       function getCookie(name) {
-         let cookieValue = null;
-         if (document.cookie && document.cookie !== '') {
-           const cookies = document.cookie.split(';');
-           for (let i = 0; i < cookies.length; i++) {
-             const cookie = cookies[i].trim();
-             if (cookie.substring(0, name.length + 1) === (name + '=')) {
-               cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
-               break;
-             }
-           }
-         }
-         return cookieValue;
-       }
-     });
+        document.querySelectorAll('.delete-btn').forEach(btn => {
+          btn.addEventListener('click', function() {
+            if (confirm('Are you sure you want to delete this account?')) {
+              remove(ref(database, 'accounts/' + this.dataset.id));
+            }
+          });
+        });
+      });
 
+      // Search accounts
+      window.searchAccounts = function() {
+        const input = document.getElementById('searchInput');
+        const filter = input.value.toUpperCase();
+        const rows = accountList.getElementsByTagName('tr');
+
+        for (let i = 0; i < rows.length; i++) {
+          const firstNameColumn = rows[i].getElementsByTagName('td')[2];
+          const lastNameColumn = rows[i].getElementsByTagName('td')[3];
+          if (firstNameColumn && lastNameColumn) {
+            const fullName = (firstNameColumn.textContent + ' ' + lastNameColumn.textContent) || '';
+            if (fullName.toUpperCase().indexOf(filter) > -1) {
+              rows[i].style.display = '';
+            } else {
+              rows[i].style.display = 'none';
+            }
+          }
+        }
+      };
+
+      // Reset form when modal is closed
+      document.getElementById('addAccountModal').addEventListener('hidden.bs.modal', function () {
+        accountForm.reset();
+        document.getElementById('addAccountModalLabel').textContent = 'Add Account';
+        document.getElementById('emailError').textContent = '';
+        isEditing = false;
+        editingAccountId = null;
+      });
+
+      // Function to check if email already exists
+      async function checkEmailExists(email) {
+        const snapshot = await get(ref(database, 'accounts'));
+        const accounts = snapshot.val();
+        return accounts ? Object.values(accounts).some(account => account.email === email) : false;
+      }
+
+      // Function to get CSRF token
+      function getCookie(name) {
+        let cookieValue = null;
+        if (document.cookie && document.cookie !== '') {
+          const cookies = document.cookie.split(';');
+          for (let i = 0; i < cookies.length; i++) {
+            const cookie = cookies[i].trim();
+            if (cookie.substring(0, name.length + 1) === (name + '=')) {
+              cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+              break;
+            }
+          }
+        }
+        return cookieValue;
+      }
+    });
 
     // Sidebar toggle function
     window.toggleSidebar = function() {
@@ -852,11 +867,9 @@
       sidebar.classList.toggle('collapsed');
       
       if (sidebar.classList.contains('collapsed')) {
-        // When collapsed, only show burger icon
         sidebar.style.width = '60px';
         burgerMenu.style.display = 'block';
       } else {
-        // When expanded, show full sidebar
         sidebar.style.width = '250px';
         burgerMenu.style.display = 'none';
       }
@@ -874,11 +887,12 @@
         sidebar.style.transform = '';
       }
     });
-     // Logout function
-     window.logout = function() {
-       localStorage.removeItem('userName');
-       window.location.href = 'main_login';
-     }
-   </script>
+
+    // Logout function
+    window.logout = function() {
+      localStorage.removeItem('userName');
+      window.location.href = 'main_login';
+    }
+  </script>
 </body>
 </html>

@@ -548,6 +548,11 @@
       document.getElementById('userName').textContent = 'Guest';  
     }
 
+    // Logout function
+    window.logout = function() {
+      localStorage.removeItem('userName');
+      window.location.href = '/home';
+    }
     // Toggle mobile menu
     const menuToggle = document.querySelector('.menu-toggle');
         const navBar = document.querySelector('.nav_bar');
