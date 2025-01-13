@@ -463,10 +463,11 @@ h2{
         }
 
         // Logout function
-    window.logout = function() {
-      localStorage.removeItem('userName');
-      window.location.href = '/home';
-    }
+        window.logout = function() {
+            localStorage.removeItem('userName');
+            window.location.href = '/home';
+        }
+
         // Initialize Firebase
         const firebaseConfig = {
             apiKey: "AIzaSyAMwvUHsWFkTmJyfzuh4DxzOrMYEjcXHvI",
@@ -483,70 +484,93 @@ h2{
         const db = firebase.database();
 
         function checkForNewItems() {
-      const lastCheckTimeOrdinances = localStorage.getItem('lastCheckTimeOrdinances') || 0;
-      const lastCheckTimeResolutions = localStorage.getItem('lastCheckTimeResolutions') || 0;
-      const lastCheckTimeAnnouncements = localStorage.getItem('lastCheckTimeAnnouncements') || 0;
-      const currentTime = Date.now();
-      const currentPath = window.location.pathname;
+            const lastCheckTimeOrdinances = localStorage.getItem('lastCheckTimeOrdinances') || 0;
+            const lastCheckTimeResolutions = localStorage.getItem('lastCheckTimeResolutions') || 0;
+            const lastCheckTimeAnnouncements = localStorage.getItem('lastCheckTimeAnnouncements') || 0;
+            const currentTime = Date.now();
+            const currentPath = window.location.pathname;
 
-      // Check ordinances
-      const ordinancesRef = ref (db, 'ordinances');
-      get(ordinancesRef).then((snapshot) => {
-        if (snapshot.exists() && currentPath !== '/user_ordinance') {
-          const newOrdinances = Object.values(snapshot.val()).filter(
-            ordinance => ordinance.createdAt > parseInt(lastCheckTimeOrdinances)
-          );
-          const badge = document.getElementById('ordinancesBadge');
-          if (newOrdinances.length > 0) {
-            badge.textContent = newOrdinances.length;
-            badge.style.display = 'inline';
-          }
+            // Check ordinances
+            const ordinancesRef = ref (db, 'ordinances');
+            get(ordinancesRef).then((snapshot) => {
+                if (snapshot.exists() && currentPath !== '/user_ordinance') {
+                    const newOrdinances = Object.values(snapshot.val()).filter(
+                        ordinance => ordinance.createdAt > parseInt(lastCheckTimeOrdinances)
+                    );
+                    const badge = document.getElementById('ordinancesBadge');
+                    if (newOrdinances.length > 0) {
+                        badge.textContent = newOrdinances.length;
+                        badge.style.display = 'inline';
+                    }
+                }
+            });
+
+            // Check resolutions
+            const resolutionsRef = ref(db, 'resolutions');
+            get(resolutionsRef).then((snapshot) => {
+                if (snapshot.exists() && currentPath !== '/user_resolution') {
+                    const newResolutions = Object.values(snapshot.val()).filter(
+                        resolution => resolution.createdAt > parseInt(lastCheckTimeResolutions)
+                    );
+                    const badge = document.getElementById('resolutionsBadge');
+                    if (newResolutions.length > 0) {
+                        badge.textContent = newResolutions.length;
+                        badge.style.display = 'inline';
+                    }
+                }
+            });
+
+            // Check announcements
+            const announcementsRef = ref(db, 'announcements');
+            get(announcementsRef).then((snapshot) => {
+                if (snapshot.exists() && currentPath !== '/user_announcement') {
+                    const newAnnouncements = Object.values(snapshot.val()).filter(
+                        announcement => announcement.createdAt > parseInt(lastCheckTimeAnnouncements)
+                    );
+                    const badge = document.getElementById('announcementsBadge');
+                    if (newAnnouncements.length > 0) {
+                        badge.textContent = newAnnouncements.length;
+                        badge.style.display = 'inline';
+                    }
+                }
+            });
+
+            // Update last check times only when visiting respective pages
+            if (currentPath === '/user_ordinance') {
+                localStorage.setItem('lastCheckTimeOrdinances', currentTime.toString());
+            } else if (currentPath === '/user_resolution') {
+                localStorage.setItem('lastCheckTimeResolutions', currentTime.toString());
+            } else if (currentPath === '/user_announcement') {
+                localStorage.setItem('lastCheckTimeAnnouncements', currentTime.toString());
+            }
         }
-      });
-
-      // Check resolutions
-      const resolutionsRef = ref(db, 'resolutions');
-      get(resolutionsRef).then((snapshot) => {
-        if (snapshot.exists() && currentPath !== '/user_resolution') {
-          const newResolutions = Object.values(snapshot.val()).filter(
-            resolution => resolution.createdAt > parseInt(lastCheckTimeResolutions)
-          );
-          const badge = document.getElementById('resolutionsBadge');
-          if (newResolutions.length > 0) {
-            badge.textContent = newResolutions.length;
-            badge.style.display = 'inline';
-          }
-        }
-      });
-
-      // Check announcements
-      const announcementsRef = ref(db, 'announcements');
-      get(announcementsRef).then((snapshot) => {
-        if (snapshot.exists() && currentPath !== '/user_announcement') {
-          const newAnnouncements = Object.values(snapshot.val()).filter(
-            announcement => announcement.createdAt > parseInt(lastCheckTimeAnnouncements)
-          );
-          const badge = document.getElementById('announcementsBadge');
-          if (newAnnouncements.length > 0) {
-            badge.textContent = newAnnouncements.length;
-            badge.style.display = 'inline';
-          }
-        }
-      });
-
-      // Update last check times only when visiting respective pages
-      if (currentPath === '/user_ordinance') {
-        localStorage.setItem('lastCheckTimeOrdinances', currentTime.toString());
-      } else if (currentPath === '/user_resolution') {
-        localStorage.setItem('lastCheckTimeResolutions', currentTime.toString());
-      } else if (currentPath === '/user_announcement') {
-        localStorage.setItem('lastCheckTimeAnnouncements', currentTime.toString());
-      }
-    }
 
         // Check for new items when page loads
         document.addEventListener('DOMContentLoaded', checkForNewItems);
+
+        // Check authentication on page load
+        // Check authentication immediately and on state changes
+        window.onload = function() {
+            // Check if the user is logged in using Firebase
+            const auth = firebase.auth();
+            auth.onAuthStateChanged((user) => {
+                // Get the current page's URL
+                const currentPage = window.location.pathname;
+
+                // List of pages that require the user to be logged in 
+                const restrictedPages = ['/home', '/admin_dash'];
+
+                // If the user is not logged in and they are trying to access a restricted page, redirect to login
+                if (!user && restrictedPages.includes(currentPage)) {
+                    window.location.href = 'main_login/';
+                }
+            });
+        };
+           
+
+
     </script>
+    
 
     <style>
         /* Slideshow styles */
@@ -624,7 +648,7 @@ h2{
         }
 
         .active, .dot:hover {
-            background-color: #717171;
+            background-color: white;
         }
 
         .mySlides {

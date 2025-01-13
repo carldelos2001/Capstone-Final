@@ -48,35 +48,6 @@ authe = firebase.auth()
 database = firebase.database()
 
 
-def login_required(function):
-    @wraps(function)
-    def wrapper(request, *args, **kwargs):
-        user_id = request.session.get('user_id')
-        if not user_id:
-            messages.error(request, "You must be logged in to access this page.")
-            return redirect('main_login')  # Redirect to login if no user_id in session
-        
-        try:
-            # Check if user exists in the "accounts" collection
-            accounts_ref = database.child('accounts').child(user_id).get()
-            if not accounts_ref.val():  # If user not found in "accounts"
-                # Check the "users" collection
-                users_ref = database.child('users').child(user_id).get()
-                if not users_ref.val():  # If user not found in "users"
-                    messages.error(request, "Invalid session. Please log in again.")
-                    del request.session['user_id']  # Clear invalid session
-                    return redirect('main_login')
-
-            # User exists; allow access to the requested view
-            return function(request, *args, **kwargs)
-
-        except Exception as e:
-            logger.error(f"Error checking user in Firebase: {e}")
-            messages.error(request, "An error occurred. Please try logging in again.")
-            return redirect('main_login')
-    
-    return wrapper
-
 
 def home(request):
     first_name = request.session.get('first_name', 'Guest')
