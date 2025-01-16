@@ -232,16 +232,16 @@
   </style>
 </head>
 <body>
+    <div class="wrapper">
+    <div class="container_nav">
   
-  <div class="container_nav">
-  
-  <div class="logo">
+    <div class="logo">
     <img src="{% static 'argao_logo.jpg' %}" alt="Logo">
-  </div>
+    </div>
 
-  <button class="menu-toggle" aria-label="Toggle menu">☰</button>
+    <button class="menu-toggle" aria-label="Toggle menu">☰</button>
 
-  <div class="nav_bar">
+    <div class="nav_bar">
     <a href="/home" class="header-menu-item">Home</a>
     <a href="/user_ordinance" class="header-menu-item">
       Ordinances
@@ -257,7 +257,7 @@
       <span class="notification-badge3" id="announcementsBadge" style="display:none">0</span>
     </a>
     <a href="/user_feedback" class="header-menu-item">Feedback</a>
-  </div>
+    </div>
 
      <!-- User Profile Dropdown -->
      <div class="dropdown ms-auto">
@@ -294,15 +294,37 @@
           <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
         </div>
         <div class="modal-body">
-          <iframe id="previewFrame" width="100%" height="500px" frameborder="0"></iframe>
+          <div id="previewContainer">
+            <iframe id="previewFrame" width="100%" height="500px" frameborder="0"></iframe>
+            <div class="preview-overlay">
+              <p>To avail the complete document, please <a href="#" onclick="showServicesPreview(event)">refer to the steps for requesting copies of resolutions/ordinances</a>.</p>
+            </div>
+          </div>
         </div>
       </div>
     </div>
   </div>
+
+  <!-- Services Preview Modal -->
+  <div class="modal fade" id="servicesPreviewModal" tabindex="-1" aria-labelledby="servicesPreviewModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title" id="servicesPreviewModalLabel">Services Document</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
+          <iframe src="https://firebasestorage.googleapis.com/v0/b/lgucapstoneproject-b94fe.appspot.com/o/services%2FREQUESTING%20COPIES%20OF%20RESOLUTIONS.pdf?alt=media&token=4431ae6a-d6af-45a9-8da3-d78838391ae1" width="100%" height="500px" frameborder="0"></iframe>
+        </div>
+      </div>
+    </div>
+  </div>
+
   <footer class="footer">
     <p>&copy; 2024 Municipality of Argao. All rights reserved.</p>
     <p>Contact: info@argao.gov.ph | Address: Municipal Hall, Argao, Cebu, Philippines</p>
-</footer>
+  </footer>
+</div>
 
   <!-- Include Bootstrap JS -->
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
@@ -328,8 +350,6 @@
 
     const resolutionsContainer = document.getElementById('resolutions-container');
     let allResolutions = {}; // To store the original fetched resolutions
-
-     
 
     function fetchResolutions() {
       const resolutionsRef = ref(db, 'resolutions');
@@ -360,8 +380,7 @@
                 <h5 class="card-title">${resolution.title}</h5>
                 <p class="card-text"><strong>Published/Approved:</strong> ${resolution.date_approved}</p>
                 <p class="card-text">${resolutionContent}...</p>
-                <button onclick="previewDocument('${resolution.document_url}')" class="btn btn-primary me-2">View</button>
-                <a href="${resolution.document_url}" class="btn btn-secondary">Read More</a>
+                <button class="btn btn-primary" onclick="previewDocument('${resolution.document_url}')">View</button>
               </div>
             </div>
           </div>
@@ -395,59 +414,91 @@
     // Fetch resolutions on page load
     document.addEventListener('DOMContentLoaded', function() {
       fetchResolutions();
-      checkForNewItems(); // Check for new items when page loads
-      setInterval(checkForNewItems, 300000); // Check every 5 minutes
-      
-      dropdownMenu.style.display = 'none';
+      checkForNewItems(); // Add this line to check for new items when page loads
+    });
+
+    // Toggle mobile menu
+    const menuToggle = document.querySelector('.menu-toggle');
+    const navBar = document.querySelector('.nav_bar');
+
+    menuToggle.addEventListener('click', () => {
+        navBar.classList.toggle('active');
+        menuToggle.textContent = navBar.classList.contains('active') ? '✕' : '☰';
+    });
+
+    // Toggle dropdown menu
+    const dropdownToggle = document.querySelector('.dropdown-toggle');
+    const dropdownMenu = document.querySelector('.dropdown-menu');
+
+    dropdownToggle.addEventListener('click', (e) => {
+        e.stopPropagation();
+        dropdownMenu.style.display = dropdownMenu.style.display === 'block' ? 'none' : 'block';
+    });
+
+    // Close dropdown when clicking outside
+    document.addEventListener('click', () => {
+        dropdownMenu.style.display = 'none';
     });
 
     // Get user from localStorage
     const userName = localStorage.getItem('userName');
-      if (userName) {
-        document.getElementById('userName').textContent = userName;
-        // Update dropdown menu for logged-in user
-        const dropdownMenu = document.querySelector('.dropdown-menu');
-        dropdownMenu.innerHTML = '<li><a class="dropdown-item" href="{% url "lgucapstone" %}" onclick="logout()">Logout</a></li>';
-      } else {
-        document.getElementById('userName').textContent = 'Guest';  
-      }
+    if (userName) {
+      document.getElementById('userName').textContent = userName;
+      // Update dropdown menu for logged-in user
+      const dropdownMenu = document.querySelector('.dropdown-menu');
+      dropdownMenu.innerHTML = '<li><a class="dropdown-item" href="{% url "lgucapstone" %}" onclick="logout()">Logout</a></li>';
+    } else {
+      document.getElementById('userName').textContent = 'Guest';  
+    }
+
     // Logout function
     window.logout = function() {
       localStorage.removeItem('userName');
       window.location.href = '/home';
     }
-
-    // Preview document function
+    
+    // Preview document function with scroll limit
     window.previewDocument = function(url) {
       const previewFrame = document.getElementById('previewFrame');
-      previewFrame.src = `https://docs.google.com/viewer?url=${encodeURIComponent(url)}&embedded=true`;
+      previewFrame.src = `https://docs.google.com/viewer?url=${encodeURIComponent(url)}&embedded=true#page=1`;
+      
+      // Add scroll event listener to prevent scrolling past first page
+      previewFrame.onload = function() {
+        const previewContainer = document.getElementById('previewContainer');
+        previewContainer.style.position = 'relative';
+        previewContainer.style.maxHeight = '500px';
+        previewContainer.style.overflow = 'hidden';
+        
+        const overlay = document.querySelector('.preview-overlay');
+        overlay.style.position = 'absolute';
+        overlay.style.bottom = '0';
+        overlay.style.left = '0';
+        overlay.style.right = '0';
+        overlay.style.background = 'rgba(255, 255, 255, 0.9)';
+        overlay.style.padding = '20px';
+        overlay.style.textAlign = 'center';
+        overlay.style.borderTop = '1px solid #ddd';
+
+        // Add message handler to prevent scrolling
+        previewFrame.contentWindow.postMessage('{"event":"command","func":"freezeScroll","args":""}', '*');
+        
+        // Disable scrolling in the iframe
+        previewFrame.style.pointerEvents = 'none';
+      };
+      
       const previewModal = new bootstrap.Modal(document.getElementById('previewModal'));
       previewModal.show();
     }
 
-    // Toggle mobile menu
-    const menuToggle = document.querySelector('.menu-toggle');
-        const navBar = document.querySelector('.nav_bar');
-
-        menuToggle.addEventListener('click', () => {
-            navBar.classList.toggle('active');
-            menuToggle.textContent = navBar.classList.contains('active') ? '✕' : '☰';
-        });
-
-        // Toggle dropdown menu
-        const dropdownToggle = document.querySelector('.dropdown-toggle');
-        const dropdownMenu = document.querySelector('.dropdown-menu');
-
-        dropdownToggle.addEventListener('click', (e) => {
-            e.stopPropagation();
-            dropdownMenu.style.display = dropdownMenu.style.display === 'block' ? 'none' : 'block';
-        });
-
-        // Close dropdown when clicking outside
-        document.addEventListener('click', () => {
-            dropdownMenu.style.display = 'none';
-        });
+    // Show services preview function
+    window.showServicesPreview = function(event) {
+      event.preventDefault();
+      const previewModal = bootstrap.Modal.getInstance(document.getElementById('previewModal'));
+      previewModal.hide();
+      
+      const servicesModal = new bootstrap.Modal(document.getElementById('servicesPreviewModal'));
+      servicesModal.show();
+    }
   </script>
-  
 </body>
 </html>

@@ -313,7 +313,27 @@ main {
         <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
       </div>
       <div class="modal-body">
-        <iframe id="previewFrame" width="100%" height="500px" frameborder="0"></iframe>
+        <div id="previewContainer">
+          <iframe id="previewFrame" width="100%" height="500px" frameborder="0"></iframe>
+          <div class="preview-overlay">
+            <p>To avail the complete document, please <a href="#" onclick="showServicesPreview(event)">refer to the steps for requesting copies of resolutions/ordinances</a>.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Services Preview Modal -->
+<div class="modal fade" id="servicesPreviewModal" tabindex="-1" aria-labelledby="servicesPreviewModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-lg">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="servicesPreviewModalLabel">Services Document</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        <iframe src="https://firebasestorage.googleapis.com/v0/b/lgucapstoneproject-b94fe.appspot.com/o/services%2FREQUESTING%20COPIES%20OF%20RESOLUTIONS.pdf?alt=media&token=4431ae6a-d6af-45a9-8da3-d78838391ae1" width="100%" height="500px" frameborder="0"></iframe>
       </div>
     </div>
   </div>
@@ -376,8 +396,7 @@ main {
                 <h5 class="card-title">${ordinance.title}</h5>
                 <p class="card-text"><strong>Published/Approved:</strong> ${ordinance.date_approved}</p>
                 <p class="card-text">${ordinanceContent}...</p>
-                <button class="btn btn-primary me-2" onclick="previewDocument('${ordinance.document_url}')">View</button>
-                <a href="${ordinance.document_url}" class="btn btn-secondary" target="_blank">Read More</a>
+                <button class="btn btn-primary" onclick="previewDocument('${ordinance.document_url}')">View </button>
               </div>
             </div>
           </div>
@@ -453,15 +472,49 @@ main {
       localStorage.removeItem('userName');
       window.location.href = '/home';
     }
-    // Preview document function
+    
+    // Preview document function with scroll limit
     window.previewDocument = function(url) {
       const previewFrame = document.getElementById('previewFrame');
-      previewFrame.src = `https://docs.google.com/viewer?url=${encodeURIComponent(url)}&embedded=true`;
+      previewFrame.src = `https://docs.google.com/viewer?url=${encodeURIComponent(url)}&embedded=true#page=1`;
+      
+      // Add scroll event listener to prevent scrolling past first page
+      previewFrame.onload = function() {
+        const previewContainer = document.getElementById('previewContainer');
+        previewContainer.style.position = 'relative';
+        previewContainer.style.maxHeight = '500px';
+        previewContainer.style.overflow = 'hidden';
+        
+        const overlay = document.querySelector('.preview-overlay');
+        overlay.style.position = 'absolute';
+        overlay.style.bottom = '0';
+        overlay.style.left = '0';
+        overlay.style.right = '0';
+        overlay.style.background = 'rgba(255, 255, 255, 0.9)';
+        overlay.style.padding = '20px';
+        overlay.style.textAlign = 'center';
+        overlay.style.borderTop = '1px solid #ddd';
+
+        // Add message handler to prevent scrolling
+        previewFrame.contentWindow.postMessage('{"event":"command","func":"freezeScroll","args":""}', '*');
+        
+        // Disable scrolling in the iframe
+        previewFrame.style.pointerEvents = 'none';
+      };
+      
       const previewModal = new bootstrap.Modal(document.getElementById('previewModal'));
       previewModal.show();
     }
 
-    
+    // Show services preview function
+    window.showServicesPreview = function(event) {
+      event.preventDefault();
+      const previewModal = bootstrap.Modal.getInstance(document.getElementById('previewModal'));
+      previewModal.hide();
+      
+      const servicesModal = new bootstrap.Modal(document.getElementById('servicesPreviewModal'));
+      servicesModal.show();
+    }
   </script>
 </body>
 </html>
